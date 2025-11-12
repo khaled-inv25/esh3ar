@@ -1,0 +1,97 @@
+﻿using Esh3arTech.Settings;
+using OtpNet;
+using System;
+using System.Threading.Tasks;
+using Volo.Abp.Domain.Services;
+using Volo.Abp.Settings;
+
+namespace Esh3arTech.Otp
+{
+    public class OtpManager : DomainService
+    {
+        private readonly ISettingProvider _settingProvider;
+
+        public OtpManager(ISettingProvider settingProvider)
+        {
+            _settingProvider = settingProvider;
+        }
+
+        public string Generate(ref string? secret, int keyLength = 20, int codeTimeout = 3600, DateTime? timestamp = null)
+        {
+            byte[] key;
+
+            if (string.IsNullOrWhiteSpace(secret))
+            {
+                key = KeyGeneration.GenerateRandomKey(keyLength);
+                secret = Base32Encoding.ToString(key);
+            }
+            else
+            {
+                key = Base32Encoding.ToBytes(secret);
+            }
+
+            var otp = new Totp(key, step: codeTimeout);
+            string code;
+
+            if (timestamp.HasValue)
+            {
+                code = otp.ComputeTotp(timestamp.Value);
+            }
+            else
+            {
+                code = otp.ComputeTotp();
+            }
+
+            return code;
+        }
+
+        public async Task<string> BuildMessage(string otp)
+        {
+            var smsTemplate = await _settingProvider.GetOrNullAsync(Esh3arTechSettings.Otp.VerificationTemplate);
+
+            // To send valid message template
+            if (string.IsNullOrWhiteSpace(smsTemplate))
+            {
+                smsTemplate = "<#> Your Esh3arTech code is: {0}\r\nmaidILDtEQp8";
+            }
+
+            return string.Format(smsTemplate, otp);
+        }
+
+        /*
+        public async Task<string> BuildMessage(string otp)
+        {
+            var smsTemplate = await _settingProvider.GetOrNullAsync(OtpSettings.Sms.VerificationTemplate);
+
+            // To send valid message template
+            if (string.IsNullOrWhiteSpace(smsTemplate))
+            {
+                smsTemplate = "<#> Your Esh3arTech code is: {0}\r\nmaidILDtEQp8";
+            }
+
+            return string.Format(smsTemplate, otp);
+        }
+
+        private bool IsAlreadySent()
+        {
+            return false;
+        }
+        */
+
+        /*
+        public string Generate(int keyLength, int codeTimeout)
+        {
+            var key = KeyGeneration.GenerateRandomKey(keyLength); // To be used in generate TOTP.
+            return GenerateTotp(key, codeTimeout);
+        }
+        */
+
+        /*
+        private string GenerateTotp(byte[] key, int codeTimeout)
+        {
+            var totp = new Totp(key, step: codeTimeout);
+            return totp.ComputeTotp();
+        }
+        */
+    }
+}

@@ -1,0 +1,87 @@
+{
+  "template": "app",
+  "imports": {
+    "Volo.Abp.LeptonXLiteTheme": {
+      "version": "4.3.5",
+      "isInstalled": true
+    },
+    "Volo.Abp.Account": {
+      "version": "9.3.5",
+      "isInstalled": true,
+      "creationTime": "11/12/2025 11:57:11 +00:00"
+    },
+    "Volo.Abp.OpenIddict": {
+      "version": "9.3.5",
+      "isInstalled": true,
+      "creationTime": "11/12/2025 11:57:11 +00:00"
+    },
+    "Volo.Abp.Identity": {
+      "version": "9.3.5",
+      "isInstalled": true,
+      "creationTime": "11/12/2025 11:57:11 +00:00"
+    },
+    "Volo.Abp.TenantManagement": {
+      "version": "9.3.5",
+      "isInstalled": true,
+      "creationTime": "11/12/2025 11:57:11 +00:00"
+    },
+    "Volo.Abp.SettingManagement": {
+      "version": "9.3.5",
+      "isInstalled": true,
+      "creationTime": "11/12/2025 11:57:11 +00:00"
+    },
+    "Volo.Abp.PermissionManagement": {
+      "version": "9.3.5",
+      "isInstalled": true,
+      "creationTime": "11/12/2025 11:57:11 +00:00"
+    },
+    "Volo.Abp.FeatureManagement": {
+      "version": "9.3.5",
+      "isInstalled": true,
+      "creationTime": "11/12/2025 11:57:11 +00:00"
+    }
+  },
+  "folders": {
+    "items": {
+      "src": {}
+    }
+  },
+  "packages": {
+    "Esh3arTech.Application": {
+      "path": "src/Esh3arTech.Application/Esh3arTech.Application.abppkg",
+      "folder": "src"
+    },
+    "Esh3arTech.Domain.Shared": {
+      "path": "src/Esh3arTech.Domain.Shared/Esh3arTech.Domain.Shared.abppkg",
+      "folder": "src"
+    },
+    "Esh3arTech.Application.Contracts": {
+      "path": "src/Esh3arTech.Application.Contracts/Esh3arTech.Application.Contracts.abppkg",
+      "folder": "src"
+    },
+    "Esh3arTech.HttpApi": {
+      "path": "src/Esh3arTech.HttpApi/Esh3arTech.HttpApi.abppkg",
+      "folder": "src"
+    },
+    "Esh3arTech.HttpApi.Client": {
+      "path": "src/Esh3arTech.HttpApi.Client/Esh3arTech.HttpApi.Client.abppkg",
+      "folder": "src"
+    },
+    "Esh3arTech.Web": {
+      "path": "src/Esh3arTech.Web/Esh3arTech.Web.abppkg",
+      "folder": "src"
+    },
+    "Esh3arTech.EntityFrameworkCore": {
+      "path": "src/Esh3arTech.EntityFrameworkCore/Esh3arTech.EntityFrameworkCore.abppkg",
+      "folder": "src"
+    },
+    "Esh3arTech.DbMigrator": {
+      "path": "src/Esh3arTech.DbMigrator/Esh3arTech.DbMigrator.abppkg",
+      "folder": "src"
+    },
+    "Esh3arTech.Domain": {
+      "path": "src/Esh3arTech.Domain/Esh3arTech.Domain.abppkg",
+      "folder": "src"
+    }
+  }
+}
