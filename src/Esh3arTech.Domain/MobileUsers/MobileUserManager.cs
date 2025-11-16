@@ -2,8 +2,10 @@
 
 namespace Esh3arTech.MobileUsers
 {
-    public class MobileUserManagment : DomainService
+    public class MobileUserManager : DomainService
     {
+        
+
         public MobileUser CreateMobileUser(string number, bool isStatic = false)
         {
             return new MobileUser(GuidGenerator.Create(), number, isStatic);

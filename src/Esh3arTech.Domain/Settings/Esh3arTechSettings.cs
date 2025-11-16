@@ -8,7 +8,7 @@ public static class Esh3arTechSettings
     public static class Otp
     {
         public const string VerificationTemplate = Prefix + ".Sms.VerificationTemplate";
-        public const string VerificationTimeout = Prefix + ".Sms.OtpTimeout";
+        public const string CodeTimeout = Prefix + ".Sms.OtpTimeout";
         public const string KeyLength = Prefix + ".Sms.KeyLength";
     }
 

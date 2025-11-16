@@ -16,7 +16,7 @@ namespace Esh3arTech.Otp
             _settingProvider = settingProvider;
         }
 
-        public string Generate(ref string? secret, int keyLength = 20, int codeTimeout = 3600, DateTime? timestamp = null)
+        public string Generate(ref string? secret, int keyLength = 20, int codeTimeout = 300, DateTime? timestamp = null)
         {
             byte[] key;
 
@@ -57,6 +57,19 @@ namespace Esh3arTech.Otp
 
             return string.Format(smsTemplate, otp);
         }
+
+        public bool Verify(string code, string secret, int codeTimeout)
+        {
+            var key = Base32Encoding.ToBytes(secret);
+            var otp = new Totp(key, step: codeTimeout);
+
+            long tm;
+
+            var result = otp.VerifyTotp(code, out tm);
+
+            return result;
+        }
+
 
         /*
         public async Task<string> BuildMessage(string otp)

@@ -72,7 +72,7 @@ namespace Esh3arTech.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("EtMobileUsers");
+                    b.ToTable("EtMobileUsers", (string)null);
                 });
 
             modelBuilder.Entity("Esh3arTech.Registretions.RegistretionRequest", b =>
@@ -108,7 +108,7 @@ namespace Esh3arTech.Migrations
 
                     b.HasIndex("MobileUserId");
 
-                    b.ToTable("EtRegistretionRequest");
+                    b.ToTable("EtRegistretionRequest", (string)null);
                 });
 
             modelBuilder.Entity("Volo.Abp.AuditLogging.AuditLog", b =>

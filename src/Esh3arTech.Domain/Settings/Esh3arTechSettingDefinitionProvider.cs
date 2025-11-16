@@ -1,5 +1,13 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Esh3arTech.MobileUsers;
+using Esh3arTech.SmsProviders;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using System.Threading.Tasks;
+using System;
+using Volo.Abp.BackgroundJobs;
+using Volo.Abp.SettingManagement;
 using Volo.Abp.Settings;
+using Volo.Abp.Uow;
 using static Esh3arTech.Settings.Esh3arTechSettings;
 
 namespace Esh3arTech.Settings;
@@ -17,7 +25,7 @@ public class Esh3arTechSettingDefinitionProvider : SettingDefinitionProvider
     {
         context.Add(
             new SettingDefinition(Esh3arTechSettings.Otp.VerificationTemplate, GetFromSettings(Esh3arTechSettings.Otp.VerificationTemplate.Replace(".", ":"))),
-            new SettingDefinition(Esh3arTechSettings.Otp.VerificationTimeout, GetFromSettings(Esh3arTechSettings.Otp.VerificationTimeout.Replace(".", ":"), "3600")),
+            new SettingDefinition(Esh3arTechSettings.Otp.CodeTimeout, GetFromSettings(Esh3arTechSettings.Otp.CodeTimeout.Replace(".", ":"), "300")),
             new SettingDefinition(Esh3arTechSettings.Otp.KeyLength, GetFromSettings(Esh3arTechSettings.Otp.KeyLength.Replace(".", ":"), "20")),
             new SettingDefinition(Registretion.SendOtpToStaticMobileNumber, GetFromSettings(Registretion.SendOtpToStaticMobileNumber.Replace(".", ":"), "false")),
             new SettingDefinition(Email.Sender, GetFromSettings(Email.Sender.Replace(".", ":")) ?? ""),

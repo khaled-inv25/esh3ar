@@ -3,6 +3,7 @@ using Esh3arTech.Localization;
 using Esh3arTech.MultiTenancy;
 using Esh3arTech.Web.HealthChecks;
 using Esh3arTech.Web.Menus;
+using Hangfire;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Hosting;
@@ -27,6 +28,7 @@ using Volo.Abp.AspNetCore.Mvc.UI.Theme.Shared.Toolbars;
 using Volo.Abp.AspNetCore.Serilog;
 using Volo.Abp.Autofac;
 using Volo.Abp.AutoMapper;
+using Volo.Abp.BackgroundJobs.Hangfire;
 using Volo.Abp.FeatureManagement;
 using Volo.Abp.Identity.Web;
 using Volo.Abp.Modularity;
@@ -54,7 +56,8 @@ namespace Esh3arTech.Web;
     typeof(AbpTenantManagementWebModule),
     typeof(AbpFeatureManagementWebModule),
     typeof(AbpSwashbuckleModule),
-    typeof(AbpAspNetCoreSerilogModule)
+    typeof(AbpAspNetCoreSerilogModule),
+    typeof(AbpBackgroundJobsHangfireModule)
 )]
 public class Esh3arTechWebModule : AbpModule
 {
@@ -133,6 +136,7 @@ public class Esh3arTechWebModule : AbpModule
         ConfigureNavigationServices();
         ConfigureAutoApiControllers();
         ConfigureSwaggerServices(context.Services);
+        ConfigureHangfire(context, configuration);
 
         Configure<PermissionManagementOptions>(options =>
         {
@@ -244,6 +248,14 @@ public class Esh3arTechWebModule : AbpModule
         );
     }
 
+    private void ConfigureHangfire(ServiceConfigurationContext context, IConfiguration configuration)
+    {
+        context.Services.AddHangfire(config =>
+        {
+            config.UseSqlServerStorage(configuration.GetConnectionString("Default"));
+        });
+    }
+
 
     public override void OnApplicationInitialization(ApplicationInitializationContext context)
     {
@@ -288,6 +300,7 @@ public class Esh3arTechWebModule : AbpModule
         });
         app.UseAuditing();
         app.UseAbpSerilogEnrichers();
+        app.UseAbpHangfireDashboard();
         app.UseConfiguredEndpoints();
     }
 }
