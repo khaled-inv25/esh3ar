@@ -57,7 +57,7 @@ namespace Esh3arTech.Otp
 
             return string.Format(smsTemplate, otp);
         }
-
+        
         public bool Verify(string code, string secret, int codeTimeout)
         {
             var key = Base32Encoding.ToBytes(secret);
@@ -67,44 +67,10 @@ namespace Esh3arTech.Otp
 
             var result = otp.VerifyTotp(code, out tm);
 
+            var totp = otp.ComputeTotp();
+
             return result;
         }
 
-
-        /*
-        public async Task<string> BuildMessage(string otp)
-        {
-            var smsTemplate = await _settingProvider.GetOrNullAsync(OtpSettings.Sms.VerificationTemplate);
-
-            // To send valid message template
-            if (string.IsNullOrWhiteSpace(smsTemplate))
-            {
-                smsTemplate = "<#> Your Esh3arTech code is: {0}\r\nmaidILDtEQp8";
-            }
-
-            return string.Format(smsTemplate, otp);
-        }
-
-        private bool IsAlreadySent()
-        {
-            return false;
-        }
-        */
-
-        /*
-        public string Generate(int keyLength, int codeTimeout)
-        {
-            var key = KeyGeneration.GenerateRandomKey(keyLength); // To be used in generate TOTP.
-            return GenerateTotp(key, codeTimeout);
-        }
-        */
-
-        /*
-        private string GenerateTotp(byte[] key, int codeTimeout)
-        {
-            var totp = new Totp(key, step: codeTimeout);
-            return totp.ComputeTotp();
-        }
-        */
     }
 }

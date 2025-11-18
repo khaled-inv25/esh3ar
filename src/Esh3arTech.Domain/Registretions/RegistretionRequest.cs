@@ -4,7 +4,6 @@ using System;
 using System.ComponentModel.DataAnnotations.Schema;
 using Volo.Abp;
 using Volo.Abp.Domain.Entities.Auditing;
-using Volo.Abp.Timing;
 
 namespace Esh3arTech.Registretions
 {

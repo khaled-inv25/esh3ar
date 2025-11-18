@@ -3,14 +3,15 @@ using Esh3arTech.MobileUsers;
 using Esh3arTech.Otp;
 using Esh3arTech.Registretions;
 using Esh3arTech.Settings;
+using Microsoft.AspNetCore.Identity;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Volo.Abp;
 using Volo.Abp.BackgroundJobs;
 using Volo.Abp.Domain.Repositories;
+using Volo.Abp.Identity;
 using Volo.Abp.Settings;
-using static Esh3arTech.Settings.Esh3arTechSettings;
 using static Esh3arTech.Utility.MobileNumberPreparator;
 
 namespace Esh3arTech.Registrations
@@ -24,6 +25,8 @@ namespace Esh3arTech.Registrations
         private readonly MobileUserManager _mobileUserManager;
         private readonly RegistretionRequestManager _registretionRequestManager;
         private readonly IBackgroundJobManager _backgroundJobManager;
+        private readonly IdentityUserManager _identityUserManager;
+
 
         public RegistretionAppService(
             IRepository<MobileUser, Guid> mobileUserRepository,
@@ -32,7 +35,8 @@ namespace Esh3arTech.Registrations
             MobileUserManager mobileUserManager,
             RegistretionRequestManager registretionRequestManager,
             IRepository<RegistretionRequest, Guid> registretionRequestRepository,
-            IBackgroundJobManager backgroundJobManager)
+            IBackgroundJobManager backgroundJobManager,
+            IdentityUserManager identityUserManager)
         {
             _mobileUserRepository = mobileUserRepository;
             _settingProvider = settingProvider;
@@ -41,6 +45,7 @@ namespace Esh3arTech.Registrations
             _registretionRequestManager = registretionRequestManager;
             _registretionRequestRepository = registretionRequestRepository;
             _backgroundJobManager = backgroundJobManager;
+            _identityUserManager = identityUserManager;
         }
 
         public async Task<RegisterOutputDto> RegisterAsync(RegisterRequestDto input)
@@ -86,7 +91,7 @@ namespace Esh3arTech.Registrations
             return new RegisterOutputDto(registretionRequest!.Id);
         }
 
-        public async Task<TokenDto> VerifyOtpAsync(VerifyOtpRequestDto input)
+        public async Task<VerifedDto> VerifyOtpAsync(VerifyOtpRequestDto input)
         {
             var minutes = await _settingProvider.GetAsync<int>(Esh3arTechSettings.Otp.CodeTimeout);
 
@@ -104,8 +109,34 @@ namespace Esh3arTech.Registrations
             }
 
             registrationRequest.SetAsVerified(Clock.Now);
+            registrationRequest!.MobileUser!.Status = MobileUserRegisterStatus.Verified;
+            await _mobileUserRepository.UpdateAsync(registrationRequest.MobileUser);
 
-            return new TokenDto("Access token success!");
+            var identityUser = await _identityUserManager.FindByEmailAsync($"{registrationRequest.MobileUser.MobileNumber}@esh3artech.ebs");
+
+            //IdentityUser newMobilIdentityUser;
+
+            if (identityUser is null)
+            {
+                var newMobilIdentityUser = new IdentityUser(
+                    id: GuidGenerator.Create(),
+                    userName: registrationRequest.MobileUser.MobileNumber,
+                    email: $"{registrationRequest.MobileUser.MobileNumber}@esh3artech.ebs"
+                );
+
+                newMobilIdentityUser.SetPhoneNumber(registrationRequest.MobileUser.MobileNumber, true);
+
+                var result = await _identityUserManager.CreateAsync(newMobilIdentityUser);
+
+                if (!result.Succeeded)
+                {
+                    throw new UserFriendlyException("Failed to create identity user for mobile user.");
+                }
+
+                return new VerifedDto(await _identityUserManager.GenerateUserTokenAsync(newMobilIdentityUser, TokenOptions.DefaultProvider, "PhoneVerification"));
+            }
+
+            return new VerifedDto("no token is provided!");
         }
 
         public async Task ResendOtpAsync(ResendOtpRequestDto input)

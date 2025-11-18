@@ -1,12 +1,10 @@
-using System.Threading.Tasks;
 using Esh3arTech.Localization;
-using Esh3arTech.Permissions;
 using Esh3arTech.MultiTenancy;
-using Volo.Abp.SettingManagement.Web.Navigation;
-using Volo.Abp.Authorization.Permissions;
+using System.Threading.Tasks;
 using Volo.Abp.Identity.Web.Navigation;
-using Volo.Abp.UI.Navigation;
+using Volo.Abp.SettingManagement.Web.Navigation;
 using Volo.Abp.TenantManagement.Web.Navigation;
+using Volo.Abp.UI.Navigation;
 
 namespace Esh3arTech.Web.Menus;
 
@@ -24,13 +22,24 @@ public class Esh3arTechMenuContributor : IMenuContributor
     {
         var l = context.GetLocalizer<Esh3arTechResource>();
 
-        //Home
+        // Home
         context.Menu.AddItem(
             new ApplicationMenuItem(
                 Esh3arTechMenus.Home,
                 l["Menu:Home"],
                 "~/",
                 icon: "fa fa-home",
+                order: 1
+            )
+        );
+        
+        // Editions
+        context.Menu.AddItem(
+            new ApplicationMenuItem(
+                Esh3arTechMenus.Edition,
+                l["Menu:Editions"],
+                "~/Editions",
+                icon: "fa-solid fa-bag-shopping",
                 order: 1
             )
         );

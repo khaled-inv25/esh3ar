@@ -1,13 +1,5 @@
-﻿using Esh3arTech.MobileUsers;
-using Esh3arTech.SmsProviders;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using System.Threading.Tasks;
-using System;
-using Volo.Abp.BackgroundJobs;
-using Volo.Abp.SettingManagement;
+﻿using Microsoft.Extensions.Configuration;
 using Volo.Abp.Settings;
-using Volo.Abp.Uow;
 using static Esh3arTech.Settings.Esh3arTechSettings;
 
 namespace Esh3arTech.Settings;

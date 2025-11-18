@@ -1,6 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Volo.Abp.Identity;
+﻿using Esh3arTech.MultiTenancy;
+using System;
 using Volo.Abp.ObjectExtending;
+using Volo.Abp.TenantManagement;
 using Volo.Abp.Threading;
 
 namespace Esh3arTech.EntityFrameworkCore;
@@ -16,6 +17,14 @@ public static class Esh3arTechEfCoreEntityExtensionMappings
 
         OneTimeRunner.Run(() =>
         {
+            ObjectExtensionManager.Instance.MapEfCoreProperty<Tenant, string>(
+                "EditionId",
+                (entityBuilder, propertyBuilder) =>
+                    {
+                        propertyBuilder.IsRequired(false);
+                        propertyBuilder.HasMaxLength(MultiTenancyConsts.MaxEditionIdLength);
+                    }
+                );
                 /* You can configure extra properties for the
                  * entities defined in the modules used by your application.
                  *

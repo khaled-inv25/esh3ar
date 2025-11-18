@@ -3,6 +3,7 @@
   "Texts": {
     "AppName": "Esh3arTech",
     "Menu:Home": "Home",
+    "Menu:Editions": "Editions",
     "LongWelcomeMessage": "Welcome to the application. This is a startup project based on the ABP framework. For more information visit",
     "Welcome": "Welcome"
   }

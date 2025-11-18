@@ -1,6 +1,7 @@
 using Esh3arTech.Configuration.MobileUserConfiguration;
 using Esh3arTech.Configuration.RegistrationConfiguration;
 using Esh3arTech.MobileUsers;
+using Esh3arTech.MultiTenancy;
 using Esh3arTech.Registretions;
 using Microsoft.EntityFrameworkCore;
 using Volo.Abp.AuditLogging.EntityFrameworkCore;
@@ -9,6 +10,7 @@ using Volo.Abp.BlobStoring.Database.EntityFrameworkCore;
 using Volo.Abp.Data;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.EntityFrameworkCore;
+using Volo.Abp.EntityFrameworkCore.Modeling;
 using Volo.Abp.FeatureManagement.EntityFrameworkCore;
 using Volo.Abp.Identity;
 using Volo.Abp.Identity.EntityFrameworkCore;
@@ -82,6 +84,7 @@ public class Esh3arTechDbContext :
         builder.ConfigureOpenIddict();
         builder.ConfigureTenantManagement();
         builder.ConfigureBlobStoring();
+        builder.Entity<Tenant>().ConfigureExtraProperties();
 
         builder.ApplyConfiguration(new MobileUserConfiguration());
         builder.ApplyConfiguration(new RegistrationRequestConfiguration());

@@ -6,7 +6,7 @@ namespace Esh3arTech.Registrations
     {
         Task<RegisterOutputDto> RegisterAsync(RegisterRequestDto input);
 
-        Task<TokenDto> VerifyOtpAsync(VerifyOtpRequestDto input);
+        Task<VerifedDto> VerifyOtpAsync(VerifyOtpRequestDto input);
 
         Task ResendOtpAsync(ResendOtpRequestDto input);
     }
