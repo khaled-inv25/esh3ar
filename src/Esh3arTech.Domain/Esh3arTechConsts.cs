@@ -12,7 +12,8 @@ public static class Esh3arTechConsts
 
     public const string TblMobileUsers = DbTablePrefix + "MobileUsers";
     public const string TblRegistretionRequest = DbTablePrefix + "RegistretionRequest";
-    public const string TblEditions = DbTablePrefix + "Editions";
+    
+    public const string TblUserPlan = DbTablePrefix + "UserPlans";
 
     public const string DefaultOtpSubject = "OTP";
 }

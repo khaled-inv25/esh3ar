@@ -1,8 +1,9 @@
+using Esh3arTech.Configuration;
 using Esh3arTech.Configuration.MobileUserConfiguration;
 using Esh3arTech.Configuration.RegistrationConfiguration;
 using Esh3arTech.MobileUsers;
-using Esh3arTech.MultiTenancy;
 using Esh3arTech.Registretions;
+using Esh3arTech.UserPlans;
 using Microsoft.EntityFrameworkCore;
 using Volo.Abp.AuditLogging.EntityFrameworkCore;
 using Volo.Abp.BackgroundJobs.EntityFrameworkCore;
@@ -33,6 +34,8 @@ public class Esh3arTechDbContext :
     public DbSet<MobileUser> MobileUsers { get; set; }
 
     public DbSet<RegistretionRequest> RegistrationRequests { get; set; }
+
+    public DbSet<UserPlan> UserPlans { get; set; }
 
     #region Entities from the modules
 
@@ -88,6 +91,7 @@ public class Esh3arTechDbContext :
 
         builder.ApplyConfiguration(new MobileUserConfiguration());
         builder.ApplyConfiguration(new RegistrationRequestConfiguration());
+        builder.ApplyConfiguration(new UserPlanConfiguration());
         
 
     }

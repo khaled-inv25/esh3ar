@@ -6,6 +6,8 @@ using Volo.Abp.AutoMapper;
 using Volo.Abp.FeatureManagement;
 using Volo.Abp.Modularity;
 using Volo.Abp.TenantManagement;
+using Esh3arTech.Features;
+using Volo.Abp.Features;
 
 namespace Esh3arTech;
 
@@ -26,6 +28,20 @@ public class Esh3arTechApplicationModule : AbpModule
         Configure<AbpAutoMapperOptions>(options =>
         {
             options.AddMaps<Esh3arTechApplicationModule>();
+        });
+
+        // To add our custom feature value provider to the beginning of the providers list.
+        // Register the WRITER
+        Configure<FeatureManagementOptions>(options =>
+        {
+            options.Providers.Insert(0, typeof(PlanFeatureManagementProvider));
+        });
+
+        // To add our custom feature value provider.
+        // Register the READER
+        Configure<AbpFeatureOptions>(options =>
+        {
+            options.ValueProviders.Add<UserPlanFeatureValueProvider>();
         });
     }
 }
