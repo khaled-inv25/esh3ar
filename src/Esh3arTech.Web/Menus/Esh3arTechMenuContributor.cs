@@ -33,12 +33,12 @@ public class Esh3arTechMenuContributor : IMenuContributor
             )
         );
         
-        // Editions
+        // Plans
         context.Menu.AddItem(
             new ApplicationMenuItem(
                 Esh3arTechMenus.Edition,
-                l["Menu:Editions"],
-                "~/Editions",
+                l["Menu:Plans"],
+                "~/Plans",
                 icon: "fa-solid fa-bag-shopping",
                 order: 1
             )

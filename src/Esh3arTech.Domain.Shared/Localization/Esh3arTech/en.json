@@ -2,8 +2,21 @@
   "Culture": "en",
   "Texts": {
     "AppName": "Esh3arTech",
+    "Plans": "Plans",
     "Menu:Home": "Home",
-    "Menu:Editions": "Editions",
+    "Menu:Plans": "Plan",
+    "Action:Edit": "Edit",
+    "Action:Delete": "Delete",
+    "Clm:Actions": "Actions",
+    "Clm:DisplayName": "Name",
+    "Clm:ExpiringPlan": "Expiring plan",
+    "Clm:DailyPrice": "Daily price",
+    "Clm:WeeklyPrice": "Weekly price",
+    "Clm:MonthlayPrice": "Monthlay price",
+    "Clm:AnnualPrice": "Annual price",
+    "Clm:TrialDayCount": "Trial days",
+    "Clm:WaitingDayAfterExpire": "Allowed days after expire",
+    "Hdr:NewPlan": "Craete new plan",
     "LongWelcomeMessage": "Welcome to the application. This is a startup project based on the ABP framework. For more information visit",
     "Welcome": "Welcome"
   }

@@ -25,7 +25,8 @@ public static class Esh3arTechEfCoreEntityExtensionMappings
                         propertyBuilder.HasMaxLength(UserConsts.MaxPlanIdLength);
                     }
                 );
-            /* You can configure extra properties for the
+        });
+        /* You can configure extra properties for the
              * entities defined in the modules used by your application.
              *
              * This class can be used to map these extra properties to table fields in the database.
@@ -48,6 +49,5 @@ public static class Esh3arTechEfCoreEntityExtensionMappings
              * See the documentation for more:
              * https://docs.abp.io/en/abp/latest/Customizing-Application-Modules-Extending-Entities
              */
-        });
     }
 }

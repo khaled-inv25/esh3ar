@@ -1,4 +1,4 @@
-﻿namespace Esh3arTech.UserPlans
+﻿namespace Esh3arTech.UserPlans.Plans
 {
     public record UserPlanDto
     {
