@@ -1,17 +1,16 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using System;
-using System.Threading.Tasks;
-using Volo.Abp.Application.Dtos;
-using Volo.Abp.Identity;
-using Volo.Abp.Users;
+using System.Collections.Generic;
 using System.Linq;
-using Volo.Abp.Authorization;
-using Microsoft.AspNetCore.Authorization;
+using System.Threading.Tasks;
 using Volo.Abp;
+using Volo.Abp.Application.Dtos;
+using Volo.Abp.Authorization;
 using Volo.Abp.Data;
 using Volo.Abp.FeatureManagement;
-using System.Collections.Generic;
 using Volo.Abp.Features;
+using Volo.Abp.Identity;
+using Volo.Abp.Users;
 
 namespace Esh3arTech.UserPlans.Plans
 {
@@ -23,6 +22,7 @@ namespace Esh3arTech.UserPlans.Plans
         private readonly IdentityUserManager _identityUserManager;
         private readonly IFeatureManager _featureManager;
         private readonly IFeatureDefinitionManager _featureDefinitionManager;
+        private readonly UserPlanManager _userPlanManager;
 
         public PlanAppService(
             IUserPlanRepository planRepository,
@@ -30,7 +30,8 @@ namespace Esh3arTech.UserPlans.Plans
             UserManager<IdentityUser> userManager,
             IdentityUserManager identityUserManager,
             IFeatureManager featureManager,
-            IFeatureDefinitionManager featureDefinitionManager)
+            IFeatureDefinitionManager featureDefinitionManager,
+            UserPlanManager userPlanManager)
         {
             _planRepository = planRepository;
             _currentUser = currentUser;
@@ -38,15 +39,15 @@ namespace Esh3arTech.UserPlans.Plans
             _identityUserManager = identityUserManager;
             _featureManager = featureManager;
             _featureDefinitionManager = featureDefinitionManager;
+            _userPlanManager = userPlanManager;
         }
 
         public async Task<PagedResultDto<PlanInListDto>> GetAllPlansAsync(PlanListFilter input)
         {
-            // To make sure it's admin user and logged in.
-            var currentUser = await _userManager.FindByIdAsync(_currentUser.GetId().ToString());
-            if (currentUser is not null)
+            // To make sure it's authenticated admin user.
+            if (_currentUser.IsAuthenticated)
             {
-                if (!await _userManager.IsInRoleAsync(currentUser, "Admin"))
+                if (!_currentUser.IsInRole("admin"))
                 {
                     throw new AbpAuthorizationException("Only authenticated admin user can access plans.");
                 }
@@ -96,29 +97,29 @@ namespace Esh3arTech.UserPlans.Plans
 
         public async Task CreatePlanAsync(CreatePlanDto input)
         {
-            var plan = new UserPlan(GuidGenerator.Create(), input.Name, input.DisplayName);
+            var plan = await _userPlanManager.CreateUserPlan(
+                input.Name,
+                input.DisplayName, 
+                input.ExpiringPlanId, 
+                input.DailyPrice,
+                input.WeeklyPrice,
+                input.MonthlayPrice,
+                input.AnnualPrice,
+                input.TrialDayCount,
+                input.WaitingDayAfterExpire);
+
             await _planRepository.InsertAsync(plan);
 
-            /*
-            foreach (var feature in input.Features)
+            foreach (var planFeatureDto in input.Features)
             {
-                var featureName = feature.Key;
-                var featureValue = feature.Value;
-
+                var featureName = planFeatureDto.Name;
+                var featureValue = planFeatureDto.Value;
                 await _featureManager.SetAsync(
                     name: featureName,
                     value: featureValue,
                     providerName: "P",
                     providerKey: plan.Id.ToString());
             }
-            */
-
-            // we need to get all the features of a plan and inseted.
-            await _featureManager.SetAsync(
-                    name: "Esh3arTech.PdfReporting", 
-                    value: "true",
-                    providerName: "P",
-                    providerKey: plan.Id.ToString());
         }
 
         public Task<PlanDto> GetPlanByIdAsync(string planId)
@@ -160,6 +161,18 @@ namespace Esh3arTech.UserPlans.Plans
         public async Task<List<PlanFeatureDto>> GetDefaultFeaturesAsync()
         {
             return await GetFeaturesForPlanAsync(null);
+        }
+
+        public async Task GetEditionsForComboboxAsync()
+        {
+
+        }
+
+        public async Task<List<PlanLookupDto>> GetPlanLookupAsync()
+        {
+            var plans = await _planRepository.GetListAsync();
+
+            return ObjectMapper.Map<List<UserPlan>, List<PlanLookupDto>>(plans);
         }
     }
 }

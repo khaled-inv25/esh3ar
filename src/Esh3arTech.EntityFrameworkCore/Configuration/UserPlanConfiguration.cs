@@ -11,12 +11,30 @@ namespace Esh3arTech.Configuration
             builder.Property(up => up.Name).IsRequired();
             builder.Property(up => up.DisplayName).IsRequired();
             builder.Property(up => up.ExpiringPlanId).IsRequired(false);
-            builder.Property(up => up.DailyPrice).IsRequired(false);
-            builder.Property(up => up.WeeklyPrice).IsRequired(false);
-            builder.Property(up => up.MonthlayPrice).IsRequired(false);
-            builder.Property(up => up.AnnualPrice).IsRequired(false);
-            builder.Property(up => up.TrialDayCount).IsRequired(false);
-            builder.Property(up => up.WaitingDayAfterExpire).IsRequired(false);
+
+            builder.Property(up => up.DailyPrice)
+                .HasColumnType("decimal(18,4)")
+                .IsRequired(false);
+
+            builder.Property(up => up.WeeklyPrice)
+                .HasColumnType("decimal(18,4)")
+                .IsRequired(false);
+
+            builder.Property(up => up.MonthlayPrice)
+                .HasColumnType("decimal(18,4)")
+                .IsRequired(false);
+
+            builder.Property(up => up.AnnualPrice)
+                .HasColumnType("decimal(18,4)")
+                .IsRequired(false);
+
+            builder.Property(up => up.TrialDayCount)
+                .HasColumnType("decimal(18,4)")
+                .IsRequired(false);
+
+            builder.Property(up => up.WaitingDayAfterExpire)
+                .HasColumnType("decimal(18,4)")
+                .IsRequired(false);
         }
     }
 }

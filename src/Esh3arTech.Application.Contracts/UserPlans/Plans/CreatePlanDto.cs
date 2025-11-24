@@ -18,6 +18,7 @@ namespace Esh3arTech.UserPlans.Plans
         public Guid? ExpiringPlanId { get; set; }
 
         [AllowNull]
+        [Range(1, double.MaxValue)]
         public decimal? DailyPrice { get; set; }
 
         [AllowNull]

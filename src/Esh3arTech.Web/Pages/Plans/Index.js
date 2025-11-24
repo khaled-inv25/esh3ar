@@ -28,6 +28,12 @@
                                 //action: function (data) {
                                 //    editModal.open({ id: data.record.id });
                                 //}
+                            },
+                            {
+                                text: l("Action:AssignToUser"),
+                            },
+                            {
+                                text: l("Action:MoveUsersToPlan"),
                             }
                         ]
                     }

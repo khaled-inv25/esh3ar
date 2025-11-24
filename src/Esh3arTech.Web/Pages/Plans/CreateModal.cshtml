@@ -1,62 +1,4 @@
-﻿@* 
-@page
-@using Esh3arTech.Localization
-@using Microsoft.Extensions.Localization
-@using Volo.Abp.AspNetCore.Mvc.UI.Bootstrap.TagHelpers.Modal
-@using Volo.Abp.Validation.StringValues
-@model Esh3arTech.Web.Pages.Plans.CreatePlanModalModel
-@inject IStringLocalizer<Esh3arTechResource> L
-@{
-    Layout = null;
-}
-<abp-dynamic-form abp-model="Plan" asp-page="/Plans/CreateModal">
-    <abp-modal>
-        <abp-modal-header title="@L["Hdr:NewPlan"].Value"></abp-modal-header>
-        <abp-modal-body>
-            <abp-form-content />
-            <hr />
-            <h4>Features</h4>
-            @for (int i = 0; i < Model.Plan.Features.Count; i++)
-            {
-                <div class="mb-3">
-                    <input type="hidden" asp-for="Plan.Features[i].Name" />
-                    <input type="hidden" asp-for="Plan.Features[i].ValueType" />
-
-                    @if (Model.Plan.Features[i].ValueType is ToggleStringValueType)
-                    {
-                        // Render Checkbox
-                        // We need to handle string "true"/"false" conversion manually or use a helper
-                        // Simple approach: Use a checkbox, use JS or bind logic to set the string "true"/"false"
-
-                        var isChecked = Model.Plan.Features[i].Value?.ToLower() == "true";
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox"
-                                   name="Plan.Features[@i].Value"
-                                   value="true"
-                            @(isChecked ? "checked" : "")
-                                   id="feat_@i">
-                            <input type="hidden" name="Plan.Features[@i].Value" value="false" />
-
-                            <label class="form-check-label" for="feat_@i">
-                                @Model.Plan.Features[i].DisplayName
-                            </label>
-                        </div>
-                    }
-                    else if (Model.Plan.Features[i].ValueType is FreeTextStringValueType)
-                    {
-                        // Render Text Input (e.g. for MaxMessages)
-                        <label class="form-label">@Model.Plan.Features[i].DisplayName</label>
-                        <input type="text" class="form-control"
-                               asp-for="Plan.Features[i].Value" />
-                    }
-                </div>
-            }
-        </abp-modal-body>
-        <abp-modal-footer buttons="@(AbpModalButtons.Cancel|AbpModalButtons.Save)"></abp-modal-footer>
-    </abp-modal>
-</abp-dynamic-form>
-*@
-@page
+﻿@page
 @using Esh3arTech.Localization
 @using Microsoft.Extensions.Localization
 @using Volo.Abp.AspNetCore.Mvc.UI.Bootstrap.TagHelpers.Modal
@@ -82,7 +24,7 @@
                             <abp-input asp-for="Plan.DisplayName" />
                         </div>
                     </div>
-                    
+
                     <div class="row">
                         <div class="col-md-6">
                             <abp-input asp-for="Plan.DailyPrice" />
@@ -104,6 +46,12 @@
                         </div>
                         <div class="col-md-6">
                             <abp-input asp-for="Plan.WaitingDayAfterExpire" />
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12">
+                            <abp-select asp-for="Plan.ExpiringPlanId" asp-items="Model.PlanList" label="@L["ParentPlan"].Value" />
                         </div>
                     </div>
                 </abp-tab>

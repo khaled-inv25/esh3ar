@@ -9,5 +9,6 @@ public class Esh3arTechApplicationAutoMapperProfile : Profile
     public Esh3arTechApplicationAutoMapperProfile()
     {
         CreateMap<UserPlan, PlanInListDto>();
+        CreateMap<UserPlan, PlanLookupDto>();
     }
 }

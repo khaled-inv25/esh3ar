@@ -1,7 +1,9 @@
 using Esh3arTech.UserPlans.Plans;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
-using Volo.Abp.Features;
 
 namespace Esh3arTech.Web.Pages.Plans
 {
@@ -10,21 +12,25 @@ namespace Esh3arTech.Web.Pages.Plans
         [BindProperty]
         public CreatePlanDto Plan { get; set; }
 
-        private readonly IPlanAppService _planAppService;
-        private readonly IFeatureDefinitionManager _featureDefinitionManager;
+        public List<SelectListItem> PlanList { get; set; }
 
-        public CreatePlanModalModel(
-            IPlanAppService planAppService, 
-            IFeatureDefinitionManager featureDefinitionManager)
+        private readonly IPlanAppService _planAppService;
+        public CreatePlanModalModel(IPlanAppService planAppService)
         {
             _planAppService = planAppService;
-            _featureDefinitionManager = featureDefinitionManager;
         }
 
-        public async Task OnGet()
+        public async Task OnGetAsync()
         {
             Plan = new CreatePlanDto();
             Plan.Features = await _planAppService.GetDefaultFeaturesAsync();
+
+            // To load the dropdown list.
+            var planLookup = await _planAppService.GetPlanLookupAsync();
+
+            PlanList = planLookup.Select(p => new SelectListItem(p.DisplayName, p.Id.ToString())).ToList();
+
+            PlanList.Insert(0, new SelectListItem { Value = "", Text = L["SelectParentPlan"], Selected = true });
         }
 
         public async Task<IActionResult> OnPostAsync()
