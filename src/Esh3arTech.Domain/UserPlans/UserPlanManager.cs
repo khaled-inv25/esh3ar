@@ -26,15 +26,15 @@ namespace Esh3arTech.UserPlans
             int? trialDayCount,
             int? waitingDayAfterExpire)
         {
+            if (await _userPlanRepository.AnyAsync(up => up.Name.ToLower() == name))
+            {
+                throw new UserFriendlyException("Plan is already exists!");
+            }
+
             var createdUserPlan = new UserPlan(
                 GuidGenerator.Create(),
                 name,
                 displayName);
-           
-            if (await _userPlanRepository.AnyAsync(up => up.Name == name))
-            {
-                throw new UserFriendlyException("Plan is already exists!");
-            }
 
             createdUserPlan.SetExpiringPlanId(expiringPlanId);
             createdUserPlan.SetPriceInfo(dailyPrice, weeklyPrice, monthlayPrice, annualPrice);
@@ -43,5 +43,31 @@ namespace Esh3arTech.UserPlans
 
             return createdUserPlan;
         }
+        
+        public async Task<UserPlan> UpdateUserPlan(
+            Guid Id,
+            string name, 
+            string displayName,
+            Guid? expiringPlanId,
+            decimal? dailyPrice,
+            decimal? weeklyPrice,
+            decimal? monthlayPrice,
+            decimal? annualPrice,
+            int? trialDayCount,
+            int? waitingDayAfterExpire)
+        {
+            if (expiringPlanId.HasValue)
+            {
+                if (await _userPlanRepository.AnyAsync(up => up.ExpiringPlanId.Equals(expiringPlanId)))
+                {
+                    throw new BusinessException("Expire plan not exists!");
+                }
+            }
+
+
+            return null;
+        }
+
+
     }
 }

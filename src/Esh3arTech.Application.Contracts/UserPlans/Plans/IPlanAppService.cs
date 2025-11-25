@@ -19,5 +19,7 @@ namespace Esh3arTech.UserPlans.Plans
         Task<List<PlanFeatureDto>> GetDefaultFeaturesAsync();
 
         Task<List<PlanLookupDto>> GetPlanLookupAsync();
+
+        Task UpdateAsync(Guid Id, UpdatePlanDto input);
     }
 }

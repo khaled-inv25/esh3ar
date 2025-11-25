@@ -1,6 +1,5 @@
 using Esh3arTech.UserPlans.Plans;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
 using System.Collections.Generic;
@@ -52,8 +51,8 @@ namespace Esh3arTech.Web.Pages.Plans
         }
 
         public async Task<IActionResult> OnPostAsync() 
-        
-        { 
+        {
+            await _planAppService.UpdateAsync();
             return NoContent();
         }
     }

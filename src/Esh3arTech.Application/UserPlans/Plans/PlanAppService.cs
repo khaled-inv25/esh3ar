@@ -175,5 +175,13 @@ namespace Esh3arTech.UserPlans.Plans
 
             return ObjectMapper.Map<List<UserPlan>, List<PlanLookupDto>>(plans);
         }
+
+        public async Task UpdateAsync(Guid Id, UpdatePlanDto input)
+        {
+            var planTobeUpdated = await _planRepository.GetAsync(Id);
+
+            planTobeUpdated.Name = input.Name;
+            planTobeUpdated.DisplayName = input.DisplayName;
+        }
     }
 }

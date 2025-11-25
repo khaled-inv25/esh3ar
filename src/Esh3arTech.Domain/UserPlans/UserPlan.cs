@@ -32,7 +32,7 @@ namespace Esh3arTech.UserPlans
         public UserPlan(Guid id, string name, string displayName) 
             : base(id)
         {
-            Name = Check.NotNullOrEmpty(name, nameof(name));
+            Name = Check.NotNullOrEmpty(name, nameof(name)).ToLower();
             DisplayName = Check.NotNullOrEmpty(displayName, nameof(displayName));
         }
 
