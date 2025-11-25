@@ -122,9 +122,15 @@ namespace Esh3arTech.UserPlans.Plans
             }
         }
 
-        public Task<PlanDto> GetPlanByIdAsync(string planId)
+        public async Task<PlanDto> GetPlanByIdAsync(Guid planId)
         {
-            throw new NotImplementedException();
+            var plan = await _planRepository.GetAsync(planId);
+
+            var planToReturn = ObjectMapper.Map<UserPlan, PlanDto>(plan);
+
+            planToReturn.Features = await GetFeaturesForPlanAsync(planId);
+
+            return planToReturn;
         }
 
         public async Task<List<PlanFeatureDto>> GetFeaturesForPlanAsync(Guid? planId = null)
@@ -161,11 +167,6 @@ namespace Esh3arTech.UserPlans.Plans
         public async Task<List<PlanFeatureDto>> GetDefaultFeaturesAsync()
         {
             return await GetFeaturesForPlanAsync(null);
-        }
-
-        public async Task GetEditionsForComboboxAsync()
-        {
-
         }
 
         public async Task<List<PlanLookupDto>> GetPlanLookupAsync()

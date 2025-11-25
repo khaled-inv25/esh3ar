@@ -2,6 +2,7 @@
 
 namespace Esh3arTech.UserPlans.Plans
 {
+    // For group of plan features.
     public class PlanFeatureDto
     {
         public string Name { get; set; }

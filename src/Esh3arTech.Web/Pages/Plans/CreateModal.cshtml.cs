@@ -27,10 +27,10 @@ namespace Esh3arTech.Web.Pages.Plans
 
             // To load the dropdown list.
             var planLookup = await _planAppService.GetPlanLookupAsync();
-
             PlanList = planLookup.Select(p => new SelectListItem(p.DisplayName, p.Id.ToString())).ToList();
 
-            PlanList.Insert(0, new SelectListItem { Value = "", Text = L["SelectParentPlan"], Selected = true });
+            // To set default value in the drowpdown list.
+            PlanList.Insert(0, new SelectListItem { Value = "", Text = L["DdList:DefaultExpirePlan"], Selected = true });
         }
 
         public async Task<IActionResult> OnPostAsync()

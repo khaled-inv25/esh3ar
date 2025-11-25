@@ -3,102 +3,101 @@
 @using Microsoft.Extensions.Localization
 @using Volo.Abp.AspNetCore.Mvc.UI.Bootstrap.TagHelpers.Modal
 @using Volo.Abp.Validation.StringValues
-@model Esh3arTech.Web.Pages.Plans.CreatePlanModalModel
 @inject IStringLocalizer<Esh3arTechResource> L
+@model Esh3arTech.Web.Pages.Plans.EditModalModel
 @{
     Layout = null;
 }
 
-<form asp-page="/Plans/CreateModal">
+<form asp-page="/Plans/EditModal">
     <abp-modal size="Large">
         <abp-modal-header title="@L["Hdr:NewPlan"].Value"></abp-modal-header>
         <abp-modal-body>
-            
             <abp-tabs>
                 <abp-tab title="@L["Tab:Details"].Value">
                     <div class="row">
                         <div class="col-md-6">
-                            <abp-input asp-for="Plan.Name" />
+                            <abp-input asp-for="UpdatePlanDto.Name"/>
                         </div>
                         <div class="col-md-6">
-                            <abp-input asp-for="Plan.DisplayName" />
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <abp-input asp-for="Plan.DailyPrice" />
-                        </div>
-                        <div class="col-md-6">
-                            <abp-input asp-for="Plan.WeeklyPrice" />
-                        </div>
-                        <div class="col-md-6">
-                            <abp-input asp-for="Plan.MonthlayPrice" />
-                        </div>
-                        <div class="col-md-6">
-                            <abp-input asp-for="Plan.AnnualPrice" />
+                            <abp-input asp-for="UpdatePlanDto.DisplayName" />
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-6">
-                            <abp-input asp-for="Plan.TrialDayCount" />
+                            <abp-input asp-for="UpdatePlanDto.DailyPrice"/>
                         </div>
                         <div class="col-md-6">
-                            <abp-input asp-for="Plan.WaitingDayAfterExpire" />
+                            <abp-input asp-for="UpdatePlanDto.WeeklyPrice" />
+                        </div>
+                        <div class="col-md-6">
+                            <abp-input asp-for="UpdatePlanDto.MonthlayPrice" />
+                        </div>
+                        <div class="col-md-6">
+                            <abp-input asp-for="UpdatePlanDto.AnnualPrice" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <abp-input asp-for="UpdatePlanDto.TrialDayCount" />
+                        </div>
+                        <div class="col-md-6">
+                            <abp-input asp-for="UpdatePlanDto.WaitingDayAfterExpire" />
                         </div>
                     </div>
                     <div class="row">
                         <div class="col-md-12">
-                            <abp-select asp-for="Plan.ExpiringPlanId" asp-items="Model.PlanList" label="@L["ParentPlan"].Value" />
+                            <abp-select asp-for="UpdatePlanDto.ExpiringPlanId" asp-items="Model.PlanList" label="@L["ParentPlan"].Value" />
                         </div>
                     </div>
                 </abp-tab>
                 <abp-tab title="@L["Tab:Features"].Value">
-                    <p class="text-muted">@L["SelectFeaturesForPlan"]</p>
-                    @if (Model.Plan.Features != null)
+                    <p class="text-muted">@L["UpdateFeaturesForPlan"]</p>
+                    @if (Model.UpdatePlanDto.Features != null)
                     {
-                        for (int i = 0; i < Model.Plan.Features.Count; i++)
+                        for (int i = 0; i < Model.UpdatePlanDto.Features.Count; i++)
                         {
                             <div class="mb-3 border-bottom pb-2">
-                                <input type="hidden" asp-for="Plan.Features[i].Name" />
-                                
+                                <input type="hidden" asp-for="UpdatePlanDto.Features[i].Name" />
+
                                 @* CASE 1: Checkbox (Toggle) *@
-                                @if (Model.Plan.Features[i].ValueType is ToggleStringValueType)
+                                @if (Model.UpdatePlanDto.Features[i].ValueType is ToggleStringValueType)
                                 {
                                     // Logic: We need to send "true" or "false" string to the backend.
                                     // We use a hidden input for the actual value binding.
                                     // We use a checkbox for the UI interaction.
-                                    
-                                    var isChecked = Model.Plan.Features[i].Value?.ToLower() == "true";
-                                    
+
+                                    var isChecked = Model.UpdatePlanDto.Features[i].Value?.ToLower() == "true";
+
                                     <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" 
-                                               id="feature_@i" 
-                                               @(isChecked ? "checked" : "")
+                                        <input class="form-check-input" type="checkbox"
+                                               id="feature_@i"
+                                        @(isChecked ? "checked" : "")
                                                onchange="document.getElementById('val_@i').value = this.checked ? 'true' : 'false'">
-                                        
+
                                         <label class="form-check-label fw-bold" for="feature_@i">
-                                            @Model.Plan.Features[i].DisplayName
+                                            @Model.UpdatePlanDto.Features[i].DisplayName
                                         </label>
-                                        
-                                        <input type="hidden" id="val_@i" 
-                                               name="Plan.Features[@i].Value" 
+
+                                        <input type="hidden" id="val_@i"
+                                               name="UpdatePlanDto.Features[@i].Value"
                                                value="@(isChecked ? "true" : "false")" />
-                                               
+
                                         <div class="form-text text-muted small">
-                                            @Model.Plan.Features[i].Description
+                                            @Model.UpdatePlanDto.Features[i].Description
                                         </div>
                                     </div>
                                 }
                                 @* CASE 2: Text Input (Numbers/Text) *@
                                 else
                                 {
-                                    <label class="form-label fw-bold">@Model.Plan.Features[i].DisplayName</label>
-                                    <input type="text" class="form-control" 
-                                           asp-for="Plan.Features[i].Value" />
-                                           
+                                    <label class="form-label fw-bold">@Model.UpdatePlanDto.Features[i].DisplayName</label>
+                                    <input type="text" class="form-control"
+                                           asp-for="UpdatePlanDto.Features[i].Value" />
+
                                     <div class="form-text text-muted small">
-                                        @Model.Plan.Features[i].Description 
-                                        (@L["Default"]: @Model.Plan.Features[i].Value)
+                                        @Model.UpdatePlanDto.Features[i].Description
+                                        (@L["Default"]: @Model.UpdatePlanDto.Features[i].Value)
                                     </div>
                                 }
                             </div>
@@ -106,9 +105,7 @@
                     }
                 </abp-tab>
             </abp-tabs>
-
         </abp-modal-body>
         <abp-modal-footer buttons="@(AbpModalButtons.Cancel|AbpModalButtons.Save)"></abp-modal-footer>
     </abp-modal>
 </form>
-

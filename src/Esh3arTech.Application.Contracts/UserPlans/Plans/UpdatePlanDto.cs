@@ -1,6 +1,6 @@
 ﻿namespace Esh3arTech.UserPlans.Plans
 {
-    public record UpdatePlanDto : CreatePlanDto
+    public class UpdatePlanDto : BasePlanDto
     {
     }
 }

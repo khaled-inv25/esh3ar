@@ -1,7 +1,8 @@
 ﻿$(function () {
     var l = abp.localization.getResource('Esh3arTech');
 
-    var editModal = new abp.ModalManager(abp.appPath + 'Plans/CreateModal');
+    var createModal = new abp.ModalManager(abp.appPath + 'Plans/CreateModal');
+    var editModal = new abp.ModalManager(abp.appPath + 'Plans/EditModal');
 
     var dataTable = $('#PlanTable').DataTable(
         abp.libs.datatables.normalizeConfiguration({
@@ -19,7 +20,6 @@
                             {
                                 text: l("Action:Edit"),
                                 action: function (data) {
-                                    console.log(data.record.id);
                                     editModal.open({ id: data.record.id });
                                 }
                             },
@@ -73,8 +73,6 @@
             ]
         })
     );
-
-    var createModal = new abp.ModalManager(abp.appPath + 'Plans/CreateModal');
 
     createModal.onResult(function () {
         dataTable.ajax.reload();

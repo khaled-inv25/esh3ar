@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Volo.Abp.Application.Dtos;
 
@@ -9,7 +10,7 @@ namespace Esh3arTech.UserPlans.Plans
         //Task<PlanDto> GetCurrentUserPlanAsync(); // Move to (IUserPlanAppService)
         Task<PagedResultDto<PlanInListDto>> GetAllPlansAsync(PlanListFilter input);
 
-        Task<PlanDto> GetPlanByIdAsync(string planId);
+        Task<PlanDto> GetPlanByIdAsync(Guid planId);
 
         Task AssginPlanToUserAsync(AssignPlanToUserDto input);
 

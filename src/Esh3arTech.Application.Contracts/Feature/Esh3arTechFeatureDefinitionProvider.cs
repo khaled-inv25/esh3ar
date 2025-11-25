@@ -34,7 +34,6 @@ namespace Esh3arTech.Feature
                 displayName: LocalizableString.Create<Esh3arTechResource>("MaxMessages"),
                 valueType: new FreeTextStringValueType(new NumericValueValidator())
                 );
-
         }
     }
 }
