@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Esh3arTech.UserPlans.Plans
+namespace Esh3arTech.Plans
 {
     public class UpdatePlanDto : BasePlanDto
     {

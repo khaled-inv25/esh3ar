@@ -1,6 +1,5 @@
 using AutoMapper;
-using Esh3arTech.UserPlans;
-using Esh3arTech.UserPlans.Plans;
+using Esh3arTech.Plans;
 
 namespace Esh3arTech;
 

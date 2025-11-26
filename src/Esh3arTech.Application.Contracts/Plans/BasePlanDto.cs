@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System;
 
-namespace Esh3arTech.UserPlans.Plans
+namespace Esh3arTech.Plans
 {
     public class BasePlanDto
     {

@@ -1,9 +1,9 @@
-using Esh3arTech.Configuration;
-using Esh3arTech.Configuration.MobileUserConfiguration;
-using Esh3arTech.Configuration.RegistrationConfiguration;
+using Esh3arTech.EntityFrameworkCore.MobileUsers;
+using Esh3arTech.EntityFrameworkCore.Plans;
+using Esh3arTech.EntityFrameworkCore.Registrations;
 using Esh3arTech.MobileUsers;
+using Esh3arTech.Plans;
 using Esh3arTech.Registretions;
-using Esh3arTech.UserPlans;
 using Microsoft.EntityFrameworkCore;
 using Volo.Abp.AuditLogging.EntityFrameworkCore;
 using Volo.Abp.BackgroundJobs.EntityFrameworkCore;

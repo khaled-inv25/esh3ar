@@ -1,8 +1,8 @@
-﻿using Esh3arTech.UserPlans;
+﻿using Esh3arTech.Plans;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Esh3arTech.Configuration
+namespace Esh3arTech.EntityFrameworkCore.Plans
 {
     public class UserPlanConfiguration : IEntityTypeConfiguration<UserPlan>
     {

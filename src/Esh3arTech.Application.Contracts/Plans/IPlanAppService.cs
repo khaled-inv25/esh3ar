@@ -3,16 +3,15 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Volo.Abp.Application.Dtos;
 
-namespace Esh3arTech.UserPlans.Plans
+namespace Esh3arTech.Plans
 {
     public interface IPlanAppService
     {
-        //Task<PlanDto> GetCurrentUserPlanAsync(); // Move to (IUserPlanAppService)
+        Task<PlanDto> GetUserPlanInfoAsync(Guid userId);
+
         Task<PagedResultDto<PlanInListDto>> GetAllPlansAsync(PlanListFilter input);
 
         Task<PlanDto> GetPlanByIdAsync(Guid planId);
-
-        Task AssginPlanToUserAsync(AssignPlanToUserDto input);
 
         Task CreatePlanAsync(CreatePlanDto input);
 
@@ -21,5 +20,17 @@ namespace Esh3arTech.UserPlans.Plans
         Task<List<PlanLookupDto>> GetPlanLookupAsync();
 
         Task UpdateAsync(Guid Id, UpdatePlanDto input);
+
+        Task AssignAfallback(ExpireToPlanDto input);
+
+        Task<int> GetAssignedUsersCountForPlanAsync(Guid planId);
+
+        Task DeleteAsync(Guid planId);
+
+        Task<int> GetLinkedUsersCountToPlan(Guid planId);
+
+        Task<int> GetLinkedUsersCountWithPlan();
+
+        Task MoveUsersToPlan(Guid planId);
     }
 }

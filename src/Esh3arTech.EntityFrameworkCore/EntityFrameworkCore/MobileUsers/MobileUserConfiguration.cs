@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Esh3arTech.Configuration.MobileUserConfiguration
+namespace Esh3arTech.EntityFrameworkCore.MobileUsers
 {
     public class MobileUserConfiguration : IEntityTypeConfiguration<MobileUser>
     {

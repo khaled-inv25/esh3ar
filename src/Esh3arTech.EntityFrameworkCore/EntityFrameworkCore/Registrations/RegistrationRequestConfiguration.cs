@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace Esh3arTech.Configuration.RegistrationConfiguration
+namespace Esh3arTech.EntityFrameworkCore.Registrations
 {
     public class RegistrationRequestConfiguration : IEntityTypeConfiguration<RegistretionRequest>
     {

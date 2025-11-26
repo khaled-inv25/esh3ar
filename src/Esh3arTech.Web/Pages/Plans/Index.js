@@ -11,7 +11,7 @@
             order: [[1, "asc"]],
             searching: false,
             scrollX: true,
-            ajax: abp.libs.datatables.createAjax(esh3arTech.userPlans.plans.plan.getAllPlans),
+            ajax: abp.libs.datatables.createAjax(esh3arTech.plans.plan.getAllPlans),
             columnDefs: [
                 {
                     title: l('Clm:Actions'),
@@ -20,20 +20,38 @@
                             {
                                 text: l("Action:Edit"),
                                 action: function (data) {
+                                    console.log(data.record.id)
                                     editModal.open({ id: data.record.id });
                                 }
                             },
                             {
                                 text: l("Action:Delete"),
-                                //action: function (data) {
-                                //    editModal.open({ id: data.record.id });
-                                //}
+                                confirmMessage: function (data) {
+                                    return l('PlanDeletionConfirmationMessage', data.record.displayName);
+                                },
+                                action: function (data) {
+                                    esh3arTech.plans.plan.delete(data.record.id)
+                                        .then(function () {
+                                            abp.notify.info(l('SuccessfullyDeleted'));
+                                            dataTable.ajax.reload();
+                                        })
+                                }
                             },
                             {
                                 text: l("Action:AssignToUser"),
                             },
                             {
                                 text: l("Action:MoveUsersToPlan"),
+                                confirmMessage: function (data) {
+                                    return l('PlanMoveUsersConfirmationMessage', data.record.displayName);
+                                },
+                                action: function (data) {
+                                    esh3arTech.plans.plan.moveUsersToPlan(data.record.id)
+                                        .then(function () {
+                                            abp.notify.info(l('UsersMovedSuccessfully'));
+                                            dataTable.ajax.reload();
+                                        })
+                                }
                             }
                         ]
                     }
@@ -75,6 +93,10 @@
     );
 
     createModal.onResult(function () {
+        dataTable.ajax.reload();
+    });
+
+    editModal.onResult(function () {
         dataTable.ajax.reload();
     });
 

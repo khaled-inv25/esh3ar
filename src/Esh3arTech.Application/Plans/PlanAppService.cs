@@ -6,13 +6,13 @@ using System.Threading.Tasks;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Authorization;
-using Volo.Abp.Data;
+using Volo.Abp.Domain.Repositories;
 using Volo.Abp.FeatureManagement;
 using Volo.Abp.Features;
 using Volo.Abp.Identity;
 using Volo.Abp.Users;
 
-namespace Esh3arTech.UserPlans.Plans
+namespace Esh3arTech.Plans
 {
     public class PlanAppService : Esh3arTechAppService, IPlanAppService
     {
@@ -23,6 +23,7 @@ namespace Esh3arTech.UserPlans.Plans
         private readonly IFeatureManager _featureManager;
         private readonly IFeatureDefinitionManager _featureDefinitionManager;
         private readonly UserPlanManager _userPlanManager;
+        private readonly IUserPlanRepository _userPlanRepository;
 
         public PlanAppService(
             IUserPlanRepository planRepository,
@@ -31,7 +32,8 @@ namespace Esh3arTech.UserPlans.Plans
             IdentityUserManager identityUserManager,
             IFeatureManager featureManager,
             IFeatureDefinitionManager featureDefinitionManager,
-            UserPlanManager userPlanManager)
+            UserPlanManager userPlanManager,
+            IUserPlanRepository userPlanRepository)
         {
             _planRepository = planRepository;
             _currentUser = currentUser;
@@ -40,6 +42,7 @@ namespace Esh3arTech.UserPlans.Plans
             _featureManager = featureManager;
             _featureDefinitionManager = featureDefinitionManager;
             _userPlanManager = userPlanManager;
+            _userPlanRepository = userPlanRepository;
         }
 
         public async Task<PagedResultDto<PlanInListDto>> GetAllPlansAsync(PlanListFilter input)
@@ -80,19 +83,6 @@ namespace Esh3arTech.UserPlans.Plans
             var items = await AsyncExecuter.ToListAsync(query);
 
             return new PagedResultDto<PlanInListDto>(count, items);
-        }
-
-        public async Task AssginPlanToUserAsync(AssignPlanToUserDto input)
-        {
-            // Use GetAsync to make sure plan is exists.
-            var plan = await _planRepository.GetAsync(p => p.Id == input.PlanId);
-
-            var user = await _identityUserManager.GetByIdAsync(input.UserId) 
-                ?? throw new UserFriendlyException("No user");
-
-            user.SetProperty("PlanId", input.PlanId.ToString());
-
-            await _userManager.UpdateAsync(user);
         }
 
         public async Task CreatePlanAsync(CreatePlanDto input)
@@ -177,11 +167,96 @@ namespace Esh3arTech.UserPlans.Plans
         }
 
         public async Task UpdateAsync(Guid Id, UpdatePlanDto input)
+        
         {
-            var planTobeUpdated = await _planRepository.GetAsync(Id);
+            var planTobeUpdated = await _userPlanManager.UpdateUserPlanAsync(Id, input.Name, input.ExpiringPlanId);
 
-            planTobeUpdated.Name = input.Name;
+            if (input.ExpiringPlanId.HasValue)
+            {
+                if (!await _userPlanRepository.AnyAsync(up => up.Id.Equals(input.ExpiringPlanId)) && !planTobeUpdated.Id.Equals(input.ExpiringPlanId.Value))
+                {
+                    throw new BusinessException("Expire plan not exists!");
+                }
+            }
+
+            planTobeUpdated.SetExpiringPlanId(input.ExpiringPlanId);
+
             planTobeUpdated.DisplayName = input.DisplayName;
+
+            planTobeUpdated.SetPriceInfo(
+                    input.DailyPrice,
+                    input.WeeklyPrice,
+                    input.MonthlayPrice,
+                    input.AnnualPrice);
+
+            if (input.TrialDayCount.HasValue)
+            {
+                planTobeUpdated.SetTrialDayCount(input.TrialDayCount);
+            }
+
+            if (input.WaitingDayAfterExpire.HasValue)
+            {
+                planTobeUpdated.SetWaitingDayAfterExpire(input.WaitingDayAfterExpire);
+            }
+
+            foreach (var planFeatureDto in input.Features)
+            {
+                await _featureManager.SetAsync(planFeatureDto.Name, planFeatureDto.Value, "P", Id.ToString());
+            }
+
+            await _planRepository.UpdateAsync(planTobeUpdated);
+        }
+
+        public Task AssignAfallback(ExpireToPlanDto input)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<int> GetAssignedUsersCountForPlanAsync(Guid planId)
+        {
+            if (!await _userPlanRepository.AnyAsync(p => p.Id.Equals(planId)))
+            {
+                throw new UserFriendlyException("Plan not exists!");
+            }
+
+            return await _planRepository.GetLinkedUsersCountToPlan(planId);
+        }
+
+        public Task<PlanDto> GetUserPlanInfoAsync(Guid userId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task DeleteAsync(Guid planId)
+        {
+            var planToDelete = await _planRepository.GetAsync(planId);
+
+            if (!await _userPlanManager.CanDeletePlanAsync(planId))
+            {
+                throw new BusinessException("There are customers subscriped to this plan. please assign different plan to then then delete this plan.");
+            }
+
+            await _planRepository.DeleteAsync(planToDelete);
+        }
+
+        public Task<int> GetLinkedUsersCountToPlan(Guid planId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<int> GetLinkedUsersCountWithPlan()
+        {
+            return await _planRepository.GetLinkedUsersCountWithPlan();
+        }
+
+        public async Task MoveUsersToPlan(Guid planId)
+        {
+            if (await GetLinkedUsersCountWithPlan() == 0)
+            {
+                throw new UserFriendlyException("No assigned users to move!");
+            }
+
+            await _planRepository.MoveUsersToPlan(planId);
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿using Volo.Abp.Validation.StringValues;
 
-namespace Esh3arTech.UserPlans.Plans
+namespace Esh3arTech.Plans
 {
     // For group of plan features.
     public class PlanFeatureDto

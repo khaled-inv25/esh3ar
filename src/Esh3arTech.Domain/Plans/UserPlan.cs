@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using Volo.Abp;
 using Volo.Abp.Domain.Entities.Auditing;
 
-namespace Esh3arTech.UserPlans
+namespace Esh3arTech.Plans
 {
     [Table(Esh3arTechConsts.TblUserPlan)]
     public class UserPlan : FullAuditedEntity<Guid>
@@ -36,11 +36,12 @@ namespace Esh3arTech.UserPlans
             DisplayName = Check.NotNullOrEmpty(displayName, nameof(displayName));
         }
 
-        internal UserPlan SetExpiringPlanId(Guid? expiringPlanId)
+        public UserPlan SetExpiringPlanId(Guid? expiringPlanId)
         {
-            if (!ExpiringPlanId.HasValue)
+            if (!expiringPlanId.HasValue)
             {
                 ExpiringPlanId = null;
+                return this;
             }
 
             ExpiringPlanId = expiringPlanId;
@@ -78,7 +79,7 @@ namespace Esh3arTech.UserPlans
             return this;
         }
 
-        internal UserPlan SetTrialDayCount(int? trialDay)
+        public UserPlan SetTrialDayCount(int? trialDay)
         {
             if (!trialDay.HasValue || IsFree)
             {
@@ -90,7 +91,7 @@ namespace Esh3arTech.UserPlans
             return this;
         }
 
-        internal UserPlan SetWaitingDayAfterExpire(int? waitingDayAfterExpire)
+        public UserPlan SetWaitingDayAfterExpire(int? waitingDayAfterExpire)
         {
             if (!waitingDayAfterExpire.HasValue || IsFree)
             {

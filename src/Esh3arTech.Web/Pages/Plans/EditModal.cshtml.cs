@@ -1,4 +1,4 @@
-using Esh3arTech.UserPlans.Plans;
+using Esh3arTech.Plans;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System;
@@ -52,7 +52,7 @@ namespace Esh3arTech.Web.Pages.Plans
 
         public async Task<IActionResult> OnPostAsync() 
         {
-            await _planAppService.UpdateAsync();
+            await _planAppService.UpdateAsync(Id, UpdatePlanDto);
             return NoContent();
         }
     }

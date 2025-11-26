@@ -1,4 +1,4 @@
-using Esh3arTech.UserPlans.Plans;
+using Esh3arTech.Plans;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Collections.Generic;
