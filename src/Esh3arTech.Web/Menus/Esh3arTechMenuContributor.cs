@@ -32,17 +32,28 @@ public class Esh3arTechMenuContributor : IMenuContributor
                 order: 1
             )
         );
-        
+
         // Plans
         context.Menu.AddItem(
             new ApplicationMenuItem(
-                Esh3arTechMenus.Edition,
+                Esh3arTechMenus.Plans,
                 l["Menu:Plans"],
                 "~/Plans",
                 icon: "fa-solid fa-bag-shopping",
                 order: 1
             )
         );
+
+        // Subscriptions
+        context.Menu.AddItem(
+                new ApplicationMenuItem(
+                    Esh3arTechMenus.Subscriptions,
+                    l["Menu:Subscriptions"],
+                    "~/Plans/Subscriptions",
+                    icon: "fa-solid fa-id-badge",
+                    order: 1
+                )
+            );
 
 
         //Administration
@@ -51,7 +62,7 @@ public class Esh3arTechMenuContributor : IMenuContributor
 
         //Administration->Identity
         administration.SetSubItemOrder(IdentityMenuNames.GroupName, 1);
-    
+
         if (MultiTenancyConsts.IsEnabled)
         {
             administration.SetSubItemOrder(TenantManagementMenuNames.GroupName, 1);
@@ -60,12 +71,12 @@ public class Esh3arTechMenuContributor : IMenuContributor
         {
             administration.TryRemoveMenuItem(TenantManagementMenuNames.GroupName);
         }
-        
+
         administration.SetSubItemOrder(SettingManagementMenuNames.GroupName, 3);
 
         //Administration->Settings
         administration.SetSubItemOrder(SettingManagementMenuNames.GroupName, 7);
-        
+
         return Task.CompletedTask;
     }
 }

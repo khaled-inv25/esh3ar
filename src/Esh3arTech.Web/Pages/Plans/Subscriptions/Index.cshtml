@@ -1,0 +1,22 @@
+﻿@page
+@using Esh3arTech.Localization
+@model Esh3arTech.Web.Pages.Plans.Subscriptions.IndexModel
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<Esh3arTechResource> L
+@section scripts
+{
+    <abp-script src="/Pages/Plans/Subscriptions/Index.js" />
+}
+
+<abp-card>
+    <abp-card-header>
+        <abp-row>
+            <abp-column size-md="_6">
+                <h2>@L["Subscriptions"]</h2>
+            </abp-column>
+        </abp-row>
+    </abp-card-header>
+    <abp-card-body>
+        <abp-table striped-rows="true" id="SubscriptionTable"></abp-table>
+    </abp-card-body>
+</abp-card>

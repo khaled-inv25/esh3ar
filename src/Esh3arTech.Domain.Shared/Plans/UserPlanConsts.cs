@@ -1,4 +1,4 @@
-﻿namespace Esh3arTech.UserPlans
+﻿namespace Esh3arTech.Plans
 {
     public static class UserPlanConsts
     {

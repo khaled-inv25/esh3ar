@@ -3,6 +3,7 @@
 
     var createModal = new abp.ModalManager(abp.appPath + 'Plans/CreateModal');
     var editModal = new abp.ModalManager(abp.appPath + 'Plans/EditModal');
+    var assignToUserModal = new abp.ModalManager(abp.appPath + 'Plans/Subscriptions/AssignToUser');
 
     var dataTable = $('#PlanTable').DataTable(
         abp.libs.datatables.normalizeConfiguration({
@@ -20,7 +21,6 @@
                             {
                                 text: l("Action:Edit"),
                                 action: function (data) {
-                                    console.log(data.record.id)
                                     editModal.open({ id: data.record.id });
                                 }
                             },
@@ -39,6 +39,10 @@
                             },
                             {
                                 text: l("Action:AssignToUser"),
+                                action: function (data) {
+                                    console.log(data.record.id);
+                                    assignToUserModal.open({ planId: data.record.id });
+                                }
                             },
                             {
                                 text: l("Action:MoveUsersToPlan"),

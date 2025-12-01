@@ -10,7 +10,7 @@ namespace Esh3arTech.Web.Pages.Plans
 {
     public class EditModalModel : Esh3arTechPageModel
     {
-        #region props
+        #region Fields
 
         [HiddenInput]
         [BindProperty(SupportsGet = true)]

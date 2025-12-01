@@ -19,6 +19,7 @@
     "Clm:TrialDayCount": "Trial days",
     "Clm:WaitingDayAfterExpire": "Allowed days after expire",
     "Hdr:NewPlan": "Craete new plan",
+    "Hdr:AssignToUser": "Configure subscription and assign it to user.",
     "DdList:DefaultExpirePlan": "Select expire plan",
     "DdList:Null": "Select nothing",
     "Tab:Details": "Details",
