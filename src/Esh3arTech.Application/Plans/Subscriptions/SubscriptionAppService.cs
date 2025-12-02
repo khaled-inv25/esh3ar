@@ -1,9 +1,6 @@
-﻿using Esh3arTech.Plans;
-using System;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Volo.Abp.Application.Dtos;
-using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Identity;
 
 namespace Esh3arTech.Plans.Subscriptions
@@ -11,13 +8,13 @@ namespace Esh3arTech.Plans.Subscriptions
     public class SubscriptionAppService : Esh3arTechAppService, ISubscriptionAppService
     {
 
-        private readonly IRepository<Subscription, Guid> _subscriptionRepository;
+        private readonly ISubscriptionRepository _subscriptionRepository;
         private readonly IIdentityUserRepository _identityUserRepository;
         private readonly IUserPlanRepository _userPlanRepository;
         private readonly SubscriptionManagere _subscriptionManagere;
 
         public SubscriptionAppService(
-            IRepository<Subscription, Guid> subscriptionRepository,
+            ISubscriptionRepository subscriptionRepository,
             IIdentityUserRepository identityUserRepository,
             IUserPlanRepository userPlanRepository,
             SubscriptionManagere subscriptionManagere)
@@ -51,8 +48,10 @@ namespace Esh3arTech.Plans.Subscriptions
 
         public async Task<PagedResultDto<SubscriptionInListDto>> GetAllSubscriptionsAsync()
         {
+            var subscriptionsWithDetails = await _subscriptionRepository.GetAllSubsccriptionsWithDetailsAsync();
 
-            return null;
+            return new PagedResultDto<SubscriptionInListDto>(subscriptionsWithDetails.Count, 
+                ObjectMapper.Map<List<SubscriptionWithDetails>, List<SubscriptionInListDto>>(subscriptionsWithDetails));
         }
     }
 }

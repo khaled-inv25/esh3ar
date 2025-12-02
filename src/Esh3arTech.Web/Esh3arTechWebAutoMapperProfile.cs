@@ -10,6 +10,7 @@ public class Esh3arTechWebAutoMapperProfile : Profile
     public Esh3arTechWebAutoMapperProfile()
     {
         CreateMap<PlanDto, UpdatePlanDto>().ReverseMap();
+        CreateMap<PlanDto, PlanViewModel>().ReverseMap();
         CreateMap<SubscriptionToUserViewModel, AssignSubscriptionToUserDto>().ReverseMap();
     }
 }

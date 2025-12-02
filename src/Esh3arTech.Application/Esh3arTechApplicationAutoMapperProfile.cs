@@ -1,5 +1,6 @@
 using AutoMapper;
 using Esh3arTech.Plans;
+using Esh3arTech.Plans.Subscriptions;
 using Esh3arTech.Users;
 using Volo.Abp.Identity;
 
@@ -14,5 +15,7 @@ public class Esh3arTechApplicationAutoMapperProfile : Profile
         CreateMap<UserPlan, PlanDto>();
 
         CreateMap<IdentityUser, UserLookupDto>();
+
+        CreateMap<SubscriptionWithDetails, SubscriptionInListDto>();
     }
 }
