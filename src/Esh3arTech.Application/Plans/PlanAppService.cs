@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,7 +8,6 @@ using Volo.Abp.Authorization;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.FeatureManagement;
 using Volo.Abp.Features;
-using Volo.Abp.Identity;
 using Volo.Abp.Users;
 
 namespace Esh3arTech.Plans
@@ -18,8 +16,6 @@ namespace Esh3arTech.Plans
     {
         private readonly IUserPlanRepository _planRepository;
         private readonly ICurrentUser _currentUser;
-        private readonly UserManager<IdentityUser> _userManager;
-        private readonly IdentityUserManager _identityUserManager;
         private readonly IFeatureManager _featureManager;
         private readonly IFeatureDefinitionManager _featureDefinitionManager;
         private readonly UserPlanManager _userPlanManager;
@@ -28,8 +24,6 @@ namespace Esh3arTech.Plans
         public PlanAppService(
             IUserPlanRepository planRepository,
             ICurrentUser currentUser,
-            UserManager<IdentityUser> userManager,
-            IdentityUserManager identityUserManager,
             IFeatureManager featureManager,
             IFeatureDefinitionManager featureDefinitionManager,
             UserPlanManager userPlanManager,
@@ -37,8 +31,6 @@ namespace Esh3arTech.Plans
         {
             _planRepository = planRepository;
             _currentUser = currentUser;
-            _userManager = userManager;
-            _identityUserManager = identityUserManager;
             _featureManager = featureManager;
             _featureDefinitionManager = featureDefinitionManager;
             _userPlanManager = userPlanManager;

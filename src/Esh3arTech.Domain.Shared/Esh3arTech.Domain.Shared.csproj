@@ -38,4 +38,6 @@
     <Folder Include="Otp\" />
   </ItemGroup>
 
+  <ProjectExtensions><VisualStudio><UserProperties localization_4esh3artech_4en_1json__JsonSchema="https://api.bitbucket.org/schemas/pipelines-configuration" /></VisualStudio></ProjectExtensions>
+
 </Project>

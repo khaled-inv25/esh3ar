@@ -70,9 +70,39 @@ namespace Esh3arTech.EntityFrameworkCore.Plans
             await dbContext.SaveChangesAsync();
         }
 
-        public override async Task<IQueryable<UserPlan>> WithDetailsAsync()
+        public async Task AssginPlanToUser(Guid planId, Guid userId)
         {
-            return await GetQueryableAsync();
+            var dbContext = await GetDbContextAsync();
+            var dbSetIdentityUser = dbContext.Set<IdentityUser>();
+
+            var user = await dbSetIdentityUser.FirstAsync(u => u.Id == userId);
+            user.SetProperty("PlanId", planId.ToString());
+            dbSetIdentityUser.Update(user);
+
+            await dbContext.SaveChangesAsync();
         }
+
+        public async Task<bool> IsPlanFreeById(Guid planId)
+        {
+            var planQuery = from up in await GetQueryableAsync()
+                            where up.Id == planId
+                            select new
+                            {
+                                IsFree = (up.DailyPrice ?? 0) == 0 &&
+                                         (up.WeeklyPrice ?? 0) == 0 &&
+                                         (up.MonthlayPrice ?? 0) == 0 &&
+                                         (up.AnnualPrice ?? 0) == 0
+                            };
+
+            var queryResult = await AsyncExecuter.FirstOrDefaultAsync(planQuery);
+
+            return queryResult?.IsFree ?? false;
+        }
+
+        //public override async Task<IQueryable<UserPlan>> WithDetailsAsync()
+        //{
+        //    return await GetQueryableAsync();
+        //}
+
     }
 }

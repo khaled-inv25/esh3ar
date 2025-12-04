@@ -42,6 +42,10 @@
                                 action: function (data) {
                                     console.log(data.record.id);
                                     assignToUserModal.open({ planId: data.record.id });
+                                    assignToUserModal.onOpen(function () {
+                                        $('#Price').prop('disabled', true);
+                                    });
+
                                 }
                             },
                             {

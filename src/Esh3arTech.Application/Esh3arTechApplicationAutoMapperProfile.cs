@@ -17,5 +17,6 @@ public class Esh3arTechApplicationAutoMapperProfile : Profile
         CreateMap<IdentityUser, UserLookupDto>();
 
         CreateMap<SubscriptionWithDetails, SubscriptionInListDto>();
+        CreateMap<Subscription, SubscriptionDto>();
     }
 }

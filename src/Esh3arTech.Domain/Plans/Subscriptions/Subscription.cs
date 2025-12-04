@@ -57,7 +57,6 @@ namespace Esh3arTech.Plans.Subscriptions
             return this;
         }
 
-
         public Subscription SetInitialPeriod()
         {
             StartDate = DateTime.UtcNow;
@@ -76,7 +75,7 @@ namespace Esh3arTech.Plans.Subscriptions
 
         public Subscription SetPrice(decimal price)
         {
-            Price = Check.Range(price, nameof(price), 0.000001m, decimal.MaxValue);
+            Price = Check.Range(price, nameof(price), 0.00m, decimal.MaxValue);
             return this;
         }
 
@@ -112,6 +111,11 @@ namespace Esh3arTech.Plans.Subscriptions
             }
 
             return this;
+        }
+
+        public bool HasExpired()
+        {
+            return EndDate <= DateTime.UtcNow;
         }
     }
 }

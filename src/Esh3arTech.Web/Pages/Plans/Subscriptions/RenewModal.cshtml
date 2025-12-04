@@ -1,0 +1,52 @@
+﻿@page
+@using Esh3arTech.Localization
+@using Microsoft.Extensions.Localization
+@using Volo.Abp.AspNetCore.Mvc.UI.Bootstrap.TagHelpers.Modal
+@using Volo.Abp.Validation.StringValues
+@inject IStringLocalizer<Esh3arTechResource> L
+@model Esh3arTech.Web.Pages.Plans.Subscriptions.RenewModalModel
+@{
+    Layout = null;
+}
+
+<form asp-page="/Plans/Subscriptions/RenewModal">
+    <abp-modal size="Large">
+        <abp-modal-header title="@L["Hdr:Renew"].Value"> </abp-modal-header>
+        <abp-modal-body>
+            <abp-input asp-for="SubscriptionId" />
+            <div class="row">
+                <div class="col-md-6">
+                    <abp-select asp-for="Model.BillingInterval" label="@L["BillingInterval"].Value" id="BillingInterval" />
+                </div>
+                <div class="col-md-2 align-content-center">
+                    <label class="form-check-label fw-bold">@L["EnableCustomPrice"].Value</label>
+                </div>
+                <div class="col-md-1 d-flex justify-content-center align-items-center form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="CbEnablePrice">
+                </div>
+                <div class="col-md-3">
+                    <abp-input asp-for="Model.Price" title="@L["CustomPrice"].Value" id="Price"></abp-input>
+                </div>
+            </div>
+        </abp-modal-body>
+        <abp-modal-footer buttons="@(AbpModalButtons.Cancel|AbpModalButtons.Save)"></abp-modal-footer>
+    </abp-modal>
+</form>
+
+<script>
+    // We use a self-executing function to avoid polluting global scope
+    (function ($) {
+        const currentPrice = $('#Price').val();
+        $(document).on('change', '#CbEnablePrice', function(e) {
+            let isChecked = $(this).prop('checked');
+            if (isChecked) {
+                $('#Price').prop('disabled', !isChecked);
+            }
+            else {
+                console.log(currentPrice);
+                $('#Price').prop('disabled', !isChecked);
+                $('#Price').val(currentPrice).text(currentPrice);
+            }
+        });
+    })(jQuery);
+</script>

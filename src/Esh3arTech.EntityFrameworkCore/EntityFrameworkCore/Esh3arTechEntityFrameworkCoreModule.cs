@@ -1,19 +1,18 @@
-using System;
 using Microsoft.Extensions.DependencyInjection;
-using Volo.Abp.Uow;
 using Volo.Abp.AuditLogging.EntityFrameworkCore;
 using Volo.Abp.BackgroundJobs.EntityFrameworkCore;
+using Volo.Abp.BackgroundJobs.Quartz;
+using Volo.Abp.BlobStoring.Database.EntityFrameworkCore;
 using Volo.Abp.EntityFrameworkCore;
 using Volo.Abp.EntityFrameworkCore.SqlServer;
 using Volo.Abp.FeatureManagement.EntityFrameworkCore;
 using Volo.Abp.Identity.EntityFrameworkCore;
-using Volo.Abp.OpenIddict.EntityFrameworkCore;
 using Volo.Abp.Modularity;
+using Volo.Abp.OpenIddict.EntityFrameworkCore;
 using Volo.Abp.PermissionManagement.EntityFrameworkCore;
 using Volo.Abp.SettingManagement.EntityFrameworkCore;
-using Volo.Abp.BlobStoring.Database.EntityFrameworkCore;
-using Volo.Abp.TenantManagement.EntityFrameworkCore;
 using Volo.Abp.Studio;
+using Volo.Abp.TenantManagement.EntityFrameworkCore;
 
 namespace Esh3arTech.EntityFrameworkCore;
 
@@ -29,12 +28,12 @@ namespace Esh3arTech.EntityFrameworkCore;
     typeof(AbpOpenIddictEntityFrameworkCoreModule),
     typeof(AbpTenantManagementEntityFrameworkCoreModule),
     typeof(BlobStoringDatabaseEntityFrameworkCoreModule)
+    //typeof(AbpBackgroundJobsQuartzModule)
     )]
-public class Esh3arTechEntityFrameworkCoreModule : AbpModule
+    public class Esh3arTechEntityFrameworkCoreModule : AbpModule
 {
     public override void PreConfigureServices(ServiceConfigurationContext context)
     {
-
         Esh3arTechEfCoreEntityExtensionMappings.Configure();
     }
 
@@ -56,9 +55,7 @@ public class Esh3arTechEntityFrameworkCoreModule : AbpModule
         {
             /* The main point to change your DBMS.
              * See also Esh3arTechDbContextFactory for EF Core tooling. */
-
             options.UseSqlServer();
-
         });
         
     }

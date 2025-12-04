@@ -37,6 +37,8 @@
     "CostPerWeek": "Week",
     "CostPerMonth": "Month",
     "CostPerYear": "Year",
+    "AutoRenew": "Auto Renew",
+    "IsActive": "Active",
     "SuccessfullyDeleted": "Deleted Successfully"
   }
 }
