@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Identity;
-using Volo.Abp.ObjectMapping;
 
 namespace Esh3arTech.Plans.Subscriptions
 {
@@ -65,21 +63,26 @@ namespace Esh3arTech.Plans.Subscriptions
 
         public async Task RenewSubscription(RenewSubscriptionDto input)
         {
-            var subscription = await _subscriptionRepository.GetAsync(input.SubscriptionId);
+            var subscription = await _subscriptionRepository.GetAsync(input.SubscriptionId, true);
 
-            // Calculate the new period based on the billing interval.
-            // Or if you have a custom price for the new renew.
-
-            // extend the subscription period, by custom period or by billing interval.
-
-            await _subscriptionManagere.RenewSubscription(subscription);
-
+            if (!subscription.BillingInterval.Equals(input.BillingInterval))
+            {
+                subscription.SetBillingInterval(input.BillingInterval);
+                subscription.ExtendPeriod();
+            }
+            else
+            {
+                subscription.ExtendPeriod();
+            }
 
             if (subscription.Price != input.Price)
             {
                 subscription.SetPrice(input.Price);
             }
 
+            await _subscriptionManagere.RenewSubscription(subscription, input.Price);
+
+            await _subscriptionRepository.UpdateAsync(subscription);
         }
     }
 }

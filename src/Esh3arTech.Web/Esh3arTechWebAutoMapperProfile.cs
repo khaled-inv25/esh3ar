@@ -15,5 +15,6 @@ public class Esh3arTechWebAutoMapperProfile : Profile
 
         CreateMap<SubscriptionToUserViewModel, AssignSubscriptionToUserDto>().ReverseMap();
         CreateMap<SubscriptionDto, SubscriptionViewModel>().ReverseMap();
+        CreateMap<RenewSubscriptionViewModel, RenewSubscriptionDto>();
     }
 }

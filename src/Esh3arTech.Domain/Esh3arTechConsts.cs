@@ -15,6 +15,7 @@ public static class Esh3arTechConsts
     
     public const string TblUserPlan = DbTablePrefix + "UserPlans";
     public const string TblSubscriptions = DbTablePrefix + "Subscriptions";
+    public const string TblSubscriptionRenewalHistory = DbTablePrefix + "SubscriptionRenewalHistory";
 
     public const string DefaultOtpSubject = "OTP";
 }

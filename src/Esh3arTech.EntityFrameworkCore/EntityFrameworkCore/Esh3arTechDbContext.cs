@@ -41,6 +41,8 @@ public class Esh3arTechDbContext :
 
     public DbSet<Subscription> Subscriptions { get; set; }
 
+    public DbSet<SubscriptionRenewalHistory> SubscriptionRenewalHistories { get; set; }
+
     #region Entities from the modules
 
     /* Notice: We only implemented IIdentityProDbContext and ISaasDbContext
@@ -97,6 +99,7 @@ public class Esh3arTechDbContext :
         builder.ApplyConfiguration(new RegistrationRequestConfiguration());
         builder.ApplyConfiguration(new UserPlanConfiguration());
         builder.ApplyConfiguration(new SubscriptionConfiguration());
+        builder.ApplyConfiguration(new SubscriptionRenewalHistoryConfiguration());
 
     }
 }

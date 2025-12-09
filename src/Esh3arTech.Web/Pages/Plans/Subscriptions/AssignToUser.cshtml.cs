@@ -37,6 +37,7 @@ namespace Esh3arTech.Web.Pages.Plans.Subscriptions
             _userAppService = userAppService;
             _subscriptionAppService = subscriptionAppService;
             _planAppService = planAppService;
+            Model = new();
         }
 
         public async Task OnGetAsync()
@@ -46,6 +47,8 @@ namespace Esh3arTech.Web.Pages.Plans.Subscriptions
 
             UserList = usersLookup.Select(u => new SelectListItem(u.UserName, u.Id.ToString())).ToList();
             UserList.Insert(0, new SelectListItem { Value = "", Text = "Select User"});
+
+            Model.Price = PlanModel.DailyPrice;
         }
 
         public async Task<IActionResult> OnPostAsync()
@@ -67,7 +70,7 @@ namespace Esh3arTech.Web.Pages.Plans.Subscriptions
             public Guid PlanId { get; set; }
 
             [AllowNull]
-            public decimal Price { get; set; }
+            public decimal? Price { get; set; }
 
             [Required]
             public BillingInterval BillingInterval { get; set; }

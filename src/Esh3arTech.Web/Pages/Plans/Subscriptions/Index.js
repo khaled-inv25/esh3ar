@@ -61,11 +61,13 @@
                 },
                 {
                     title: 'Start date',
-                    data: "startDate"
+                    data: "startDate",
+                    render: formatDateTimeWithAMPM
                 },
                 {
                     title: 'End date',
-                    data: "endDate"
+                    data: "endDate",
+                    render: formatDateTimeWithAMPM
                 },
                 {
                     title: 'Price',
@@ -74,4 +76,11 @@
             ]
         })
     );
+
+    function formatDateTimeWithAMPM(data) {
+        if (data) {
+            return moment(data).format('YYYY-MM-DD hh:mm:ss A');
+        }
+        return '';
+    }
 });

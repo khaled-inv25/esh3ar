@@ -52,14 +52,15 @@
                 </div>
                 <div class="col-md-3">
                     <abp-input asp-for="Model.Price" title="@L["CustomPrice"].Value" id="Price"></abp-input>
+                    <abp-input type="hidden" asp-for="Model.Price" id="HiddenPrice" />
                 </div>
             </div>
             <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox">
+                <input asp-for="Model.IsAutoRenew" class="form-check-input" type="checkbox">
                 <label class="form-check-label fw-bold">@L["AutoRenew"].Value</label>
             </div>
             <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox">
+                <input asp-for="Model.IsActive" class="form-check-input" type="checkbox">
                 <label class="form-check-label fw-bold">@L["IsActive"].Value</label>
             </div>
         </abp-modal-body>
@@ -70,20 +71,54 @@
 <script>
     // We use a self-executing function to avoid polluting global scope
     (function ($) {
-        $(document).on('change', '#BillingInterval', function (e) {
-            console.log("Billing Interval changed: " + $(this).val());
-        });
+        const $priceInput = $('#Price');
+        const $hiddenPriceInput = $('#HiddenPrice');
+        const $billingIntervalInput = $('#BillingInterval');
+
+        let currentPrice = $priceInput.val();
+        $hiddenPriceInput.val(currentPrice);
+
+        const currentInterval = $billingIntervalInput.val();
 
         $(document).on('change', '#CbEnablePrice', function(e) {
             let isChecked = $(this).prop('checked');
 
             if (isChecked) {
                 $('#Price').prop('disabled', !isChecked);
+                $priceInput.val(currentPrice);
             }
             else {
                 $('#Price').prop('disabled', !isChecked);
-                $('#Price').val(0);
+                $hiddenPriceInput.val($priceInput.val());
             }
         });
+
+        $billingIntervalInput.on('change', function() {
+            if ($(this).val() == 0) {
+                currentPrice = @Model.PlanModel.DailyPrice.Value;
+                $priceInput.val(currentPrice);
+                $hiddenPriceInput.val(currentPrice);
+            }
+            else if ($(this).val() == 1) {
+                currentPrice = @Model.PlanModel.WeeklyPrice.Value;
+                $priceInput.val(currentPrice);
+                $hiddenPriceInput.val(currentPrice);
+            }
+            else if ($(this).val() == 2) {
+                currentPrice = @Model.PlanModel.MonthlayPrice.Value;
+                $priceInput.val(currentPrice);
+                $hiddenPriceInput.val(currentPrice);
+            }
+            else if ($(this).val() == 3) {
+                currentPrice = @Model.PlanModel.AnnualPrice.Value;
+                $priceInput.val(currentPrice);
+                $hiddenPriceInput.val(currentPrice);
+            }
+        });
+
+        $priceInput.on('change', function() {
+            $hiddenPriceInput.val($priceInput.val());
+        });
+
     })(jQuery);
 </script>

@@ -14,7 +14,7 @@ namespace Esh3arTech.Web.Pages.Plans.Subscriptions
         [BindProperty(SupportsGet = true)]
         public Guid SubscriptionId { get; set; }
 
-        private readonly ISubscriptionAppService _subscriptionAppService;
+        readonly ISubscriptionAppService _subscriptionAppService;
 
         public RenewModalModel(ISubscriptionAppService subscriptionAppService)
         {
@@ -28,40 +28,51 @@ namespace Esh3arTech.Web.Pages.Plans.Subscriptions
 
         public async Task<IActionResult> OnPostAsync()
         {
+            var model = new RenewSubscriptionViewModel()
+            {
+                SubscriptionId = SubscriptionId,
+                Price = Model.Price,
+                BillingInterval = Model.BillingInterval,
+            };
+
             await _subscriptionAppService.RenewSubscription(
-                new RenewSubscriptionDto
-                {
-                    SubscriptionId = SubscriptionId,
-                    Price = Model.Price,
-                    BillingInterval = Model.BillingInterval,
-                });
+                ObjectMapper.Map<RenewSubscriptionViewModel, RenewSubscriptionDto>(model));
 
             return NoContent();
         }
 
         public class SubscriptionViewModel
         {
-            public Guid UserId { get; private set; }
+            public Guid UserId { get; set; }
 
-            public Guid PlanId { get; private set; }
+            public Guid PlanId { get; set; }
 
-            public decimal Price { get; private set; }
+            public decimal Price { get; set; }
 
-            public BillingInterval BillingInterval { get; private set; }
+            public BillingInterval BillingInterval { get; set; }
 
-            public DateTime StartDate { get; private set; }
+            public DateTime StartDate { get; set; }
 
-            public DateTime EndDate { get; private set; }
+            public DateTime EndDate { get; set; }
 
-            public DateTime NextBill { get; private set; }
+            public DateTime NextBill { get; set; }
 
-            public bool IsAutoRenew { get; private set; }
+            public bool IsAutoRenew { get; set; }
 
-            public bool IsActive { get; private set; }
+            public bool IsActive { get; set; }
 
             public LastPaymentStatus LastPaymentStatus { get; set; }
 
             public SubscriptionStatus Status { get; set; }
+        }
+
+        public class RenewSubscriptionViewModel
+        {
+            public Guid SubscriptionId { get; set; }
+
+            public decimal Price { get; set; }
+
+            public BillingInterval BillingInterval { get; set; }
         }
     }
 }

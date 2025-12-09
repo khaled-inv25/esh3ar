@@ -26,6 +26,7 @@
                 </div>
                 <div class="col-md-3">
                     <abp-input asp-for="Model.Price" title="@L["CustomPrice"].Value" id="Price"></abp-input>
+                    <abp-input type="hidden" asp-for="Model.Price" id="HiddenPrice" />
                 </div>
             </div>
         </abp-modal-body>
@@ -36,17 +37,27 @@
 <script>
     // We use a self-executing function to avoid polluting global scope
     (function ($) {
-        const currentPrice = $('#Price').val();
+        const $priceInput = $('#Price');
+        const $hiddenPriceInput = $('#HiddenPrice');
+
+        const currentPrice = $priceInput.val();
+        $hiddenPriceInput.val(currentPrice);
+
         $(document).on('change', '#CbEnablePrice', function(e) {
             let isChecked = $(this).prop('checked');
+
             if (isChecked) {
-                $('#Price').prop('disabled', !isChecked);
+                $priceInput.prop('disabled', !isChecked);
+                $priceInput.val(currentPrice);
             }
             else {
-                console.log(currentPrice);
-                $('#Price').prop('disabled', !isChecked);
-                $('#Price').val(currentPrice).text(currentPrice);
+                $priceInput.prop('disabled', !isChecked);
+                $hiddenPriceInput.val($priceInput.val());
             }
+        });
+
+        $priceInput.on('change', function() {
+            $hiddenPriceInput.val($priceInput.val());
         });
     })(jQuery);
 </script>

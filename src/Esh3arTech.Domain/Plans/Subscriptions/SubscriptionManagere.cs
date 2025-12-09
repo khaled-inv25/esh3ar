@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Volo.Abp;
 using Volo.Abp.Domain.Services;
@@ -43,11 +44,12 @@ namespace Esh3arTech.Plans.Subscriptions
                 }
             }
             subscription.SetNextBilling();
+            subscription.AddHistory(price);
 
             return subscription;
         }
 
-        public async Task<Subscription> RenewSubscription(Subscription subscription, decimal price)
+        public async Task<Subscription> RenewSubscription(Subscription subscription, decimal amount)
         {
             if (await _userPlanRepository.IsPlanFreeById(subscription.PlanId))
             {
@@ -59,10 +61,7 @@ namespace Esh3arTech.Plans.Subscriptions
                 throw new UserFriendlyException("Cannot renew an inactive subscription. please active this subscription or contact the admin");
             }
 
-            if (subscription.Price != price)
-            {
-                subscription.SetPrice(price);
-            }
+            subscription.RenewManually(amount, InitialAssignment.Renewal);
 
             return subscription;
         }

@@ -1,5 +1,6 @@
 ﻿using Esh3arTech.Plans;
 using Esh3arTech.Plans.Subscriptions;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -41,6 +42,12 @@ namespace Esh3arTech.EntityFrameworkCore.Subscriptions
                         };
 
             return await AsyncExecuter.ToListAsync(query);
+        }
+
+        public override async Task<IQueryable<Subscription>> WithDetailsAsync()
+        {
+            return (await GetQueryableAsync())
+                .Include(s => s.RenewalHistories);
         }
     }
 }

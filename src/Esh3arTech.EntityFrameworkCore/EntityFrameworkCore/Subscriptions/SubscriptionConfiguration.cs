@@ -6,6 +6,7 @@ using Volo.Abp.Identity;
 
 namespace Esh3arTech.EntityFrameworkCore.Subscriptions
 {
+    // The configuration of the subscription entity.
     public class SubscriptionConfiguration : IEntityTypeConfiguration<Subscription>
     {
         public void Configure(EntityTypeBuilder<Subscription> builder)
@@ -35,6 +36,27 @@ namespace Esh3arTech.EntityFrameworkCore.Subscriptions
             builder.Property(s => s.LastPaymentStatus).IsRequired();
             builder.Property(s => s.Status).IsRequired();
 
+
+        }
+    }
+
+    // The configuration of the subscription renewal history entity.
+    public class SubscriptionRenewalHistoryConfiguration : IEntityTypeConfiguration<SubscriptionRenewalHistory>
+    {
+        public void Configure(EntityTypeBuilder<SubscriptionRenewalHistory> builder)
+        {
+            builder.HasOne<Subscription>()
+                .WithMany(s => s.RenewalHistories)
+                .HasForeignKey(srh => srh.SubscriptionId).IsRequired().OnDelete(DeleteBehavior.NoAction);
+
+            builder.Property(srh => srh.RenewalDate).IsRequired();
+            builder.Property(srh => srh.PeriodStartDate).IsRequired();
+            builder.Property(srh => srh.PeriodEndDate).IsRequired();
+            builder.Property(srh => srh.Amount)
+                .HasColumnType("decimal(18,4)")
+                .IsRequired();
+            builder.Property(srh => srh.BillingInterval).IsRequired();
+            builder.Property(srh => srh.IsManual).IsRequired();
 
         }
     }
