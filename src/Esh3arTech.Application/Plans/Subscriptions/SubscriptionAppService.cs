@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Management;
 using System.Threading.Tasks;
+using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Identity;
 
@@ -65,16 +67,6 @@ namespace Esh3arTech.Plans.Subscriptions
         {
             var subscription = await _subscriptionRepository.GetAsync(input.SubscriptionId, true);
 
-            if (!subscription.BillingInterval.Equals(input.BillingInterval))
-            {
-                subscription.SetBillingInterval(input.BillingInterval);
-                subscription.ExtendPeriod();
-            }
-            else
-            {
-                subscription.ExtendPeriod();
-            }
-
             if (subscription.Price != input.Price)
             {
                 subscription.SetPrice(input.Price);
@@ -83,6 +75,23 @@ namespace Esh3arTech.Plans.Subscriptions
             await _subscriptionManagere.RenewSubscription(subscription, input.Price);
 
             await _subscriptionRepository.UpdateAsync(subscription);
+        }
+
+        public async Task<PagedResultDto<SubscriptionHistoryInListDto>> GetSubscriptionHistoryByIdAsync(SubscriptionFilterDto input)
+        {
+            IReadOnlyList<SubscriptionRenewalHistory> history;
+            if (Guid.TryParse(input.SubscriptionId, out Guid subscriptionId))
+            {
+                var subscription = await _subscriptionRepository.GetAsync(subscriptionId, true);
+                history = subscription.GetRenewalHistories();
+            }
+            else
+            {
+                throw new UserFriendlyException("Invalid GUID string");
+            }
+
+            return new PagedResultDto<SubscriptionHistoryInListDto>(history.Count, 
+                ObjectMapper.Map<IReadOnlyList<SubscriptionRenewalHistory>, IReadOnlyList<SubscriptionHistoryInListDto>>(history));
         }
     }
 }

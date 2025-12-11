@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.IdentityModel.Tokens;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -65,18 +66,16 @@ namespace Esh3arTech.Plans.Subscriptions
 
         public Subscription SetInitialPeriod()
         {
-            StartDate = DateTime.UtcNow;
+            StartDate = DateTime.Now;
 
-            EndDate = CalcCurrentBillingInterval();
-
-            return this;
-        }
-
-        public Subscription ExtendPeriod()
-        {
-            EndDate = EndDate = CalcCurrentBillingInterval();
-
-            SetNextBilling();
+            EndDate = BillingInterval switch
+            {
+                BillingInterval.Daily => StartDate.AddDays(1),
+                BillingInterval.Weekly => StartDate.AddDays(7),
+                BillingInterval.Monthly => StartDate.AddMonths(1),
+                BillingInterval.Annually => StartDate.AddYears(1),
+                _ => throw new ArgumentOutOfRangeException(),
+            };
 
             return this;
         }
@@ -140,9 +139,9 @@ namespace Esh3arTech.Plans.Subscriptions
 
                 RenewalHistories.Add(new SubscriptionRenewalHistory(
                     subscriptionId: Id,
-                    renewalDate: DateTime.Now,
-                    periodStartDate: DateTime.Now,
-                    periodEndDate: periodEndDate,
+                    renewalDate: StartDate,
+                    periodStartDate: StartDate,
+                    periodEndDate: EndDate,
                     amount,
                     BillingInterval,
                     isManual: true,
@@ -151,40 +150,70 @@ namespace Esh3arTech.Plans.Subscriptions
             }
             else
             {
-                int daysLeft = 0;
-                var lastHistory = RenewalHistories.OrderByDescending(srh => srh.CreationTime).FirstOrDefault();
+                var lastHistory = RenewalHistories.OrderByDescending(srh => srh.CreationTime).First();
+                DateTime periodStartDate;
+                DateTime periodEndDate;
                 if (!HasExpired())
                 {
-                   daysLeft = (int)(EndDate - DateTime.Now).TotalDays;
+                    periodStartDate = lastHistory.PeriodEndDate;
+                    periodEndDate = BillingInterval switch
+                    {
+                        BillingInterval.Daily => periodStartDate.AddDays(1),
+                        BillingInterval.Weekly => periodStartDate.AddDays(7),
+                        BillingInterval.Monthly => periodStartDate.AddMonths(1),
+                        BillingInterval.Annually => periodStartDate.AddYears(1),
+                        _ => throw new ArgumentOutOfRangeException(),
+                    };
+
+                    ExtendPeriod(periodEndDate);
                 }
 
-                var periodEndDate = BillingInterval switch
+                else
                 {
-                    BillingInterval.Daily => DateTime.Now.AddDays(1),
-                    BillingInterval.Weekly => DateTime.Now.AddDays(7),
-                    BillingInterval.Monthly => DateTime.Now.AddMonths(1),
-                    BillingInterval.Annually => DateTime.Now.AddYears(1),
-                    _ => throw new ArgumentOutOfRangeException(),
-                };
+                    periodStartDate = DateTime.Now;
+                    periodEndDate = BillingInterval switch
+                    {
+                        BillingInterval.Daily => DateTime.Now.AddDays(1),
+                        BillingInterval.Weekly => DateTime.Now.AddDays(7),
+                        BillingInterval.Monthly => DateTime.Now.AddMonths(1),
+                        BillingInterval.Annually => DateTime.Now.AddYears(1),
+                        _ => throw new ArgumentOutOfRangeException(),
+                    };
+
+                }
 
                 RenewalHistories.Add(new SubscriptionRenewalHistory(
-                    subscriptionId: Id,
-                    renewalDate: lastHistory!.RenewalDate,
-                    periodStartDate: DateTime.Now.AddDays(daysLeft),
-                    periodEndDate: periodEndDate,
-                    amount,
-                    BillingInterval,
-                    isManual: true,
-                    type
-                    ));
+                        subscriptionId: Id,
+                        renewalDate: DateTime.Now,
+                        periodStartDate,
+                        periodEndDate,
+                        amount,
+                        BillingInterval,
+                        isManual: true,
+                        type
+                        ));
             }
             
             return this;
         }
 
+        public IReadOnlyList<SubscriptionRenewalHistory> GetRenewalHistories()
+        {
+            return RenewalHistories
+                .Where(srh => srh.SubscriptionId == Id).ToList();
+        }
+
         private bool HasExpired()
         {
-            return EndDate <= DateTime.UtcNow;
+            return EndDate <= DateTime.Now;
+        }
+
+        private Subscription ExtendPeriod(DateTime period)
+        {
+            EndDate = period;
+            SetNextBilling();
+
+            return this;
         }
 
         private DateTime CalcCurrentBillingInterval()

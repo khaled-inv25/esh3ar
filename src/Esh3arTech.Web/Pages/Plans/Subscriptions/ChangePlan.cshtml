@@ -1,0 +1,14 @@
+﻿@page
+@using Esh3arTech.Localization
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<Esh3arTechResource> L
+@model Esh3arTech.Web.Pages.Plans.Subscriptions.ChangePlanModel
+@{
+    Layout = null;
+}
+
+<form asp-page="/Plans/Subscriptions/ChangePlan">
+    <abp-modal size="Large">
+        <abp-modal-header title="@L["Hdr:ChangePlan"].Value"></abp-modal-header>
+    </abp-modal>
+</form>

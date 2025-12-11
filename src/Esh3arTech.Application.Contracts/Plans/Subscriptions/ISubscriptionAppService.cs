@@ -13,5 +13,7 @@ namespace Esh3arTech.Plans.Subscriptions
         Task RenewSubscription(RenewSubscriptionDto input);
 
         Task<SubscriptionDto> GetSubscriptionByIdAsync(Guid subscriptionId);
+
+        Task<PagedResultDto<SubscriptionHistoryInListDto>> GetSubscriptionHistoryByIdAsync(SubscriptionFilterDto input);
     }
 }

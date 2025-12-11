@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using Volo.Abp;
 using Volo.Abp.Domain.Services;
@@ -33,10 +32,11 @@ namespace Esh3arTech.Plans.Subscriptions
             }
             else
             {
-                // To check if the price is provided from outside.
-                if (price.Equals(0)) 
+                // To check if the price changed from outside.
+                var cost = CalcCostBaseOnPlanPrice(billingInterval, plan);
+                if (!price.Equals(cost)) 
                 {
-                    subscription.SetPrice(CalcCostBaseOnPlanPrice(billingInterval, plan));
+                    subscription.SetPrice(cost);
                 }
                 else
                 {
