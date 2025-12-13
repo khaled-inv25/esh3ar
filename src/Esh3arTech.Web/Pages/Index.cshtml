@@ -4,6 +4,7 @@
 @using Volo.Abp.AspNetCore.Mvc.UI.Layout
 @using Microsoft.AspNetCore.Mvc.Localization
 @using Esh3arTech.Localization
+@using Volo.Abp.AspNetCore.Mvc.UI.Packages.SignalR
 @using Volo.Abp.Users
 @inject IPageLayout PageLayout
 @inject IHtmlLocalizer<Esh3arTechResource> L
@@ -15,6 +16,10 @@
 
 @section styles {
     <abp-style src="/Pages/Index.css" />
+}
+
+@section scripts {
+    <abp-script type="typeof(SignalRBrowserScriptContributor)" />
 }
 
 <div class="row mb-3">

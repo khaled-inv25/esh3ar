@@ -27,7 +27,6 @@ namespace Esh3arTech.Registrations
         private readonly IBackgroundJobManager _backgroundJobManager;
         private readonly IdentityUserManager _identityUserManager;
 
-
         public RegistretionAppService(
             IRepository<MobileUser, Guid> mobileUserRepository,
             ISettingProvider settingProvider,
