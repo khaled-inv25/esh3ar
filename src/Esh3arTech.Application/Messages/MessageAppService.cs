@@ -1,21 +1,28 @@
 ﻿using System.Threading.Tasks;
-using Volo.Abp.EventBus.Distributed;
+using Volo.Abp.EventBus.Local;
+using Volo.Abp.Uow;
 
 namespace Esh3arTech.Messages
 {
     public class MessageAppService : Esh3arTechAppService, IMessageAppService
     {
-        private readonly IDistributedEventBus _distributedEventBus;
+        private readonly ILocalEventBus _localEventBus;
+        private readonly IUnitOfWorkManager _unitOfWorkManager;
 
         public MessageAppService(
-            IDistributedEventBus distributedEventBus)
+            ILocalEventBus localEventBus, 
+            IUnitOfWorkManager unitOfWorkManager)
         {
-            _distributedEventBus = distributedEventBus;
+            _localEventBus = localEventBus;
+            _unitOfWorkManager = unitOfWorkManager;
         }
 
         public async Task ReceiveMessage(MessagePayloadDto input)
         {
-            await _distributedEventBus.PublishAsync(ObjectMapper.Map<MessagePayloadDto, SendMessageEto>(input));
+
+            using var uow = _unitOfWorkManager.Begin(requiresNew: true, isTransactional: false);
+            await _localEventBus.PublishAsync(ObjectMapper.Map<MessagePayloadDto, SendMessageEvent>(input));
+            await uow.CompleteAsync();
         }
     }
 }
