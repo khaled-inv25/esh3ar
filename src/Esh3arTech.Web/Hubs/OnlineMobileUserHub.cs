@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 using System;
 using System.Threading.Tasks;
 using Volo.Abp.AspNetCore.SignalR;
-using Volo.Abp.Identity;
 
 namespace Esh3arTech.Web.Hubs
 {
@@ -12,14 +11,10 @@ namespace Esh3arTech.Web.Hubs
     public class OnlineMobileUserHub : AbpHub
     {
         private readonly OnlineUserTrackerService _onlineUserTrackerService;
-        private readonly IIdentityUserRepository _identityUserRepository;
 
-        public OnlineMobileUserHub(
-            OnlineUserTrackerService onlineUserTrackerService, 
-            IIdentityUserRepository identityUserRepository)
+        public OnlineMobileUserHub(OnlineUserTrackerService onlineUserTrackerService)
         {
             _onlineUserTrackerService = onlineUserTrackerService;
-            _identityUserRepository = identityUserRepository;
         }
 
         public override async Task OnConnectedAsync()
@@ -48,13 +43,13 @@ namespace Esh3arTech.Web.Hubs
 
         private string? GetMobileNumber()
         {
-            var mobilePhoneClaim = Context.User?.FindFirst(System.Security.Claims.ClaimTypes.MobilePhone)?.Value;
-            if (!string.IsNullOrEmpty(mobilePhoneClaim))
+            var phoneNumber = Context.User?.FindFirst(ClaimTypesConsts.MobileNumber)?.Value;
+            if (!string.IsNullOrEmpty(phoneNumber))
             {
-                return mobilePhoneClaim;
+                return phoneNumber;
             }
 
-            return Context.User?.FindFirst("phone_number")?.Value;
+            return null;
         }
     }
 }

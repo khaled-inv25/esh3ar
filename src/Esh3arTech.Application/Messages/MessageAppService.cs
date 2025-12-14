@@ -19,7 +19,6 @@ namespace Esh3arTech.Messages
 
         public async Task ReceiveMessage(MessagePayloadDto input)
         {
-
             using var uow = _unitOfWorkManager.Begin(requiresNew: true, isTransactional: false);
             await _localEventBus.PublishAsync(ObjectMapper.Map<MessagePayloadDto, SendMessageEvent>(input));
             await uow.CompleteAsync();

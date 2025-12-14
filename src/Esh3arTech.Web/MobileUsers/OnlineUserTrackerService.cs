@@ -1,7 +1,5 @@
-﻿using Esh3arTech.MobileUsers;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Linq;
-using System.Threading.Tasks;
 using Volo.Abp.DependencyInjection;
 
 namespace Esh3arTech.Web.MobileUsers
@@ -33,9 +31,19 @@ namespace Esh3arTech.Web.MobileUsers
             }
         }
 
-        public async Task<bool> IsConnectedAsync(string mobileNumber)
+        public bool IsConnected(string mobileNumber)
         {
             return _onlineUsers.TryGetValue(mobileNumber, out var connections) && connections.Any();
+        }
+
+        public string? GetFirstConnectionId(string mobileNumber)
+        {
+            if (_onlineUsers.TryGetValue(mobileNumber, out var connections))
+            {
+                return connections.FirstOrDefault();
+            }
+
+            return null;
         }
     }
 }

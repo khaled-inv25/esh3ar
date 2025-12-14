@@ -1,5 +1,4 @@
 ﻿using Esh3arTech.MobileUsers;
-using System.Threading.Tasks;
 using Volo.Abp.DependencyInjection;
 
 namespace Esh3arTech.Web.MobileUsers
@@ -13,9 +12,9 @@ namespace Esh3arTech.Web.MobileUsers
             _onlineUserTrackerService = onlineUserTrackerService;
         }
 
-        public async Task<bool> IsConnectedAsync(string mobileNumber)
+        public bool IsConnected(string mobileNumber)
         {
-            return await _onlineUserTrackerService.IsConnectedAsync(mobileNumber);
+            return _onlineUserTrackerService.IsConnected(mobileNumber);
         }
     }
 }
