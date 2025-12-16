@@ -23,5 +23,7 @@ public class Esh3arTechApplicationAutoMapperProfile : Profile
         CreateMap<SubscriptionRenewalHistory, SubscriptionHistoryInListDto>();
 
         CreateMap<MessagePayloadDto, SendMessageEvent>();
+        CreateMap<Message, PendingMessageDto>();
+        CreateMap<BroadcastMessageDto, BroadcastMessageEvent>();
     }
 }

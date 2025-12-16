@@ -1,6 +1,4 @@
-﻿using System.Threading.Tasks;
-
-namespace Esh3arTech.MobileUsers
+﻿namespace Esh3arTech.MobileUsers
 {
     public interface IOnlineMobileUserManager
     {

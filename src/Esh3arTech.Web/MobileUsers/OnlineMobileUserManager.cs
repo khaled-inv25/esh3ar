@@ -1,4 +1,7 @@
-﻿using Esh3arTech.MobileUsers;
+﻿using Esh3arTech.Messages;
+using Esh3arTech.MobileUsers;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Volo.Abp.DependencyInjection;
 
 namespace Esh3arTech.Web.MobileUsers
@@ -14,7 +17,7 @@ namespace Esh3arTech.Web.MobileUsers
 
         public bool IsConnected(string mobileNumber)
         {
-            return _onlineUserTrackerService.IsConnected(mobileNumber);
+            return _onlineUserTrackerService.IsRecipientOnline(mobileNumber);
         }
     }
 }

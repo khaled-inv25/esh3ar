@@ -31,7 +31,7 @@ namespace Esh3arTech.Web.MobileUsers
             }
         }
 
-        public bool IsConnected(string mobileNumber)
+        public bool IsRecipientOnline(string mobileNumber)
         {
             return _onlineUsers.TryGetValue(mobileNumber, out var connections) && connections.Any();
         }
