@@ -2,6 +2,6 @@
 {
     public class SendMessageEvent : MessageBaseDto
     {
-
+        public string From { get; set; }
     }
 }

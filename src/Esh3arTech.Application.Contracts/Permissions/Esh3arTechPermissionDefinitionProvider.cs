@@ -1,7 +1,6 @@
 using Esh3arTech.Localization;
 using Volo.Abp.Authorization.Permissions;
 using Volo.Abp.Localization;
-using Volo.Abp.MultiTenancy;
 
 namespace Esh3arTech.Permissions;
 
@@ -9,10 +8,8 @@ public class Esh3arTechPermissionDefinitionProvider : PermissionDefinitionProvid
 {
     public override void Define(IPermissionDefinitionContext context)
     {
-        var myGroup = context.AddGroup(Esh3arTechPermissions.GroupName);
-
-        //Define your own permissions here. Example:
-        //myGroup.AddPermission(Esh3arTechPermissions.MyPermission1, L("Permission:MyPermission1"));
+        var esh3arTechGroup = context.AddGroup(Esh3arTechPermissions.Esh3arTechGroupName, L("Permission:Esh3arTech"));
+        esh3arTechGroup.AddPermission(Esh3arTechPermissions.Esh3arSendMessages, L("Permission:SenderSendMessage"));
     }
 
     private static LocalizableString L(string name)

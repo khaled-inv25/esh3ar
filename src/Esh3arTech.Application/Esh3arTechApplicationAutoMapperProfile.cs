@@ -1,5 +1,4 @@
 using AutoMapper;
-using AutoMapper.Internal.Mappers;
 using Esh3arTech.Messages;
 using Esh3arTech.Plans;
 using Esh3arTech.Plans.Subscriptions;
@@ -23,7 +22,9 @@ public class Esh3arTechApplicationAutoMapperProfile : Profile
         CreateMap<SubscriptionRenewalHistory, SubscriptionHistoryInListDto>();
 
         CreateMap<MessagePayloadDto, SendMessageEvent>();
-        CreateMap<Message, PendingMessageDto>();
         CreateMap<BroadcastMessageDto, BroadcastMessageEvent>();
+        CreateMap<Message, PendingMessageDto>();
+        CreateMap<Message, SendMessageEvent>();
+        CreateMap<Message, MessageInListDto>();
     }
 }

@@ -30,39 +30,33 @@ namespace Esh3arTech.Messages.Handlers
 
         public async Task HandleEventAsync(SendMessageEvent eventData)
          {
-            if(_onlineMobileUserManager.IsConnected(eventData.PhoneNumber))
+            if (_onlineMobileUserManager.IsConnected(eventData.RecipientPhoneNumber))
             {
                 var id = _guidGenerator.Create();
                 
                 var eto = new SendMessageEto()
                 {
                     Id = id,
-                    PhoneNumber = eventData.PhoneNumber,
-                    MessageContent = eventData.MessageContent
+                    RecipientPhoneNumber = eventData.RecipientPhoneNumber,
+                    MessageContent = eventData.MessageContent,
+                    From = eventData.From
                 };
 
                 await _distributedEventBus.PublishAsync(eto);
 
-                await _messageRepository.InsertAsync(
-                    new Message(
-                        id,
-                        eventData.PhoneNumber,
-                        "Subject",
-                        MessageContentType.Text,
-                        eventData.MessageContent,
-                        MessageStatus.Sent)
-                    );
+                var msg = new Message(id, eventData.RecipientPhoneNumber, "Subject");
+                msg.SetContentType(MessageContentType.Text);
+                msg.SetMessageStatusType(MessageStatus.Sent);
+                msg.SetMessageContent(eventData.MessageContent);
+
+                await _messageRepository.InsertAsync(msg);
             }
             else
             {
-                var msg = new Message(
-                    _guidGenerator.Create(),
-                    eventData.PhoneNumber,
-                    "Subject",
-                    MessageContentType.Text,
-                    eventData.MessageContent,
-                    MessageStatus.Pending
-                    );
+                var msg = new Message(_guidGenerator.Create(), eventData.RecipientPhoneNumber, "Subject");
+                msg.SetContentType(MessageContentType.Text);
+                msg.SetMessageStatusType(MessageStatus.Pending);
+                msg.SetMessageContent(eventData.MessageContent);
                 await _messageRepository.InsertAsync(msg);
             }
         }

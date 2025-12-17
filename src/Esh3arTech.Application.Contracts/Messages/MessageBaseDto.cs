@@ -1,12 +1,13 @@
-﻿using System;
-using Volo.Abp.Application.Dtos;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace Esh3arTech.Messages
 {
     public class MessageBaseDto
     {
-        public string PhoneNumber { get; set; }
-
+        [RegularExpression(@"^(77|78|70|73|71)\d{7}$")]
+        public string RecipientPhoneNumber { get; set; }
+        
+        [Required]
         public string MessageContent { get; set; }
     }
 }

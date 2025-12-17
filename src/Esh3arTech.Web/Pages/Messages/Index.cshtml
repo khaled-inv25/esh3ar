@@ -1,0 +1,35 @@
+﻿@page
+@using Esh3arTech.Localization
+@using Microsoft.Extensions.Localization
+@model Esh3arTech.Web.Pages.Messages.IndexModel
+@inject IStringLocalizer<Esh3arTechResource> L
+
+@section scripts
+{
+    <abp-script src="/Pages/Messages/Index.js" />
+}
+
+<abp-card>
+    <abp-card-header>
+        <abp-row>
+            <abp-column size-md="_6">
+                <h2>@L["Messages"]</h2>
+            </abp-column>
+            <abp-column size-md="_2">
+                <abp-button id="SendMsgBtn" text="@L["SendMessage"].Value" icon="plus" button-type="Primary">
+                </abp-button>
+            </abp-column>
+            <abp-column size-md="_2">
+                <abp-button id="ExportMsgsBtn" text="@L["ExportToExcel"].Value" icon="plus" button-type="Primary">
+                </abp-button>
+            </abp-column>
+            <abp-column size-md="_2">
+                <abp-button id="RefBtn" text="@L["Refresh"].Value" icon="plus" button-type="Primary">
+                </abp-button>
+            </abp-column>
+        </abp-row>
+    </abp-card-header>
+    <abp-card-body>
+        <abp-table striped-rows="true" id="MessagesTable"></abp-table>
+    </abp-card-body>
+</abp-card>

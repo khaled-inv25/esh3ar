@@ -2,9 +2,7 @@
 {
     public enum MessageContentType : byte
     {
-        Html = 0,
-        Json = 1,
-        Text = 2,
-        Xml = 3,
+        Json = 0,
+        Text = 1
     }
 }

@@ -1,0 +1,24 @@
+﻿@page
+@using Esh3arTech.Localization
+@using Microsoft.Extensions.Localization
+@using Volo.Abp.AspNetCore.Mvc.UI.Bootstrap.TagHelpers.Modal
+@model Esh3arTech.Web.Pages.Messages.SendMessageModalModel
+@inject IStringLocalizer<Esh3arTechResource> L
+@{
+    Layout = null;
+}
+
+<form asp-page="/Messages/SendMessageModal">
+    <abp-modal size="Large">
+        <abp-modal-header title="@L["Hdr:SendManualMessage"].Value"></abp-modal-header>
+        <abp-modal-body>
+            <div class="col-md-12">
+                <p class="text-muted">@L["WriteMessageToSend"].Value</p>
+            </div>
+            <div class="col-md-12">
+                <abp-input asp-for="Model.MessageContent" title="@L["CustomPrice"].Value" id="Price"></abp-input>
+            </div>
+        </abp-modal-body>
+        <abp-modal-footer buttons="@(AbpModalButtons.Cancel|AbpModalButtons.Save)"></abp-modal-footer>
+    </abp-modal>
+</form>

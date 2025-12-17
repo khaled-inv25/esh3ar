@@ -54,6 +54,17 @@ public class Esh3arTechMenuContributor : IMenuContributor
                     order: 1
                 )
             );
+        
+        // Subscriptions
+        context.Menu.AddItem(
+                new ApplicationMenuItem(
+                    Esh3arTechMenus.Messages,
+                    l["Menu:Messages"],
+                    "~/Messages",
+                    icon: "fa-solid fa-message",
+                    order: 1
+                )
+            );
 
 
         //Administration

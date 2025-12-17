@@ -25,10 +25,10 @@ namespace Esh3arTech.Web.EventBus.DistributedHandlers
 
         public async Task HandleEventAsync(SendMessageEto eventData)
         {
-            await SendRealTimeMessageToClient(eventData.Id, eventData.PhoneNumber, eventData.MessageContent);
+            await SendRealTimeMessageToClient(eventData.Id, eventData.RecipientPhoneNumber, eventData.MessageContent, eventData.From!);
         }
 
-        private async Task SendRealTimeMessageToClient(Guid id, string phoneNumber, string messageContent)
+        private async Task SendRealTimeMessageToClient(Guid id, string phoneNumber, string messageContent, string from)
         {
             var connectionId = _onlineUserTrackerService.GetFirstConnectionId(phoneNumber);
 
@@ -37,8 +37,9 @@ namespace Esh3arTech.Web.EventBus.DistributedHandlers
                 var model = new SendMessageModel
                 {
                     Id = id,
-                    PhoneNumber = phoneNumber,
-                    MessageContent = messageContent
+                    RecipientPhoneNumber = phoneNumber,
+                    MessageContent = messageContent,
+                    From = from
                 };
 
                 await _hubContext.Clients.Client(connectionId).SendAsync("ReceiveMessage", JsonSerializer.Serialize(model));
@@ -49,7 +50,9 @@ namespace Esh3arTech.Web.EventBus.DistributedHandlers
     public class SendMessageModel
     {
         public Guid Id { get; set; }
-        public string PhoneNumber { get; set; }
+        public string RecipientPhoneNumber { get; set; }
         public string MessageContent { get; set; }
+        public string From { get; set; }
+
     }
 }

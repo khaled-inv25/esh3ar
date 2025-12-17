@@ -1,6 +1,8 @@
 using AutoMapper;
+using Esh3arTech.Messages;
 using Esh3arTech.Plans;
 using Esh3arTech.Plans.Subscriptions;
+using Esh3arTech.Web.Pages.Messages;
 using static Esh3arTech.Web.Pages.Plans.Subscriptions.AssignToUserModel;
 using static Esh3arTech.Web.Pages.Plans.Subscriptions.RenewModalModel;
 
@@ -16,5 +18,6 @@ public class Esh3arTechWebAutoMapperProfile : Profile
         CreateMap<SubscriptionToUserViewModel, AssignSubscriptionToUserDto>().ReverseMap();
         CreateMap<SubscriptionDto, SubscriptionViewModel>().ReverseMap();
         CreateMap<RenewSubscriptionViewModel, RenewSubscriptionDto>();
+        CreateMap<SendMessageViewModal, MessagePayloadDto>();
     }
 }

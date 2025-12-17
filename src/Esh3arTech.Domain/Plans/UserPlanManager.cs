@@ -1,24 +1,27 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Esh3arTech.Messages;
 using System;
 using System.Threading.Tasks;
 using Volo.Abp;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Domain.Services;
-using Volo.Abp.Identity;
+using Volo.Abp.Features;
 
 namespace Esh3arTech.Plans
 {
     public class UserPlanManager : DomainService
     {
         private readonly IUserPlanRepository _userPlanRepository;
-        private readonly UserManager<IdentityUser> _identityUserManager;
+        private readonly IFeatureChecker _featureChecker;
+        private readonly IRepository<Message, Guid> _messageRepository;
 
         public UserPlanManager(
             IUserPlanRepository userPlanRepository,
-            UserManager<IdentityUser> identityUserManager)
+            IFeatureChecker featureChecker,
+            IRepository<Message, Guid> messageRepository)
         {
             _userPlanRepository = userPlanRepository;
-            _identityUserManager = identityUserManager;
+            _featureChecker = featureChecker;
+            _messageRepository = messageRepository;
         }
 
         public async Task<UserPlan> CreateUserPlan(
@@ -67,6 +70,19 @@ namespace Esh3arTech.Plans
         {
             return !await _userPlanRepository.IsThereLinkedUsersAsync(planId) && 
                    !await _userPlanRepository.AnyAsync(up => up.ExpiringPlanId.Equals(planId)); // to check if there is expiring plans linked to it.
+        }
+
+        public async Task<bool> CanSendMessageAsync(Guid userId)
+        {
+            var sentMessages = await GetSentMessagesByUserId(userId);
+            var allowedMessagesCount = await _featureChecker.GetAsync<int>("Esh3arTech.MaxMessages");
+
+            return sentMessages < allowedMessagesCount;
+        }
+
+        private async Task<int> GetSentMessagesByUserId(Guid id)
+        {
+            return await _messageRepository.CountAsync(m => m.CreatorId == id); ;
         }
     }
 }

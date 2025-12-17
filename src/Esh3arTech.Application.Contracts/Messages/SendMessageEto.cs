@@ -7,5 +7,7 @@ namespace Esh3arTech.Messages
     public class SendMessageEto : MessageBaseDto
     {
         public Guid Id { get; set; }
+
+        public string From { get; set; }
     }
 }

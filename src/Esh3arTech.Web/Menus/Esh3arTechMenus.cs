@@ -7,4 +7,5 @@ public class Esh3arTechMenus
     public const string Home = Prefix + ".Home";
     public const string Plans = Prefix + ".Plans";
     public const string Subscriptions = Prefix + ".Subscriptions";
+    public const string Messages = Prefix + ".Messages";
 }
