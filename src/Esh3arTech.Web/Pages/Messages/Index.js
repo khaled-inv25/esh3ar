@@ -9,7 +9,7 @@
             order: [[1, "desc"]],
             searching: false,
             scrollX: true,
-            ajax: abp.libs.datatables.createAjax(esh3arTech.messages.message.getAllMessages),
+            ajax: abp.libs.datatables.createAjax(esh3arTech.messages.message.getOneWayMessages),
             columnDefs: [
                 {
                     title: l('Clm:To'),

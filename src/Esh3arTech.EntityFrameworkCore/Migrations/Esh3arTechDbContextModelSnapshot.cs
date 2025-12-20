@@ -29,8 +29,8 @@ namespace Esh3arTech.Migrations
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<byte>("ContentType")
-                        .HasColumnType("tinyint");
+                    b.Property<Guid?>("ConversationId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreationTime")
                         .HasColumnType("datetime2")
@@ -47,6 +47,12 @@ namespace Esh3arTech.Migrations
                     b.Property<DateTime?>("DeletionTime")
                         .HasColumnType("datetime2")
                         .HasColumnName("DeletionTime");
+
+                    b.Property<DateTime?>("DeliveredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FailureReason")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
@@ -66,8 +72,21 @@ namespace Esh3arTech.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<byte>("Priority")
+                        .HasColumnType("tinyint");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("RecipientPhoneNumber")
                         .IsRequired()
+                        .HasMaxLength(14)
+                        .HasColumnType("nvarchar(14)");
+
+                    b.Property<int>("RetryCount")
+                        .HasColumnType("int");
+
+                    b.Property<string>("SenderPhoneNumber")
                         .HasMaxLength(14)
                         .HasColumnType("nvarchar(14)");
 
@@ -75,9 +94,11 @@ namespace Esh3arTech.Migrations
                         .HasColumnType("tinyint");
 
                     b.Property<string>("Subject")
-                        .IsRequired()
                         .HasMaxLength(32)
                         .HasColumnType("nvarchar(32)");
+
+                    b.Property<byte>("Type")
+                        .HasColumnType("tinyint");
 
                     b.HasKey("Id");
 

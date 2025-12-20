@@ -14,6 +14,7 @@ namespace Esh3arTech.Messages
             _userPlanManager = userPlanManager;
         }
 
+        /*
         public async Task<Message> CreateMessageAsync(
             Guid userId,
             string recipientPhoneNumber,
@@ -23,16 +24,21 @@ namespace Esh3arTech.Messages
             await _userPlanManager.CanSendMessageAsync(userId);
 
             var msgToReturn = new Message(GuidGenerator.Create(), recipientPhoneNumber, subject);
-            if (messageContent.StartsWith('{') && messageContent.EndsWith('}'))
-            {
-                msgToReturn.SetContentType(MessageContentType.Json);
-            }
-            else
-            {
-                msgToReturn.SetContentType(MessageContentType.Text);
-            }
-            
             msgToReturn.SetMessageContent(messageContent);
+
+            return msgToReturn;
+        }
+        */
+
+        public async Task<Message> CreateOneWayMessage(Guid userId, string recipientPhoneNumber)
+        {
+            await _userPlanManager.CanSendMessageAsync(userId);
+
+            var msgToReturn = new Message(
+                GuidGenerator.Create(),
+                recipientPhoneNumber,
+                MessageType.OneWay
+                );
 
             return msgToReturn;
         }

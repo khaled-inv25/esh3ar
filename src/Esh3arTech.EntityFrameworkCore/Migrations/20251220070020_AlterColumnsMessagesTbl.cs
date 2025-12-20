@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Esh3arTech.Migrations
 {
     /// <inheritdoc />
-    public partial class UpdatedDb : Migration
+    public partial class AlterColumnsMessagesTbl : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -818,10 +818,17 @@ namespace Esh3arTech.Migrations
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     RecipientPhoneNumber = table.Column<string>(type: "nvarchar(14)", maxLength: 14, nullable: false),
-                    Subject = table.Column<string>(type: "nvarchar(32)", maxLength: 32, nullable: false),
-                    ContentType = table.Column<byte>(type: "tinyint", nullable: false),
+                    Subject = table.Column<string>(type: "nvarchar(32)", maxLength: 32, nullable: true),
                     MessageContent = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Status = table.Column<byte>(type: "tinyint", nullable: false),
+                    Type = table.Column<byte>(type: "tinyint", nullable: false),
+                    ConversationId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    SenderPhoneNumber = table.Column<string>(type: "nvarchar(14)", maxLength: 14, nullable: true),
+                    RetryCount = table.Column<int>(type: "int", nullable: false),
+                    DeliveredAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    ReadAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    FailureReason = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Priority = table.Column<byte>(type: "tinyint", nullable: false),
                     CreationTime = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatorId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     LastModificationTime = table.Column<DateTime>(type: "datetime2", nullable: true),

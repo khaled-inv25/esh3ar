@@ -21,4 +21,10 @@ public static class Esh3arTechConsts
 
     public const string DefaultOtpSubject = "OTP";
 
+    public static class HubMethods
+    {
+        public const string ReceivePendingMessages = "ReceivePendingMessages";
+        public const string ReceiveMessage = "ReceiveMessage";
+    }
+
 }

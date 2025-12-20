@@ -1,49 +1,62 @@
-﻿using System.Collections.Concurrent;
+﻿using Esh3arTech.Web.MobileUsers.CacheItems;
+using Microsoft.Extensions.Caching.Distributed;
+using System;
 using System.Linq;
+using System.Threading.Tasks;
+using Volo.Abp.Caching;
 using Volo.Abp.DependencyInjection;
 
 namespace Esh3arTech.Web.MobileUsers
 {
-    public class OnlineUserTrackerService : ISingletonDependency
+    public class OnlineUserTrackerService : ITransientDependency
     {
-        private readonly ConcurrentDictionary<string, ConcurrentBag<string>> _onlineUsers = new();
+        private readonly IDistributedCache<UserConnectionsCacheItem> _cache;
 
-        public void AddConnection(string mobileNumber, string connectionId)
+        public OnlineUserTrackerService(IDistributedCache<UserConnectionsCacheItem> cache)
         {
-            var connections = _onlineUsers.GetOrAdd(mobileNumber, _ => new ConcurrentBag<string>());
-            connections.Add(connectionId);
+            _cache = cache;
         }
 
-        public void RemoveConnection(string mobileNumber, string connectionId)
+        public async Task AddConnection(string mobileNumber, string connectionId)
         {
-            if (_onlineUsers.TryGetValue(mobileNumber, out var connections))
-            {
-                var newConnections = new ConcurrentBag<string>(connections.Where(id => id != connectionId));
+            var cacheKey = mobileNumber;
+            var cacheItem = await _cache.GetAsync(cacheKey) ?? new UserConnectionsCacheItem();
 
-                if (newConnections.IsEmpty)
+            if (!cacheItem.ConnectionIds.Contains(cacheKey))
+            {
+                cacheItem.ConnectionIds.Add(connectionId);
+                await _cache.SetAsync(cacheKey, cacheItem, new DistributedCacheEntryOptions
                 {
-                    _onlineUsers.TryRemove(mobileNumber, out _);
+                    SlidingExpiration = TimeSpan.FromMinutes(30)
+                });
+            }
+        }
+
+        public async Task RemoveConnection(string mobileNumber, string connectionId)
+        {
+            var cacheKey = mobileNumber;
+            var cacheItem = await _cache.GetAsync(cacheKey);
+
+            if (cacheItem != null)
+            {
+                cacheItem.ConnectionIds.Remove(connectionId);
+                if (cacheItem.ConnectionIds.Count != 0)
+                {
+                    await _cache.SetAsync(cacheKey, cacheItem);
                 }
                 else
                 {
-                    _onlineUsers.TryUpdate(mobileNumber, newConnections, connections);
+                    await _cache.RemoveAsync(cacheKey);
                 }
             }
         }
 
-        public bool IsRecipientOnline(string mobileNumber)
+        public async Task<string?> GetFirstConnectionIdByPhoneNumberAsync(string mobileNumber)
         {
-            return _onlineUsers.TryGetValue(mobileNumber, out var connections) && connections.Any();
-        }
+            var cacheKey = mobileNumber;
+            var cacheItem = await _cache.GetAsync(cacheKey);
 
-        public string? GetFirstConnectionId(string mobileNumber)
-        {
-            if (_onlineUsers.TryGetValue(mobileNumber, out var connections))
-            {
-                return connections.FirstOrDefault();
-            }
-
-            return null;
+            return cacheItem?.ConnectionIds?.FirstOrDefault();
         }
     }
 }

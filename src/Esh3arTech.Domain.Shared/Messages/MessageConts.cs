@@ -2,7 +2,7 @@
 {
     public static class MessageConts
     {
-        public const int MaxRecipientPhoneNumberLength = 14;
+        public const int MaxPhoneNumberLength = 14;
 
         public const int MaxSubjectLength = 32;
     }

@@ -23,9 +23,9 @@ namespace Esh3arTech.Web.Pages.Messages
 
         public async Task OnPostAsync()
         {
-            var model = ObjectMapper.Map<SendMessageViewModal, MessagePayloadDto>(Model);
+            var model = ObjectMapper.Map<SendMessageViewModal, SendOneWayMessageDto>(Model);
 
-            await _messageAppService.ReceiveMessageToRoutAsync(model);
+            await _messageAppService.SendOneWayMessageAsync(model);
         }
     }
 
@@ -34,5 +34,7 @@ namespace Esh3arTech.Web.Pages.Messages
         public string RecipientPhoneNumber = "775265496";
 
         public string MessageContent { get; set; }
+
+        public string Subject { get; set; } = "Test Subject";
     }
 }

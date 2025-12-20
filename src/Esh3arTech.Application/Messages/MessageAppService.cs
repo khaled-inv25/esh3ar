@@ -1,6 +1,5 @@
 ﻿using Esh3arTech.MobileUsers;
 using Esh3arTech.Permissions;
-using Esh3arTech.Plans;
 using Esh3arTech.Utility;
 using Microsoft.AspNetCore.Authorization;
 using System;
@@ -9,29 +8,26 @@ using System.Threading.Tasks;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Domain.Repositories;
-using Volo.Abp.EventBus.Local;
-using Volo.Abp.Security.Claims;
+using Volo.Abp.EventBus.Distributed;
 using Volo.Abp.Uow;
 
 namespace Esh3arTech.Messages
 {
     public class MessageAppService : Esh3arTechAppService, IMessageAppService
     {
-        private readonly ILocalEventBus _localEventBus;
-        private readonly IUnitOfWorkManager _unitOfWorkManager;
+        private readonly IDistributedEventBus _distributedEventBus;
         private readonly IRepository<Message, Guid> _messageRepository;
         private readonly IRepository<MobileUser, Guid> _mobileUserRepository;
         private readonly MessageManager _messageManager;
 
         public MessageAppService(
-            ILocalEventBus localEventBus,
+            IDistributedEventBus distributedEventBus,
             IUnitOfWorkManager unitOfWorkManager,
             IRepository<Message, Guid> messageRepository,
             IRepository<MobileUser, Guid> mobileUserRepository,
             MessageManager messageManager)
         {
-            _localEventBus = localEventBus;
-            _unitOfWorkManager = unitOfWorkManager;
+            _distributedEventBus = distributedEventBus;
             _messageRepository = messageRepository;
             _mobileUserRepository = mobileUserRepository;
             _messageManager = messageManager;
@@ -47,8 +43,19 @@ namespace Esh3arTech.Messages
             return list;
         }
 
+        [Authorize]
+        public async Task<PagedResultDto<MessageInListDto>> GetOneWayMessagesAsync()
+        {
+            var currentUserId = CurrentUser.Id!.Value;
+
+            var messages = await _messageRepository.GetListAsync(m => m.CreatorId.Equals(currentUserId));
+            var dtos = ObjectMapper.Map<List<Message>, List<MessageInListDto>>(messages);
+
+            return new PagedResultDto<MessageInListDto>(dtos.Count, dtos);
+        }
+
         [Authorize(Esh3arTechPermissions.Esh3arSendMessages)]
-        public async Task ReceiveMessageToRoutAsync(MessagePayloadDto input)
+        public async Task<MessageDto> SendOneWayMessageAsync(SendOneWayMessageDto input)
         {
             input.RecipientPhoneNumber = MobileNumberPreparator.PrepareMobileNumber(input.RecipientPhoneNumber);
 
@@ -58,45 +65,29 @@ namespace Esh3arTech.Messages
             }
 
             var currentUserId = CurrentUser.Id!.Value;
-            var createdMessage = await _messageManager.CreateMessageAsync(
-                currentUserId,
-                input.RecipientPhoneNumber,
-                "Subject",
-                input.MessageContent
-                );
+            var createdMessage = await _messageManager.CreateOneWayMessage(currentUserId, input.RecipientPhoneNumber);
+            createdMessage.SetSubject(input.Subject);
+            createdMessage.SetMessageStatusType(MessageStatus.Pending);
+            createdMessage.SetMessageContent(input.MessageContent);
 
-            using var uow = _unitOfWorkManager.Begin(requiresNew: true, isTransactional: false);
-            var @event = ObjectMapper.Map<Message, SendMessageEvent>(createdMessage);
-            @event.From = CurrentUser.Name!;
-            await _localEventBus.PublishAsync(@event);
-            await uow.CompleteAsync();
+            var sendMsgEto = ObjectMapper.Map<Message, SendOneWayMessageEto>(createdMessage);
+            sendMsgEto.From = CurrentUser.Name!;
+
+            await _distributedEventBus.PublishAsync(sendMsgEto);
+
+            // to update the status to "Queued" immediately after enqueuing.
+            createdMessage.SetMessageStatusType(MessageStatus.Queued);
+            await _messageRepository.InsertAsync(createdMessage);
+
+            return new MessageDto { Id = createdMessage.Id };
         }
 
-        public async Task BroadcastAsync(BroadcastMessageDto input)
+        public async Task UpdateMessageStatus(UpdateMessageStatusDto input)
         {
-            using var uow = _unitOfWorkManager.Begin(requiresNew: true, isTransactional: false);
-            await _localEventBus.PublishAsync(ObjectMapper.Map<BroadcastMessageDto, BroadcastMessageEvent>(input));
-            await uow.CompleteAsync();
-        }
+            var message = await _messageRepository.GetAsync(input.Id);
 
-        [Authorize]
-        public async Task UpdateMessageStatusToDeliveredAsync(Guid messageId)
-        {
-            var message = await _messageRepository.GetAsync(messageId);
-
-            message.SetMessageStatusType(MessageStatus.Delivered);
+            message.SetMessageStatusType(input.Status);
             await _messageRepository.UpdateAsync(message);
-        }
-
-        [Authorize]
-        public async Task<PagedResultDto<MessageInListDto>> GetAllMessages()
-        {
-            var currentUserId = CurrentUser.Id!.Value;
-
-            var messages = await _messageRepository.GetListAsync(m => m.CreatorId.Equals(currentUserId));
-            var dtos = ObjectMapper.Map<List<Message>, List<MessageInListDto>>(messages);
-
-            return new PagedResultDto<MessageInListDto>(dtos.Count, dtos);
         }
     }
 }

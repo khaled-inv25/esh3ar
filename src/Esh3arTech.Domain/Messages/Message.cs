@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 using Volo.Abp;
 using Volo.Abp.Domain.Entities.Auditing;
@@ -15,20 +14,36 @@ namespace Esh3arTech.Messages
 
         public string Subject { get; private set; }
 
-        public MessageContentType ContentType { get; private set; }
-
         public string MessageContent { get; private set; }
 
         public MessageStatus Status { get; private set; }
 
+        public MessageType Type { get; private set; }
+
+        public Guid? ConversationId { get; private set; }
+
+        public string? SenderPhoneNumber { get; private set; }
+
+        public int RetryCount { get; private set; }
+
+        public DateTime? DeliveredAt { get; private set; }
+
+        public DateTime? ReadAt { get; private set; }
+
+        public string? FailureReason { get; private set; }
+
+        public Priority Priority { get; private set; }
+        
+        // Updated Ctor 
         public Message(
             Guid id,
             string recipientPhoneNumber,
-            string subject)
+            MessageType type ) 
             : base(id)
         {
             SetRecipientPhoneNumber(recipientPhoneNumber);
-            SetSubject(subject);
+            SetMessageType(type);
+            SetPriority(Priority.Normal);
         }
 
         public Message SetRecipientPhoneNumber(string number)
@@ -46,18 +61,6 @@ namespace Esh3arTech.Messages
         public Message SetSubject(string subject)
         {
             Subject = Check.NotNullOrWhiteSpace(subject, nameof(subject));
-
-            return this;
-        }
-
-        public Message SetContentType(MessageContentType contentType)
-        {
-            if (!Enum.IsDefined(typeof(MessageContentType), contentType))
-            {
-                throw new AbpValidationException();
-            }
-
-            ContentType = contentType;
 
             return this;
         }
@@ -80,6 +83,40 @@ namespace Esh3arTech.Messages
 
             return this;
         }
+
+        public Message SetMessageType(MessageType type)
+        {
+            if (!Enum.IsDefined(typeof(MessageType), type))
+            {
+                throw new AbpValidationException();
+            }
+
+            Type = type;
+            return this;
+        }
+
+        public Message SetPriority(Priority priority)
+        {
+            if (!Enum.IsDefined(typeof(Priority), priority))
+            {
+                throw new AbpValidationException();
+            }
+
+            Priority = priority;
+            return this;
+        }
+
+        /*
+         * * Methods needed:
+         * 
+         * 
+         * SetMessageType ✅
+         * MarkAsDelivered
+         * IncrementRetryCount
+         * SetConversation
+         * MarkAsRead
+         * MarkAsFailed --> we should have the reson for failure.
+         */
 
     }
 }

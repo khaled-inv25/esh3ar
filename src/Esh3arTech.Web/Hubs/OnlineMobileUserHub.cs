@@ -6,7 +6,9 @@ using System;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Volo.Abp;
 using Volo.Abp.AspNetCore.SignalR;
+using static Esh3arTech.Esh3arTechConsts;
 
 namespace Esh3arTech.Web.Hubs
 {
@@ -18,7 +20,7 @@ namespace Esh3arTech.Web.Hubs
         private readonly IMessageAppService _messageAppService;
 
         public OnlineMobileUserHub(
-            OnlineUserTrackerService onlineUserTrackerService, 
+            OnlineUserTrackerService onlineUserTrackerService,
             IMessageAppService messageAppService)
         {
             _onlineUserTrackerService = onlineUserTrackerService;
@@ -32,30 +34,32 @@ namespace Esh3arTech.Web.Hubs
 
             if (!string.IsNullOrEmpty(mobileNumber))
             {
-                _onlineUserTrackerService.AddConnection(mobileNumber, connectionId);
+                // To prevent multiple connections from the same mobile number.
+                if (!string.IsNullOrEmpty(await _onlineUserTrackerService.GetFirstConnectionIdByPhoneNumberAsync(mobileNumber)))
+                {
+                    throw new UserFriendlyException("Mobile Number is already online!");
+                }
+
+                await _onlineUserTrackerService.AddConnection(mobileNumber, connectionId);
 
                 // Check if any pending messages.
                 var pendingMessages = await _messageAppService.GetPendingMessagesAsync(mobileNumber!);
                 if (pendingMessages.Any())
                 {
-                    await Clients.Caller.SendAsync("ReceivePendingMessages", JsonSerializer.Serialize(pendingMessages));
+                    await Clients.Caller.SendAsync(HubMethods.ReceivePendingMessages, JsonSerializer.Serialize(pendingMessages));
                 }
             }
-
-            await Task.CompletedTask;
         }
 
-        public override Task OnDisconnectedAsync(Exception? exception)
+        public override async Task OnDisconnectedAsync(Exception? exception)
         {
             var mobileNumber = GetMobileNumber();
             var connectionId = Context.ConnectionId;
 
             if (!string.IsNullOrEmpty(mobileNumber))
             {
-                _onlineUserTrackerService.RemoveConnection(mobileNumber, connectionId);
+                await _onlineUserTrackerService.RemoveConnection(mobileNumber, connectionId);
             }
-
-            return base.OnDisconnectedAsync(exception);
         }
 
         public async Task AcknowledgeMessage(Guid messageId)
@@ -67,7 +71,7 @@ namespace Esh3arTech.Web.Hubs
                 return;
             }
 
-            await _messageAppService.UpdateMessageStatusToDeliveredAsync(messageId);
+            await _messageAppService.UpdateMessageStatus(new UpdateMessageStatusDto() { Id = messageId, Status = MessageStatus.Delivered });
         }
 
         private string? GetMobileNumber()

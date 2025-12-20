@@ -15,18 +15,34 @@ namespace Esh3arTech.EntityFrameworkCore.Messages
                 .HasForeignKey(m => m.CreatorId).IsRequired().OnDelete(DeleteBehavior.NoAction);
 
             builder.Property(m => m.RecipientPhoneNumber)
-                .HasMaxLength(MessageConts.MaxRecipientPhoneNumberLength)
+                .HasMaxLength(MessageConts.MaxPhoneNumberLength)
                 .IsRequired();
             
             builder.Property(m => m.Subject)
                 .HasMaxLength(MessageConts.MaxSubjectLength)
-                .IsRequired();
-            
-            builder.Property(m => m.ContentType)
-                .IsRequired();
+                .IsRequired(false);
             
             builder.Property(m => m.Status)
                 .IsRequired();
+
+            builder.Property(m => m.Type)
+                .IsRequired();
+
+            builder.Property(m => m.ConversationId)
+                .IsRequired(false);
+
+            builder.Property(m => m.SenderPhoneNumber)
+                .HasMaxLength(MessageConts.MaxPhoneNumberLength)
+                .IsRequired(false);
+
+            builder.Property(m => m.RetryCount)
+                .IsRequired();
+
+            builder.Property(m => m.DeliveredAt)
+                .IsRequired(false);
+
+            builder.Property(m => m.ReadAt)
+                .IsRequired(false);
         }
     }
 }
