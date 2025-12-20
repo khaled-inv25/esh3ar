@@ -13,8 +13,8 @@ using Volo.Abp.EntityFrameworkCore;
 namespace Esh3arTech.Migrations
 {
     [DbContext(typeof(Esh3arTechDbContext))]
-    [Migration("20251124071207_AddClmTypeToPriceClmsInUserPlan")]
-    partial class AddClmTypeToPriceClmsInUserPlan
+    [Migration("20251218135056_UpdatedDb")]
+    partial class UpdatedDb
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -26,6 +26,68 @@ namespace Esh3arTech.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("Esh3arTech.Messages.Message", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte>("ContentType")
+                        .HasColumnType("tinyint");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<string>("MessageContent")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RecipientPhoneNumber")
+                        .IsRequired()
+                        .HasMaxLength(14)
+                        .HasColumnType("nvarchar(14)");
+
+                    b.Property<byte>("Status")
+                        .HasColumnType("tinyint");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatorId");
+
+                    b.ToTable("EtMessages");
+                });
 
             modelBuilder.Entity("Esh3arTech.MobileUsers.MobileUser", b =>
                 {
@@ -78,10 +140,20 @@ namespace Esh3arTech.Migrations
                     b.ToTable("EtMobileUsers");
                 });
 
-            modelBuilder.Entity("Esh3arTech.Registretions.RegistretionRequest", b =>
+            modelBuilder.Entity("Esh3arTech.Plans.Subscriptions.Subscription", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte>("BillingInterval")
+                        .HasColumnType("tinyint");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)")
+                        .HasColumnName("ConcurrencyStamp");
 
                     b.Property<DateTime>("CreationTime")
                         .HasColumnType("datetime2")
@@ -91,30 +163,139 @@ namespace Esh3arTech.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("CreatorId");
 
-                    b.Property<Guid>("MobileUserId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("DeleterId");
 
-                    b.Property<byte>("OS")
-                        .HasColumnType("tinyint");
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("DeletionTime");
 
-                    b.Property<string>("Secret")
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ExtraProperties")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("ExtraProperties");
 
-                    b.Property<bool>("Verified")
+                    b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<DateTime?>("VerifiedTime")
+                    b.Property<bool>("IsAutoRenew")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<byte>("LastPaymentStatus")
+                        .HasColumnType("tinyint");
+
+                    b.Property<DateTime>("NextBill")
                         .HasColumnType("datetime2");
+
+                    b.Property<Guid>("PlanId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<byte>("Status")
+                        .HasColumnType("tinyint");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("MobileUserId");
+                    b.HasIndex("PlanId");
 
-                    b.ToTable("EtRegistretionRequest");
+                    b.HasIndex("UserId");
+
+                    b.ToTable("EtSubscriptions");
                 });
 
-            modelBuilder.Entity("Esh3arTech.UserPlans.UserPlan", b =>
+            modelBuilder.Entity("Esh3arTech.Plans.Subscriptions.SubscriptionRenewalHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<byte>("BillingInterval")
+                        .HasColumnType("tinyint");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid?>("DeleterId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("DeleterId");
+
+                    b.Property<DateTime?>("DeletionTime")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("DeletionTime");
+
+                    b.Property<bool>("IsDeleted")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false)
+                        .HasColumnName("IsDeleted");
+
+                    b.Property<bool>("IsManual")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("LastModificationTime")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("LastModificationTime");
+
+                    b.Property<Guid?>("LastModifierId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("LastModifierId");
+
+                    b.Property<DateTime>("PeriodEndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("PeriodStartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("RenewalDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("SubscriptionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte>("Type")
+                        .HasColumnType("tinyint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SubscriptionId");
+
+                    b.ToTable("EtSubscriptionRenewalHistory");
+                });
+
+            modelBuilder.Entity("Esh3arTech.Plans.UserPlan", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -181,6 +362,42 @@ namespace Esh3arTech.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("EtUserPlans");
+                });
+
+            modelBuilder.Entity("Esh3arTech.Registretions.RegistretionRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreationTime")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("CreationTime");
+
+                    b.Property<Guid?>("CreatorId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("CreatorId");
+
+                    b.Property<Guid>("MobileUserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<byte>("OS")
+                        .HasColumnType("tinyint");
+
+                    b.Property<string>("Secret")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("Verified")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime?>("VerifiedTime")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MobileUserId");
+
+                    b.ToTable("EtRegistretionRequest");
                 });
 
             modelBuilder.Entity("Volo.Abp.AuditLogging.AuditLog", b =>
@@ -2044,6 +2261,39 @@ namespace Esh3arTech.Migrations
                     b.ToTable("AbpTenantConnectionStrings", (string)null);
                 });
 
+            modelBuilder.Entity("Esh3arTech.Messages.Message", b =>
+                {
+                    b.HasOne("Volo.Abp.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("CreatorId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Esh3arTech.Plans.Subscriptions.Subscription", b =>
+                {
+                    b.HasOne("Esh3arTech.Plans.UserPlan", null)
+                        .WithMany()
+                        .HasForeignKey("PlanId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("Volo.Abp.Identity.IdentityUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Esh3arTech.Plans.Subscriptions.SubscriptionRenewalHistory", b =>
+                {
+                    b.HasOne("Esh3arTech.Plans.Subscriptions.Subscription", null)
+                        .WithMany("RenewalHistories")
+                        .HasForeignKey("SubscriptionId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Esh3arTech.Registretions.RegistretionRequest", b =>
                 {
                     b.HasOne("Esh3arTech.MobileUsers.MobileUser", "MobileUser")
@@ -2209,6 +2459,11 @@ namespace Esh3arTech.Migrations
             modelBuilder.Entity("Esh3arTech.MobileUsers.MobileUser", b =>
                 {
                     b.Navigation("Requests");
+                });
+
+            modelBuilder.Entity("Esh3arTech.Plans.Subscriptions.Subscription", b =>
+                {
+                    b.Navigation("RenewalHistories");
                 });
 
             modelBuilder.Entity("Volo.Abp.AuditLogging.AuditLog", b =>

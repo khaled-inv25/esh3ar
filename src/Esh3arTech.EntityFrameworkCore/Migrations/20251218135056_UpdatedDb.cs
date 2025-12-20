@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Esh3arTech.Migrations
 {
     /// <inheritdoc />
-    public partial class Initial : Migration
+    public partial class UpdatedDb : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -430,6 +430,7 @@ namespace Esh3arTech.Migrations
                     ShouldChangePasswordOnNextLogin = table.Column<bool>(type: "bit", nullable: false),
                     EntityVersion = table.Column<int>(type: "int", nullable: false),
                     LastPasswordChangeTime = table.Column<DateTimeOffset>(type: "datetimeoffset", nullable: true),
+                    PlanId = table.Column<string>(type: "nvarchar(36)", maxLength: 36, nullable: true),
                     ExtraProperties = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ConcurrencyStamp = table.Column<string>(type: "nvarchar(40)", maxLength: 40, nullable: false),
                     CreationTime = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -443,6 +444,54 @@ namespace Esh3arTech.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AbpUsers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "EtMobileUsers",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    MobileNumber = table.Column<string>(type: "nvarchar(15)", maxLength: 15, nullable: false),
+                    Status = table.Column<byte>(type: "tinyint", nullable: false),
+                    IsStatic = table.Column<bool>(type: "bit", nullable: false),
+                    CreationTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatorId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    LastModificationTime = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    LastModifierId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
+                    DeleterId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    DeletionTime = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_EtMobileUsers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "EtUserPlans",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DisplayName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ExpiringPlanId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    DailyPrice = table.Column<decimal>(type: "decimal(18,4)", nullable: true),
+                    WeeklyPrice = table.Column<decimal>(type: "decimal(18,4)", nullable: true),
+                    MonthlayPrice = table.Column<decimal>(type: "decimal(18,4)", nullable: true),
+                    AnnualPrice = table.Column<decimal>(type: "decimal(18,4)", nullable: true),
+                    TrialDayCount = table.Column<decimal>(type: "decimal(18,4)", nullable: true),
+                    WaitingDayAfterExpire = table.Column<decimal>(type: "decimal(18,4)", nullable: true),
+                    CreationTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatorId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    LastModificationTime = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    LastModifierId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
+                    DeleterId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    DeletionTime = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_EtUserPlans", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -764,6 +813,99 @@ namespace Esh3arTech.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "EtMessages",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    RecipientPhoneNumber = table.Column<string>(type: "nvarchar(14)", maxLength: 14, nullable: false),
+                    Subject = table.Column<string>(type: "nvarchar(32)", maxLength: 32, nullable: false),
+                    ContentType = table.Column<byte>(type: "tinyint", nullable: false),
+                    MessageContent = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Status = table.Column<byte>(type: "tinyint", nullable: false),
+                    CreationTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatorId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    LastModificationTime = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    LastModifierId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
+                    DeleterId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    DeletionTime = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_EtMessages", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_EtMessages_AbpUsers_CreatorId",
+                        column: x => x.CreatorId,
+                        principalTable: "AbpUsers",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "EtRegistretionRequest",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    OS = table.Column<byte>(type: "tinyint", nullable: false),
+                    Secret = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Verified = table.Column<bool>(type: "bit", nullable: false),
+                    VerifiedTime = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    MobileUserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CreationTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatorId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_EtRegistretionRequest", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_EtRegistretionRequest_EtMobileUsers_MobileUserId",
+                        column: x => x.MobileUserId,
+                        principalTable: "EtMobileUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "EtSubscriptions",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    PlanId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Price = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    BillingInterval = table.Column<byte>(type: "tinyint", nullable: false),
+                    StartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    EndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    NextBill = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsAutoRenew = table.Column<bool>(type: "bit", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    LastPaymentStatus = table.Column<byte>(type: "tinyint", nullable: false),
+                    Status = table.Column<byte>(type: "tinyint", nullable: false),
+                    ExtraProperties = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ConcurrencyStamp = table.Column<string>(type: "nvarchar(40)", maxLength: 40, nullable: false),
+                    CreationTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatorId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    LastModificationTime = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    LastModifierId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
+                    DeleterId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    DeletionTime = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_EtSubscriptions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_EtSubscriptions_AbpUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AbpUsers",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_EtSubscriptions_EtUserPlans_PlanId",
+                        column: x => x.PlanId,
+                        principalTable: "EtUserPlans",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "OpenIddictAuthorizations",
                 columns: table => new
                 {
@@ -809,6 +951,37 @@ namespace Esh3arTech.Migrations
                         principalTable: "AbpEntityChanges",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "EtSubscriptionRenewalHistory",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    SubscriptionId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    RenewalDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    PeriodStartDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    PeriodEndDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Amount = table.Column<decimal>(type: "decimal(18,4)", nullable: false),
+                    BillingInterval = table.Column<byte>(type: "tinyint", nullable: false),
+                    Type = table.Column<byte>(type: "tinyint", nullable: false),
+                    IsManual = table.Column<bool>(type: "bit", nullable: false),
+                    CreationTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatorId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    LastModificationTime = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    LastModifierId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    IsDeleted = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
+                    DeleterId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    DeletionTime = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_EtSubscriptionRenewalHistory", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_EtSubscriptionRenewalHistory_EtSubscriptions_SubscriptionId",
+                        column: x => x.SubscriptionId,
+                        principalTable: "EtSubscriptions",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -1079,6 +1252,31 @@ namespace Esh3arTech.Migrations
                 column: "UserName");
 
             migrationBuilder.CreateIndex(
+                name: "IX_EtMessages_CreatorId",
+                table: "EtMessages",
+                column: "CreatorId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_EtRegistretionRequest_MobileUserId",
+                table: "EtRegistretionRequest",
+                column: "MobileUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_EtSubscriptionRenewalHistory_SubscriptionId",
+                table: "EtSubscriptionRenewalHistory",
+                column: "SubscriptionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_EtSubscriptions_PlanId",
+                table: "EtSubscriptions",
+                column: "PlanId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_EtSubscriptions_UserId",
+                table: "EtSubscriptions",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_OpenIddictApplications_ClientId",
                 table: "OpenIddictApplications",
                 column: "ClientId");
@@ -1191,6 +1389,15 @@ namespace Esh3arTech.Migrations
                 name: "AbpUserTokens");
 
             migrationBuilder.DropTable(
+                name: "EtMessages");
+
+            migrationBuilder.DropTable(
+                name: "EtRegistretionRequest");
+
+            migrationBuilder.DropTable(
+                name: "EtSubscriptionRenewalHistory");
+
+            migrationBuilder.DropTable(
                 name: "OpenIddictScopes");
 
             migrationBuilder.DropTable(
@@ -1212,13 +1419,22 @@ namespace Esh3arTech.Migrations
                 name: "AbpRoles");
 
             migrationBuilder.DropTable(
-                name: "AbpUsers");
+                name: "EtMobileUsers");
+
+            migrationBuilder.DropTable(
+                name: "EtSubscriptions");
 
             migrationBuilder.DropTable(
                 name: "OpenIddictAuthorizations");
 
             migrationBuilder.DropTable(
                 name: "AbpAuditLogs");
+
+            migrationBuilder.DropTable(
+                name: "AbpUsers");
+
+            migrationBuilder.DropTable(
+                name: "EtUserPlans");
 
             migrationBuilder.DropTable(
                 name: "OpenIddictApplications");
