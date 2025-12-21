@@ -31,11 +31,10 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Localization\Esh3arTech\*.json" />
+    <Compile Remove="Otp\**" />
     <Content Remove="Localization\Esh3arTech\*.json" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Otp\" />
+    <EmbeddedResource Remove="Otp\**" />
+    <None Remove="Otp\**" />
   </ItemGroup>
 
   <ProjectExtensions><VisualStudio><UserProperties localization_4esh3artech_4en_1json__JsonSchema="https://api.bitbucket.org/schemas/pipelines-configuration" /></VisualStudio></ProjectExtensions>

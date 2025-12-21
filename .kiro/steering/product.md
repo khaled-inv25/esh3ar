@@ -1,18 +1,19 @@
-# Esh3arTech Product Overview
+# Product Overview
 
-Esh3arTech is a messaging and notification platform built on the ABP Framework. It enables businesses to send messages to mobile users through a subscription-based model.
+Esh3arTech is a subscription and messaging management platform built on the ABP Framework. The application manages user plans, subscriptions, and real-time messaging capabilities.
 
 ## Core Features
 
-- **Messaging System**: Send messages to registered mobile users with delivery tracking
-- **Mobile User Management**: Registration, OTP verification, and user status tracking
-- **Subscription Plans**: Tiered subscription system with feature-based access control
-- **Real-time Communication**: SignalR-based hub for online user tracking and live messaging
-- **Multi-tenancy**: Support for multiple tenants with isolated data
+- **User Plan Management**: Create and manage subscription plans with pricing tiers (daily, weekly, monthly, annual), trial periods, and expiration policies
+- **Subscription System**: Handle user subscriptions with auto-renewal, billing intervals, and subscription history tracking
+- **Messaging System**: Real-time message delivery using SignalR with support for one-way messages, broadcast messages, and message status tracking (pending, sent, delivered, read, queued, failed)
+- **Mobile User Management**: Track mobile users with registration requests, OTP verification, and online status tracking
+- **Feature Management**: ABP feature system for plan-based feature access control
 
-## Business Domain
+## Domain Concepts
 
-- Users subscribe to plans that grant messaging capabilities
-- Mobile users register via phone number with OTP verification
-- Messages are routed to recipients and tracked for delivery status
-- Background jobs handle subscription renewals and email notifications
+- **UserPlan**: Subscription plans with pricing, trial periods, and expiration fallback plans
+- **Subscription**: User subscriptions with billing intervals, renewal history, and payment status
+- **Message**: Messages with content types, priorities, and delivery status
+- **MobileUser**: Mobile application users with registration status and device information
+- **RegistrationRequest**: OTP-based user registration workflow
