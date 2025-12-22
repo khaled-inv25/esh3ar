@@ -98,7 +98,7 @@ namespace Esh3arTech.Messages
 
         public async Task<MessageDto> SendOneWayMessageWithMediaAsync(SendOneWayMessageWithMediaDto input)
         {
-            await _blobService.SaveAsync(input.MediaFile, GuidGenerator.Create().ToString());
+            await _blobService.SaveAsync(input.StringBase64, GuidGenerator.Create().ToString());
             return null;
         }
     }
