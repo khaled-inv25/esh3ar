@@ -1,3 +1,4 @@
+using Esh3arTech.Abp.Blob;
 using Esh3arTech.EntityFrameworkCore;
 using Esh3arTech.Localization;
 using Esh3arTech.MultiTenancy;
@@ -30,6 +31,8 @@ using Volo.Abp.AspNetCore.SignalR;
 using Volo.Abp.Autofac;
 using Volo.Abp.AutoMapper;
 using Volo.Abp.BackgroundJobs.Hangfire;
+using Volo.Abp.BlobStoring;
+using Volo.Abp.BlobStoring.FileSystem;
 using Volo.Abp.EventBus.RabbitMq;
 using Volo.Abp.FeatureManagement;
 using Volo.Abp.Identity.Web;
@@ -61,7 +64,8 @@ namespace Esh3arTech.Web;
     typeof(AbpAspNetCoreSerilogModule),
     typeof(AbpBackgroundJobsHangfireModule),
     typeof(AbpEventBusRabbitMqModule),
-    typeof(AbpAspNetCoreSignalRModule)
+    typeof(AbpAspNetCoreSignalRModule),
+    typeof(Esh3arTechAbpBlobModule)
 )]
 public class Esh3arTechWebModule : AbpModule
 {
@@ -141,6 +145,7 @@ public class Esh3arTechWebModule : AbpModule
         ConfigureAutoApiControllers();
         ConfigureSwaggerServices(context.Services);
         ConfigureHangfire(context, configuration);
+        ConfigureBlobStoringFileSystem(configuration);
 
         Configure<PermissionManagementOptions>(options =>
         {
@@ -264,6 +269,21 @@ public class Esh3arTechWebModule : AbpModule
         {
             config.UseSqlServerStorage(configuration.GetConnectionString("Default"));
         });
+    }
+
+    private void ConfigureBlobStoringFileSystem(IConfiguration configuration)
+    {
+        Configure<AbpBlobStoringOptions>(options =>
+        {
+            options.Containers.ConfigureDefault(container =>
+            {
+                container.UseFileSystem(fileSystem =>
+                {
+                    fileSystem.BasePath = configuration["Blob"] ?? throw new NullReferenceException("BLOB Path is null");
+                });
+            });
+        });
+
     }
 
 

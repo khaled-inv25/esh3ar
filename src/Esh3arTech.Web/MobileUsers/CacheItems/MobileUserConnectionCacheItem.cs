@@ -4,7 +4,7 @@ using Volo.Abp.Caching;
 namespace Esh3arTech.Web.MobileUsers.CacheItems
 {
     [CacheName("MobileUsers")]
-    public class UserConnectionsCacheItem
+    public class MobileUserConnectionCacheItem
     {
         public List<string> ConnectionIds { get; set; } = new();
     }

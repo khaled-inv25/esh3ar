@@ -34,7 +34,6 @@ namespace Esh3arTech.Messages
 
         public Priority Priority { get; private set; }
         
-        // Updated Ctor 
         public Message(
             Guid id,
             string recipientPhoneNumber,
@@ -79,6 +78,11 @@ namespace Esh3arTech.Messages
                 throw new AbpValidationException();
             }
 
+            if (status.Equals(MessageStatus.Delivered))
+            {
+                MarkAsDelivered();
+            }
+            
             Status = status;
 
             return this;
@@ -106,12 +110,17 @@ namespace Esh3arTech.Messages
             return this;
         }
 
+        private void MarkAsDelivered()
+        {
+            DeliveredAt = (Status.Equals(MessageStatus.Delivered)) ? DateTime.Now : null;
+        }
+
         /*
          * * Methods needed:
          * 
          * 
          * SetMessageType ✅
-         * MarkAsDelivered
+         * MarkAsDelivered ✅
          * IncrementRetryCount
          * SetConversation
          * MarkAsRead

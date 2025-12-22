@@ -55,7 +55,6 @@ The architecture follows a distributed, event-driven design with clear separatio
 └─────────────────┘
 ```
 
-
 ### Technology Stack Alignment
 
 - **Message Queue**: RabbitMQ (already configured in appsettings.json)
@@ -110,7 +109,6 @@ The architecture follows a distributed, event-driven design with clear separatio
                 └─────────────────┘
 ```
 
-
 ## Components and Interfaces
 
 ### 1. Message Domain Entity (Enhanced)
@@ -127,7 +125,7 @@ public class Message : FullAuditedAggregateRoot<Guid>
     public MessageType Type { get; set; } // OneWay
     public MessageStatus Status { get; set; }
     public Priority Priority { get; set; }
-    
+
     // Delivery tracking
     public DateTime? SentAt { get; set; }
     public DateTime? DeliveredAt { get; set; }
@@ -135,13 +133,13 @@ public class Message : FullAuditedAggregateRoot<Guid>
     public int RetryCount { get; set; }
     public DateTime? LastRetryAt { get; set; }
     public string FailureReason { get; set; }
-    
+
     // Media attachments
     public List<MessageAttachment> Attachments { get; set; }
-    
+
     // Idempotency
     public string IdempotencyKey { get; set; }
-    
+
     // Methods
     public void MarkAsSent();
     public void MarkAsDelivered();
@@ -174,20 +172,19 @@ public class MessageManager : DomainService
     private readonly IDistributedEventBus _distributedEventBus;
     private readonly IBlobContainer _blobContainer;
     private readonly IDistributedCache<MessageLock> _lockCache;
-    
+
     public async Task<Message> CreateOneWayMessageAsync(
         Guid senderId,
         Guid recipientId,
         string content,
         List<IFormFile> attachments = null);
-    
+
     public async Task<bool> AcquireMessageLockAsync(Guid messageId, TimeSpan leaseTime);
     public async Task ReleaseMessageLockAsync(Guid messageId);
     public async Task<List<Message>> GetPendingMessagesForUserAsync(Guid userId);
     public async Task MoveToDeadLetterQueueAsync(Guid messageId, string reason);
 }
 ```
-
 
 ### 3. Message Application Service
 
@@ -198,7 +195,7 @@ public class MessageAppService : Esh3arTechAppService, IMessageAppService
 {
     private readonly MessageManager _messageManager;
     private readonly IDistributedEventBus _distributedEventBus;
-    
+
     [Authorize(Esh3arTechPermissions.SenderSendMessage)]
     public async Task<MessageDto> SendOneWayMessageAsync(SendOneWayMessageDto input)
     {
@@ -208,7 +205,7 @@ public class MessageAppService : Esh3arTechAppService, IMessageAppService
         // 4. Publish SendOneWayMessageEto event to RabbitMQ
         // 5. Return message DTO with ID and initial status
     }
-    
+
     public async Task<MessageDto> GetMessageStatusAsync(Guid messageId);
     public async Task<PagedResultDto<MessageDto>> GetMessageHistoryAsync(MessageFilterDto filter);
     public async Task<List<MessageDto>> GetDeadLetterQueueAsync();
@@ -225,7 +222,7 @@ public class OnlineUserTrackerService
 {
     private readonly IDistributedCache<UserConnectionsCacheItem> _connectionCache;
     private readonly ILogger<OnlineUserTrackerService> _logger;
-    
+
     public async Task AddConnectionAsync(Guid userId, string connectionId);
     public async Task RemoveConnectionAsync(Guid userId, string connectionId);
     public async Task<bool> IsUserOnlineAsync(Guid userId);
@@ -254,37 +251,37 @@ public class OnlineMobileUserHub : AbpHub
 {
     private readonly OnlineUserTrackerService _onlineTracker;
     private readonly MessageManager _messageManager;
-    
+
     public override async Task OnConnectedAsync()
     {
         var userId = CurrentUser.GetId();
         await _onlineTracker.AddConnectionAsync(userId, Context.ConnectionId);
-        
+
         // Trigger delivery of pending messages
         await Clients.Caller.SendAsync("ConnectionEstablished");
-        
+
         await base.OnConnectedAsync();
     }
-    
+
     public override async Task OnDisconnectedAsync(Exception exception)
     {
         var userId = CurrentUser.GetId();
         await _onlineTracker.RemoveConnectionAsync(userId, Context.ConnectionId);
         await base.OnDisconnectedAsync(exception);
     }
-    
+
     public async Task AcknowledgeMessage(Guid messageId)
     {
         // Update message status to Delivered
         // Called by mobile client when message is received
     }
-    
+
     public async Task MarkMessageAsRead(Guid messageId)
     {
         // Update message status to Read
         // Called by mobile client when message is opened
     }
-    
+
     public async Task Heartbeat()
     {
         var userId = CurrentUser.GetId();
@@ -293,13 +290,12 @@ public class OnlineMobileUserHub : AbpHub
 }
 ```
 
-
 ### 6. Message Delivery Handler (Background Worker)
 
 **Location**: `src/Esh3arTech.Web/MessagesHandler/MessageDeliveryHandler.cs`
 
 ```csharp
-public class MessageDeliveryHandler : 
+public class MessageDeliveryHandler :
     IDistributedEventHandler<SendOneWayMessageEto>,
     ITransientDependency
 {
@@ -308,24 +304,24 @@ public class MessageDeliveryHandler :
     private readonly MessageManager _messageManager;
     private readonly IDistributedEventBus _eventBus;
     private readonly ILogger<MessageDeliveryHandler> _logger;
-    
+
     public async Task HandleEventAsync(SendOneWayMessageEto eventData)
     {
         var messageId = eventData.MessageId;
         var recipientId = eventData.RecipientId;
-        
+
         // 1. Acquire distributed lock for message
         if (!await _messageManager.AcquireMessageLockAsync(messageId, TimeSpan.FromSeconds(30)))
         {
             _logger.LogWarning($"Could not acquire lock for message {messageId}");
             return; // Another worker is processing this message
         }
-        
+
         try
         {
             // 2. Check if user is online
             var isOnline = await _onlineTracker.IsUserOnlineAsync(recipientId);
-            
+
             if (isOnline)
             {
                 // 3. Deliver to online user via SignalR
@@ -348,7 +344,7 @@ public class MessageDeliveryHandler :
             await _messageManager.ReleaseMessageLockAsync(messageId);
         }
     }
-    
+
     private async Task DeliverToOnlineUserAsync(Guid messageId, Guid recipientId, SendOneWayMessageEto eventData);
     private async Task HandleOfflineUserAsync(Guid messageId, Guid recipientId);
     private async Task HandleDeliveryFailureAsync(Guid messageId, Exception ex);
@@ -365,25 +361,25 @@ public class PendingMessagesDeliveryWorker : AsyncPeriodicBackgroundWorkerBase
     private readonly MessageManager _messageManager;
     private readonly OnlineUserTrackerService _onlineTracker;
     private readonly IDistributedEventBus _eventBus;
-    
+
     public PendingMessagesDeliveryWorker(
         AbpAsyncTimer timer,
-        IServiceScopeFactory serviceScopeFactory) 
+        IServiceScopeFactory serviceScopeFactory)
         : base(timer, serviceScopeFactory)
     {
         Timer.Period = 5000; // Check every 5 seconds
     }
-    
+
     protected override async Task DoWorkAsync(PeriodicBackgroundWorkerContext workerContext)
     {
         // 1. Get list of online users
         var onlineUsers = await _onlineTracker.GetOnlineUsersAsync();
-        
+
         // 2. For each online user, check for pending messages
         foreach (var userId in onlineUsers)
         {
             var pendingMessages = await _messageManager.GetPendingMessagesForUserAsync(userId);
-            
+
             // 3. Publish delivery events for pending messages
             foreach (var message in pendingMessages)
             {
@@ -400,7 +396,6 @@ public class PendingMessagesDeliveryWorker : AsyncPeriodicBackgroundWorkerBase
 }
 ```
 
-
 ### 8. Retry Policy Service
 
 **Location**: `src/Esh3arTech.Domain/Messages/RetryPolicyService.cs`
@@ -410,24 +405,24 @@ public class RetryPolicyService : DomainService
 {
     private static readonly int[] BackoffIntervals = { 1, 2, 4, 8, 16 }; // seconds
     private const int MaxRetries = 5;
-    
+
     public bool ShouldRetry(Message message)
     {
         return message.RetryCount < MaxRetries;
     }
-    
+
     public TimeSpan GetNextRetryDelay(int retryCount)
     {
         if (retryCount >= BackoffIntervals.Length)
             return TimeSpan.FromSeconds(BackoffIntervals[^1]);
-            
+
         return TimeSpan.FromSeconds(BackoffIntervals[retryCount]);
     }
-    
+
     public async Task ScheduleRetryAsync(Message message)
     {
         var delay = GetNextRetryDelay(message.RetryCount);
-        
+
         // Schedule delayed event publication
         await _backgroundJobManager.EnqueueAsync(
             new RetryMessageDeliveryArgs
@@ -449,35 +444,34 @@ public class HeartbeatMonitorWorker : AsyncPeriodicBackgroundWorkerBase
 {
     private readonly OnlineUserTrackerService _onlineTracker;
     private readonly IHubContext<OnlineMobileUserHub> _hubContext;
-    
+
     public HeartbeatMonitorWorker(
         AbpAsyncTimer timer,
-        IServiceScopeFactory serviceScopeFactory) 
+        IServiceScopeFactory serviceScopeFactory)
         : base(timer, serviceScopeFactory)
     {
         Timer.Period = 30000; // Check every 30 seconds
     }
-    
+
     protected override async Task DoWorkAsync(PeriodicBackgroundWorkerContext workerContext)
     {
         // 1. Send heartbeat ping to all connected users
         await _hubContext.Clients.All.SendAsync("Ping");
-        
+
         // 2. Check for users who haven't responded to last 2 heartbeats
         var staleUsers = await _onlineTracker.GetStaleConnectionsAsync(TimeSpan.FromSeconds(60));
-        
+
         // 3. Mark stale users as offline
         foreach (var userId in staleUsers)
         {
             await _onlineTracker.MarkUserOfflineAsync(userId);
         }
-        
+
         // 4. Cleanup connections older than 5 minutes
         await _onlineTracker.CleanupStaleConnectionsAsync();
     }
 }
 ```
-
 
 ### 10. Circuit Breaker Service
 
@@ -490,7 +484,7 @@ public class CircuitBreakerService : DomainService
     private const double FailureThreshold = 0.5; // 50%
     private const int MinimumThroughput = 10;
     private const int CooldownSeconds = 60;
-    
+
     public async Task<bool> IsOpenAsync(string resourceName);
     public async Task RecordSuccessAsync(string resourceName);
     public async Task RecordFailureAsync(string resourceName);
@@ -522,7 +516,7 @@ CREATE TABLE EtMessages (
     Type INT NOT NULL,
     Status INT NOT NULL,
     Priority INT NOT NULL,
-    
+
     -- Delivery tracking
     SentAt DATETIME2 NULL,
     DeliveredAt DATETIME2 NULL,
@@ -530,10 +524,10 @@ CREATE TABLE EtMessages (
     RetryCount INT NOT NULL DEFAULT 0,
     LastRetryAt DATETIME2 NULL,
     FailureReason NVARCHAR(500) NULL,
-    
+
     -- Idempotency
     IdempotencyKey NVARCHAR(100) NOT NULL,
-    
+
     -- Audit fields
     CreationTime DATETIME2 NOT NULL,
     CreatorId UNIQUEIDENTIFIER NULL,
@@ -542,7 +536,7 @@ CREATE TABLE EtMessages (
     IsDeleted BIT NOT NULL DEFAULT 0,
     DeleterId UNIQUEIDENTIFIER NULL,
     DeletionTime DATETIME2 NULL,
-    
+
     INDEX IX_Messages_RecipientId_Status (RecipientId, Status),
     INDEX IX_Messages_Status_CreationTime (Status, CreationTime),
     INDEX IX_Messages_IdempotencyKey (IdempotencyKey)
@@ -557,7 +551,7 @@ CREATE TABLE EtMessageAttachments (
     BlobName NVARCHAR(500) NOT NULL,
     AccessUrl NVARCHAR(1000) NULL,
     UrlExpiresAt DATETIME2 NULL,
-    
+
     FOREIGN KEY (MessageId) REFERENCES EtMessages(Id) ON DELETE CASCADE
 );
 ```
@@ -586,239 +580,237 @@ Value: MessageCount
 TTL: 60 seconds
 ```
 
-
 ## Correctness Properties
 
 A property is a characteristic or behavior that should hold true across all valid executions of a system—essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.
 
 ### Property 1: Message Creation Returns Unique Identifiers
 
-*For any* set of valid message submissions, each message should receive a unique identifier that is never reused.
+_For any_ set of valid message submissions, each message should receive a unique identifier that is never reused.
 
 **Validates: Requirements 1.1, 11.1**
 
 ### Property 2: Message Persistence is Immediate
 
-*For any* message that is successfully queued, querying the Message_Store immediately after should return the message with all its properties intact.
+_For any_ message that is successfully queued, querying the Message_Store immediately after should return the message with all its properties intact.
 
 **Validates: Requirements 1.2**
 
 ### Property 3: Media Validation Rejects Invalid Files
 
-*For any* message with media attachments, if any attachment violates type or size constraints, the entire message submission should be rejected with descriptive errors.
+_For any_ message with media attachments, if any attachment violates type or size constraints, the entire message submission should be rejected with descriptive errors.
 
 **Validates: Requirements 1.3, 6.2, 6.3**
 
 ### Property 4: Invalid Messages Are Not Queued
 
-*For any* message that fails validation, the message should not appear in Message_Store and an error should be returned to the caller.
+_For any_ message that fails validation, the message should not appear in Message_Store and an error should be returned to the caller.
 
 **Validates: Requirements 1.4**
 
 ### Property 5: Initial Message State is Correct
 
-*For any* successfully queued message, the initial status should be "Queued" and the creation timestamp should be set to the current time (within 1 second tolerance).
+_For any_ successfully queued message, the initial status should be "Queued" and the creation timestamp should be set to the current time (within 1 second tolerance).
 
 **Validates: Requirements 1.5**
 
 ### Property 6: Online Users Receive Real-Time Delivery
 
-*For any* message sent to an online mobile user, the message should be delivered via SignalR and the status should transition to "Sent".
+_For any_ message sent to an online mobile user, the message should be delivered via SignalR and the status should transition to "Sent".
 
 **Validates: Requirements 1.6, 2.3**
 
 ### Property 7: Offline Users Have Messages Queued
 
-*For any* message sent to an offline mobile user, the message should remain in Message_Queue with status "Pending" until the user comes online.
+_For any_ message sent to an offline mobile user, the message should remain in Message_Queue with status "Pending" until the user comes online.
 
 **Validates: Requirements 1.7, 3.1**
 
 ### Property 8: Acknowledgment Updates Status to Delivered
 
-*For any* message that receives an acknowledgment from the mobile user, the status should transition from "Sent" to "Delivered" and the DeliveredAt timestamp should be recorded.
+_For any_ message that receives an acknowledgment from the mobile user, the status should transition from "Sent" to "Delivered" and the DeliveredAt timestamp should be recorded.
 
 **Validates: Requirements 1.9, 2.5**
 
 ### Property 9: Connection State is Tracked
 
-*For any* mobile user that connects to Connection_Hub, the Online_Tracker should maintain their connection state as online with at least one connection ID.
+_For any_ mobile user that connects to Connection_Hub, the Online_Tracker should maintain their connection state as online with at least one connection ID.
 
 **Validates: Requirements 2.1, 3.2**
 
 ### Property 10: Timeout Triggers Retry
 
-*For any* message that does not receive acknowledgment within the timeout period, the system should retry delivery according to the Retry_Policy.
+_For any_ message that does not receive acknowledgment within the timeout period, the system should retry delivery according to the Retry_Policy.
 
 **Validates: Requirements 2.6**
 
 ### Property 11: Pending Messages Retrieved on Reconnection
 
-*For any* offline user with pending messages, when the user comes online, all pending messages for that user should be retrieved from Message_Queue.
+_For any_ offline user with pending messages, when the user comes online, all pending messages for that user should be retrieved from Message_Queue.
 
 **Validates: Requirements 3.3**
 
 ### Property 12: Messages Delivered in Chronological Order
 
-*For any* set of pending messages for a user, when delivered, the messages should be ordered by creation timestamp (oldest first).
+_For any_ set of pending messages for a user, when delivered, the messages should be ordered by creation timestamp (oldest first).
 
 **Validates: Requirements 3.4**
 
 ### Property 13: Batch Status Update on Delivery
 
-*For any* set of pending messages that are delivered to a user, all messages should have their status updated to "Sent".
+_For any_ set of pending messages that are delivered to a user, all messages should have their status updated to "Sent".
 
 **Validates: Requirements 3.5**
 
 ### Property 14: Status Query Returns Complete History
 
-*For any* message with status transitions, querying the message status should return the current status and all transition timestamps (SentAt, DeliveredAt, ReadAt).
+_For any_ message with status transitions, querying the message status should return the current status and all transition timestamps (SentAt, DeliveredAt, ReadAt).
 
 **Validates: Requirements 4.2**
 
 ### Property 15: Only Valid State Transitions Allowed
 
-*For any* message, status transitions should only follow the valid path: Queued → Sent → Delivered → Read, or Queued → Failed.
+_For any_ message, status transitions should only follow the valid path: Queued → Sent → Delivered → Read, or Queued → Failed.
 
 **Validates: Requirements 4.3**
 
 ### Property 16: Failure Tracking is Complete
 
-*For any* message that fails delivery, the system should record the failure reason and increment the retry count.
+_For any_ message that fails delivery, the system should record the failure reason and increment the retry count.
 
 **Validates: Requirements 4.4**
 
 ### Property 17: Read Status Updates Correctly
 
-*For any* message marked as read by a mobile user, the status should transition to "Read" and the ReadAt timestamp should be recorded.
+_For any_ message marked as read by a mobile user, the status should transition to "Read" and the ReadAt timestamp should be recorded.
 
 **Validates: Requirements 4.5**
 
 ### Property 18: Exponential Backoff Retry Policy
 
-*For any* message that fails delivery, retries should occur with exponential backoff intervals: 1s, 2s, 4s, 8s, 16s.
+_For any_ message that fails delivery, retries should occur with exponential backoff intervals: 1s, 2s, 4s, 8s, 16s.
 
 **Validates: Requirements 5.1, 5.2**
 
 ### Property 19: Dead Letter Queue After Max Retries
 
-*For any* message that exceeds 5 retry attempts, the message should be moved to Dead_Letter_Queue with status "Failed".
+_For any_ message that exceeds 5 retry attempts, the message should be moved to Dead_Letter_Queue with status "Failed".
 
 **Validates: Requirements 5.3, 5.4**
 
 ### Property 20: Retry Metadata is Persisted
 
-*For any* message that is retried, the retry count and last retry timestamp should be persisted in Message_Store.
+_For any_ message that is retried, the retry count and last retry timestamp should be persisted in Message_Store.
 
 **Validates: Requirements 5.5**
 
 ### Property 21: Media Upload Precedes Queuing
 
-*For any* message with media attachments, all attachments should be uploaded to Media_Storage and have BlobName assigned before the message is queued.
+_For any_ message with media attachments, all attachments should be uploaded to Media_Storage and have BlobName assigned before the message is queued.
 
 **Validates: Requirements 6.1**
 
 ### Property 22: Media URLs Generated with Expiration
 
-*For any* uploaded media attachment, a secure access URL should be generated with an expiration timestamp set in the future.
+_For any_ uploaded media attachment, a secure access URL should be generated with an expiration timestamp set in the future.
 
 **Validates: Requirements 6.4**
 
 ### Property 23: Message Payload Includes Media URLs
 
-*For any* message delivered with media attachments, the message payload should include the access URLs for all attachments.
+_For any_ message delivered with media attachments, the message payload should include the access URLs for all attachments.
 
 **Validates: Requirements 6.5**
 
 ### Property 24: Circuit Breaker Opens at Threshold
 
-*For any* external dependency, when the failure rate exceeds 50% over a minimum of 10 requests, the circuit breaker should open.
+_For any_ external dependency, when the failure rate exceeds 50% over a minimum of 10 requests, the circuit breaker should open.
 
 **Validates: Requirements 8.3**
 
 ### Property 25: Distributed Locking Prevents Duplicates
 
-*For any* message being processed by multiple workers concurrently, only one worker should successfully acquire the lock and process the message.
+_For any_ message being processed by multiple workers concurrently, only one worker should successfully acquire the lock and process the message.
 
 **Validates: Requirements 9.3, 11.2**
 
 ### Property 26: Lock Release on Worker Failure
 
-*For any* message lock held by a worker that fails, the lock should be released after the lease timeout (30 seconds) allowing another worker to process it.
+_For any_ message lock held by a worker that fails, the lock should be released after the lease timeout (30 seconds) allowing another worker to process it.
 
 **Validates: Requirements 11.3**
 
 ### Property 27: Online Users Prioritized Over Offline
 
-*For any* delivery worker processing messages, messages for online users should be processed before messages for offline users.
+_For any_ delivery worker processing messages, messages for online users should be processed before messages for offline users.
 
 **Validates: Requirements 10.4**
 
 ### Property 28: Idempotency Prevents Duplicate Delivery
 
-*For any* message with an idempotency key, attempting to deliver the same message multiple times should result in only one delivery.
+_For any_ message with an idempotency key, attempting to deliver the same message multiple times should result in only one delivery.
 
 **Validates: Requirements 11.4**
 
 ### Property 29: Acknowledgment Prevents Redelivery
 
-*For any* message that has been acknowledged by a mobile user, the message should not be redelivered even if the user reconnects.
+_For any_ message that has been acknowledged by a mobile user, the message should not be redelivered even if the user reconnects.
 
 **Validates: Requirements 11.5**
 
 ### Property 30: Offline Marking Rolls Back Message Status
 
-*For any* user marked as offline with messages in "Sent" status, those messages should transition back to "Pending" status.
+_For any_ user marked as offline with messages in "Sent" status, those messages should transition back to "Pending" status.
 
 **Validates: Requirements 12.3**
 
 ### Property 31: Delivery Resumes from Last Acknowledged
 
-*For any* user that reconnects, message delivery should resume from the first unacknowledged message in chronological order.
+_For any_ user that reconnects, message delivery should resume from the first unacknowledged message in chronological order.
 
 **Validates: Requirements 12.5**
 
 ### Property 32: Dead Letter Queue Logs Failure Details
 
-*For any* message moved to Dead_Letter_Queue, the system should log the failure reason, retry count, and retry history.
+_For any_ message moved to Dead_Letter_Queue, the system should log the failure reason, retry count, and retry history.
 
 **Validates: Requirements 13.1**
 
 ### Property 33: DLQ Query Returns Complete Metadata
 
-*For any* message in Dead_Letter_Queue, querying should return recipient status, failure reason, and retry count.
+_For any_ message in Dead_Letter_Queue, querying should return recipient status, failure reason, and retry count.
 
 **Validates: Requirements 13.3**
 
 ### Property 34: Manual Retry Requeues Message
 
-*For any* message manually retried from Dead_Letter_Queue, the message should be returned to Message_Queue with status "Queued".
+_For any_ message manually retried from Dead_Letter_Queue, the message should be returned to Message_Queue with status "Queued".
 
 **Validates: Requirements 13.4**
 
 ### Property 35: Manual Retry Resets Retry Count
 
-*For any* message manually retried from Dead_Letter_Queue, the retry count should be reset to 0.
+_For any_ message manually retried from Dead_Letter_Queue, the retry count should be reset to 0.
 
 **Validates: Requirements 13.5**
 
 ### Property 36: State Transitions Are Logged
 
-*For any* message status transition, a log entry should be created with the transition timestamp and correlation identifier.
+_For any_ message status transition, a log entry should be created with the transition timestamp and correlation identifier.
 
 **Validates: Requirements 14.2**
 
 ### Property 37: Backpressure Applied at Queue Threshold
 
-*For any* message submission when Message_Queue depth exceeds 100,000 messages, the submission should be rejected with backpressure indication.
+_For any_ message submission when Message_Queue depth exceeds 100,000 messages, the submission should be rejected with backpressure indication.
 
 **Validates: Requirements 15.1**
 
 ### Property 38: Rate Limiting Enforced Per User
 
-*For any* business user, submitting more than 100 messages within a 60-second window should result in rejection of excess messages.
+_For any_ business user, submitting more than 100 messages within a 60-second window should result in rejection of excess messages.
 
 **Validates: Requirements 15.2**
-
 
 ## Error Handling
 
@@ -885,6 +877,7 @@ Property-based tests will verify universal properties across all inputs using a 
 8. **Rate Limiting** (Property 38): Generate message bursts, verify rate limits enforced
 
 **Test Tagging**: Each property test must include a comment referencing its design property:
+
 ```csharp
 // Feature: guaranteed-message-delivery, Property 1: Message Creation Returns Unique Identifiers
 [Property]
@@ -914,6 +907,7 @@ Performance tests will verify non-functional requirements:
 ### Monitoring and Observability
 
 **Metrics to Track**:
+
 - Message throughput (messages/second)
 - Delivery latency (p50, p95, p99)
 - Queue depth (current, max)
@@ -925,12 +919,14 @@ Performance tests will verify non-functional requirements:
 - Worker health status
 
 **Logging Strategy**:
+
 - Structured logging with Serilog
 - Correlation IDs for request tracing
 - Log levels: Debug (development), Information (production), Warning (errors), Error (failures), Critical (system down)
 - Log retention: 90 days minimum
 
 **Alerting Thresholds**:
+
 - Error rate > 5%: Warning alert
 - Error rate > 10%: Critical alert
 - Queue depth > 50,000: Warning alert
@@ -938,4 +934,3 @@ Performance tests will verify non-functional requirements:
 - Dead letter queue > 100: Warning alert
 - Worker down: Critical alert
 - Database connection failures: Critical alert
-

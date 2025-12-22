@@ -10,7 +10,7 @@ namespace Esh3arTech.MobileUsers
     [Table(Esh3arTechConsts.TblMobileUsers)]
     public class MobileUser : FullAuditedEntity<Guid>
     {
-        public string MobileNumber { get; set; }
+        public string MobileNumber { get; private set; }
 
         public MobileUserRegisterStatus Status { get; set; }
 

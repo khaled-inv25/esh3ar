@@ -1,6 +1,5 @@
 using AutoMapper;
 using Esh3arTech.Messages;
-using Esh3arTech.Messages.Events;
 using Esh3arTech.Plans;
 using Esh3arTech.Plans.Subscriptions;
 using Esh3arTech.Users;
@@ -24,7 +23,6 @@ public class Esh3arTechApplicationAutoMapperProfile : Profile
 
         CreateMap<BroadcastMessageDto, BroadcastMessageEvent>();
         CreateMap<Message, PendingMessageDto>();
-        CreateMap<Message, OneWayMessageCreatedEvent>();
         CreateMap<Message, SendOneWayMessageEto>();
         CreateMap<Message, MessageInListDto>();
     }

@@ -112,6 +112,7 @@ UPDATE EtSubscriptions SET IsActive = 1
 SELECT * FROM AbpUsers
 
 SELECT 
+	Id,
     RecipientPhoneNumber,
     Subject,
     MessageContent,
@@ -124,17 +125,23 @@ SELECT
         WHEN Status = 5 THEN 'Failed'
         ELSE 'Unknown'
     END AS StatusDescription,
-	CreatorId
-FROM EtMessages;
+	CreatorId,
+	CreationTime
+FROM EtMessages Order by CreationTime DESC;
 
+SELECT * FROM EtMessages
+
+SELECT COUNT(*) FROM EtMessages
+
+UPDATE EtMessages SET Status = 2
 -- Mobile sections
-SELECT * FROM EtMobileUsers
 SELECT * FROM AbpUsers
+SELECT * FROM EtMobileUsers
 
 
-INSERT INTO EtMobileUsers (Id, MobileNumber, Status, IsStatic, CreationTime, IsDeleted)
-VALUES 
-(NEWID(), '967775265496', 1, 0, GETDATE(), 0),
-(NEWID(), '967775265497', 1, 0, GETDATE(), 0),
-(NEWID(), '967775265498', 1, 0, GETDATE(), 0),
-(NEWID(), '967775265499', 1, 0, GETDATE(), 0)
+-- INSERT INTO EtMobileUsers (Id, MobileNumber, Status, IsStatic, CreationTime, IsDeleted)
+-- VALUES 
+-- (NEWID(), '967775265496', 1, 0, GETDATE(), 0),
+-- (NEWID(), '967775265497', 1, 0, GETDATE(), 0),
+-- (NEWID(), '967775265498', 1, 0, GETDATE(), 0),
+-- (NEWID(), '967775265499', 1, 0, GETDATE(), 0)

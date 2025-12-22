@@ -9,6 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Esh3arTech.Abp.Blob\Esh3arTech.Abp.Blob.csproj" />
     <ProjectReference Include="..\Esh3arTech.Domain\Esh3arTech.Domain.csproj" />
     <ProjectReference Include="..\Esh3arTech.Application.Contracts\Esh3arTech.Application.Contracts.csproj" />
   </ItemGroup>

@@ -1,13 +1,18 @@
 ﻿using Esh3arTech.Messages;
+using Esh3arTech.Web.MessagesHandler.CacheItems;
 using Esh3arTech.Web.MobileUsers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Volo.Abp;
+using Volo.Abp.Application.Dtos;
 using Volo.Abp.AspNetCore.SignalR;
+using Volo.Abp.Caching;
+using Volo.Abp.Uow;
 using static Esh3arTech.Esh3arTechConsts;
 
 namespace Esh3arTech.Web.Hubs
@@ -18,13 +23,19 @@ namespace Esh3arTech.Web.Hubs
     {
         private readonly OnlineUserTrackerService _onlineUserTrackerService;
         private readonly IMessageAppService _messageAppService;
+        private readonly IDistributedCache<UserPendingMessageItem> _cache;
+        private readonly IUnitOfWorkManager _unitOfWorkManager;
 
         public OnlineMobileUserHub(
             OnlineUserTrackerService onlineUserTrackerService,
-            IMessageAppService messageAppService)
+            IMessageAppService messageAppService,
+            IDistributedCache<UserPendingMessageItem> cache,
+            IUnitOfWorkManager unitOfWorkManager)
         {
             _onlineUserTrackerService = onlineUserTrackerService;
             _messageAppService = messageAppService;
+            _cache = cache;
+            _unitOfWorkManager = unitOfWorkManager;
         }
 
         public override async Task OnConnectedAsync()
@@ -43,10 +54,28 @@ namespace Esh3arTech.Web.Hubs
                 await _onlineUserTrackerService.AddConnection(mobileNumber, connectionId);
 
                 // Check if any pending messages.
-                var pendingMessages = await _messageAppService.GetPendingMessagesAsync(mobileNumber!);
-                if (pendingMessages.Any())
+                var cacheKey = mobileNumber;
+                var cacheItem = await _cache.GetAsync(cacheKey);
+                if (cacheItem != null && cacheItem.penddingMessages.Count > 0)
                 {
+                    IReadOnlyList<SendMessageModel> pendingMessages;
+                    List<SendMessageModel> tempList = new();
+                    foreach (var msg in cacheItem.penddingMessages)
+                    {
+                        tempList.Add(JsonSerializer.Deserialize<SendMessageModel>(msg)!);
+                    }
+
+                    pendingMessages = tempList;
                     await Clients.Caller.SendAsync(HubMethods.ReceivePendingMessages, JsonSerializer.Serialize(pendingMessages));
+                    await _cache.RemoveAsync(cacheKey);
+                }
+                else
+                {
+                    var pendingMessages = await _messageAppService.GetPendingMessagesAsync(mobileNumber!);
+                    if (pendingMessages.Any())
+                    {
+                        await Clients.Caller.SendAsync(HubMethods.ReceivePendingMessages, JsonSerializer.Serialize(pendingMessages));
+                    }
                 }
             }
         }
@@ -71,7 +100,9 @@ namespace Esh3arTech.Web.Hubs
                 return;
             }
 
+            using var uow = _unitOfWorkManager.Begin(requiresNew: true);
             await _messageAppService.UpdateMessageStatus(new UpdateMessageStatusDto() { Id = messageId, Status = MessageStatus.Delivered });
+            await uow.CompleteAsync();
         }
 
         private string? GetMobileNumber()
@@ -83,6 +114,14 @@ namespace Esh3arTech.Web.Hubs
             }
 
             return null;
+        }
+
+        public class SendMessageModel : EntityDto<Guid>
+        {
+            public string RecipientPhoneNumber { get; set; }
+            public string MessageContent { get; set; }
+            public string From { get; set; }
+
         }
     }
 }

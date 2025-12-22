@@ -10,9 +10,9 @@ namespace Esh3arTech.Web.MobileUsers
 {
     public class OnlineUserTrackerService : ITransientDependency
     {
-        private readonly IDistributedCache<UserConnectionsCacheItem> _cache;
+        private readonly IDistributedCache<MobileUserConnectionCacheItem> _cache;
 
-        public OnlineUserTrackerService(IDistributedCache<UserConnectionsCacheItem> cache)
+        public OnlineUserTrackerService(IDistributedCache<MobileUserConnectionCacheItem> cache)
         {
             _cache = cache;
         }
@@ -20,7 +20,7 @@ namespace Esh3arTech.Web.MobileUsers
         public async Task AddConnection(string mobileNumber, string connectionId)
         {
             var cacheKey = mobileNumber;
-            var cacheItem = await _cache.GetAsync(cacheKey) ?? new UserConnectionsCacheItem();
+            var cacheItem = await _cache.GetAsync(cacheKey) ?? new MobileUserConnectionCacheItem();
 
             if (!cacheItem.ConnectionIds.Contains(cacheKey))
             {

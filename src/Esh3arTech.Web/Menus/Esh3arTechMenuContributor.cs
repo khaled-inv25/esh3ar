@@ -1,5 +1,6 @@
 using Esh3arTech.Localization;
 using Esh3arTech.MultiTenancy;
+using Esh3arTech.Permissions;
 using System.Threading.Tasks;
 using Volo.Abp.Identity.Web.Navigation;
 using Volo.Abp.SettingManagement.Web.Navigation;
@@ -40,7 +41,8 @@ public class Esh3arTechMenuContributor : IMenuContributor
                 l["Menu:Plans"],
                 "~/Plans",
                 icon: "fa-solid fa-bag-shopping",
-                order: 1
+                order: 1,
+                requiredPermissionName: Esh3arTechPermissions.Esh3arPlans
             )
         );
 
@@ -51,18 +53,19 @@ public class Esh3arTechMenuContributor : IMenuContributor
                     l["Menu:Subscriptions"],
                     "~/Plans/Subscriptions",
                     icon: "fa-solid fa-id-badge",
-                    order: 1
+                    order: 1,
+                    requiredPermissionName: Esh3arTechPermissions.Esh3arSubscriptions
                 )
             );
-        
-        // Subscriptions
+
         context.Menu.AddItem(
                 new ApplicationMenuItem(
                     Esh3arTechMenus.Messages,
                     l["Menu:Messages"],
                     "~/Messages",
                     icon: "fa-solid fa-message",
-                    order: 1
+                    order: 1,
+                    requiredPermissionName: Esh3arTechPermissions.Esh3arSendMessages
                 )
             );
 

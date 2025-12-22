@@ -113,8 +113,6 @@ namespace Esh3arTech.Registrations
 
             var identityUser = await _identityUserManager.FindByEmailAsync($"{registrationRequest.MobileUser.MobileNumber}@esh3artech.ebs");
 
-            //IdentityUser newMobilIdentityUser;
-
             if (identityUser is null)
             {
                 var newMobilIdentityUser = new IdentityUser(
@@ -122,8 +120,7 @@ namespace Esh3arTech.Registrations
                     userName: registrationRequest.MobileUser.MobileNumber,
                     email: $"{registrationRequest.MobileUser.MobileNumber}@esh3artech.ebs"
                 );
-
-                newMobilIdentityUser.SetPhoneNumber(registrationRequest.MobileUser.MobileNumber, true);
+                newMobilIdentityUser.SetPhoneNumber(PrepareMobileNumber(registrationRequest.MobileUser.MobileNumber), true);
 
                 var result = await _identityUserManager.CreateAsync(newMobilIdentityUser);
 

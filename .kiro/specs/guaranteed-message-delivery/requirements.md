@@ -30,15 +30,15 @@ This document specifies the requirements for a high-performance, real-time messa
 
 #### Acceptance Criteria
 
-1. WHEN a business user submits a message with valid content and recipient, THE Message_Queue SHALL accept the message and return a unique message identifier
-2. WHEN a message is queued, THE System SHALL persist the message to Message_Store immediately to prevent data loss
+1. WHEN a business user submits a message with valid content and recipient, THE Message_Queue SHALL accept the message and return a unique message identifier ✅
+2. WHEN a message is queued, THE System SHALL persist the message to Message_Store immediately to prevent data loss ✅
 3. WHEN a message contains media attachments, THE System SHALL validate file types and sizes before accepting the message
-4. IF a message submission fails validation, THEN THE System SHALL return descriptive error information without queuing the message
-5. WHEN a message is successfully queued, THE System SHALL set initial status to "Queued" and record the creation timestamp
-6. WHEN a one-way message is sent to an online mobile user THEN the Message System SHALL deliver the message in real-time via SignalR
-7. WHEN a one-way message is sent to an offline mobile user THEN the Message System SHALL queue the message and deliver it when the user comes back online
-8. WHEN a mobile user receives a one-way message THEN the Message System SHALL display the message as read-only without reply capability
-9. WHEN a mobile user receives a one-way message THEN the Message System SHALL track the message status and updated as Delivered.
+4. IF a message submission fails validation, THEN THE System SHALL return descriptive error information without queuing the message ✅
+5. WHEN a message is successfully queued, THE System SHALL set initial status to "Queued" and record the creation timestamp ✅
+6. WHEN a one-way message is sent to an online mobile user THEN the Message System SHALL deliver the message in real-time via SignalR ✅
+7. WHEN a one-way message is sent to an offline mobile user THEN the Message System SHALL queue the message and deliver it when the user comes back online ✅
+8. WHEN a mobile user receives a one-way message THEN the Message System SHALL display the message as read-only without reply capability ✅
+9. WHEN a mobile user receives a one-way message THEN the Message System SHALL track the message status and updated as Delivered. ✅
 
 ### Requirement 2: Real-Time Message Delivery to Online Users
 
@@ -46,11 +46,11 @@ This document specifies the requirements for a high-performance, real-time messa
 
 #### Acceptance Criteria
 
-1. WHEN a mobile user is connected to Connection_Hub, THE Online_Tracker SHALL maintain the user's connection state
-2. WHEN a message is queued for an online mobile user, THE Delivery_Worker SHALL deliver the message through Connection_Hub within 100 milliseconds
-3. WHEN a message is delivered via Connection_Hub, THE System SHALL update message status to "Sent"
+1. WHEN a mobile user is connected to Connection_Hub, THE Online_Tracker SHALL maintain the user's connection state ✅
+2. WHEN a message is queued for an online mobile user, THE Delivery_Worker SHALL deliver the message through Connection_Hub within 100 milliseconds ✅
+3. WHEN a message is delivered via Connection_Hub, THE System SHALL update message status to "Sent" ✅
 4. WHEN a mobile user receives a message, THE System SHALL wait for Acknowledgment within 30 seconds
-5. IF Acknowledgment is received, THEN THE System SHALL update message status to "Delivered"
+5. IF Acknowledgment is received, THEN THE System SHALL update message status to "Delivered" ✅
 6. IF Acknowledgment is not received within timeout, THEN THE System SHALL retry delivery according to Retry_Policy
 
 ### Requirement 3: Offline Message Handling
@@ -59,11 +59,11 @@ This document specifies the requirements for a high-performance, real-time messa
 
 #### Acceptance Criteria
 
-1. WHEN a message is queued for an offline mobile user, THE System SHALL store the message in Message_Queue with status "Pending"
-2. WHEN a mobile user connects to Connection_Hub, THE Online_Tracker SHALL detect the connection event
-3. WHEN an offline user comes online, THE Delivery_Worker SHALL retrieve all pending messages for that user from Message_Queue
+1. WHEN a message is queued for an offline mobile user, THE System SHALL store the message in Message_Queue with status "Pending" (Insted we store it in a cache) ✅
+2. WHEN a mobile user connects to Connection_Hub, THE Online_Tracker SHALL detect the connection event I used (OnlineUserTrackerService) ✅
+3. WHEN an offline user comes online, THE Delivery_Worker SHALL retrieve all pending messages for that user from Message_Queue (Insted we used a cache) ✅
 4. WHEN delivering pending messages, THE System SHALL deliver messages in chronological order based on creation timestamp
-5. WHEN all pending messages are delivered, THE System SHALL update their status to "Sent"
+5. WHEN all pending messages are delivered, THE System SHALL update their status to "Sent" ✅
 
 ### Requirement 4: Message Status Tracking
 
@@ -96,7 +96,7 @@ This document specifies the requirements for a high-performance, real-time messa
 #### Acceptance Criteria
 
 1. WHEN a message includes media attachments, THE System SHALL upload files to Media_Storage before queuing the message
-2. THE System SHALL support the following media types: images (JPEG, PNG, GIF), documents (PDF), videos (MP4, MOV)
+2. THE System SHALL support the following media types: images (JPEG, PNG, GIF), documents (PDF, Excel, Csv), videos (MP4, MOV)
 3. THE System SHALL enforce maximum file size of 10MB per attachment and maximum 5 attachments per message
 4. WHEN media is uploaded, THE System SHALL generate secure, time-limited access URLs
 5. WHEN delivering a message with media, THE System SHALL include media URLs in the message payload

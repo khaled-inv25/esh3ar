@@ -12,11 +12,11 @@
     <abp-modal size="Large">
         <abp-modal-header title="@L["Hdr:SendManualMessage"].Value"></abp-modal-header>
         <abp-modal-body>
-            <div class="col-md-12">
-                <p class="text-muted">@L["WriteMessageToSend"].Value</p>
+            <div class="col-md-3">
+                <abp-input asp-for="Model.RecipientPhoneNumber" title="@L["RecipientNumber"].Value"></abp-input>
             </div>
             <div class="col-md-12">
-                <abp-input asp-for="Model.MessageContent" title="@L["CustomPrice"].Value" id="Price"></abp-input>
+                <abp-input asp-for="Model.MessageContent" title="@L["MessageContent"].Value"></abp-input>
             </div>
         </abp-modal-body>
         <abp-modal-footer buttons="@(AbpModalButtons.Cancel|AbpModalButtons.Save)"></abp-modal-footer>

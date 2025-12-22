@@ -1,5 +1,6 @@
 using Esh3arTech.Messages;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 using Volo.Abp.AspNetCore.Mvc.UI.RazorPages;
 
@@ -31,10 +32,13 @@ namespace Esh3arTech.Web.Pages.Messages
 
     public class SendMessageViewModal
     {
-        public string RecipientPhoneNumber = "775265496";
+        [RegularExpression(@"^(77|78|70|73|71)\d{7}$")]
+        [Length(maximumLength: MessageConts.MaxRecipientNumberLength, minimumLength: MessageConts.MaxRecipientNumberLength)]
+        public string RecipientPhoneNumber { get; set; }
 
+        [Required]
         public string MessageContent { get; set; }
 
-        public string Subject { get; set; } = "Test Subject";
+        public string Subject { get; set; } = "Manual Message";
     }
 }

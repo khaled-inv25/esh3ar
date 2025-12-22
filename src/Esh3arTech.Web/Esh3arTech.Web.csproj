@@ -52,6 +52,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Esh3arTech.Abp.Blob\Esh3arTech.Abp.Blob.csproj" />
     <ProjectReference Include="..\Esh3arTech.Application\Esh3arTech.Application.csproj" />
     <ProjectReference Include="..\Esh3arTech.HttpApi\Esh3arTech.HttpApi.csproj" />
     <ProjectReference Include="..\Esh3arTech.EntityFrameworkCore\Esh3arTech.EntityFrameworkCore.csproj" />

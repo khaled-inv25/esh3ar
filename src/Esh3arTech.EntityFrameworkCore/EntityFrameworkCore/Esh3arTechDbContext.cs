@@ -4,6 +4,7 @@ using Esh3arTech.EntityFrameworkCore.Plans;
 using Esh3arTech.EntityFrameworkCore.Registrations;
 using Esh3arTech.EntityFrameworkCore.Subscriptions;
 using Esh3arTech.Messages;
+using Esh3arTech.Messages.Attachments;
 using Esh3arTech.MobileUsers;
 using Esh3arTech.Plans;
 using Esh3arTech.Plans.Subscriptions;
@@ -46,6 +47,8 @@ public class Esh3arTechDbContext :
     public DbSet<SubscriptionRenewalHistory> SubscriptionRenewalHistories { get; set; }
 
     public DbSet<Message> Messages { get; set; }
+
+    public DbSet<MessageAttachment> Attachments { get; set; }
 
     #region Entities from the modules
 
@@ -105,6 +108,7 @@ public class Esh3arTechDbContext :
         builder.ApplyConfiguration(new SubscriptionConfiguration());
         builder.ApplyConfiguration(new SubscriptionRenewalHistoryConfiguration());
         builder.ApplyConfiguration(new MessageConfiguration());
+        builder.ApplyConfiguration(new AttachmentConfiguration());
 
     }
 }

@@ -15,11 +15,48 @@
 }
 
 @section styles {
-    <abp-style src="/Pages/Index.css" />
+<abp-style src="/Pages/Index.css" />
 }
 
 @section scripts {
     <abp-script type="typeof(SignalRBrowserScriptContributor)" />
+}
+
+@if (CurrentUser.IsAuthenticated)
+{
+    @if (!CurrentUser.IsInRole("admin"))
+    {
+        <div class="row mb-3">
+            <div class="col-xl-3">
+                <div class="card h-lg-100 w-100 overflow-hidden">
+                    <div class="card-body">
+                        Total Messages
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3">
+                <div class="card h-lg-100 w-100 overflow-hidden">
+                    <div class="card-body">
+                        Total Messages this month
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3">
+                <div class="card h-lg-100 w-100 overflow-hidden">
+                    <div class="card-body">
+                        Total Messages this week
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3">
+                <div class="card h-lg-100 w-100 overflow-hidden">
+                    <div class="card-body">
+                        Total Messages today
+                    </div>
+                </div>
+            </div>
+        </div>
+    }    
 }
 
 <!--

@@ -1,4 +1,7 @@
-﻿using Esh3arTech.MobileUsers;
+﻿using Esh3arTech.Abp.Blob.Services;
+using Esh3arTech.Messages.Specs;
+using Esh3arTech.MobileUsers;
+using Esh3arTech.MobileUsers.Specs;
 using Esh3arTech.Permissions;
 using Esh3arTech.Utility;
 using Microsoft.AspNetCore.Authorization;
@@ -9,7 +12,6 @@ using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.EventBus.Distributed;
-using Volo.Abp.Uow;
 
 namespace Esh3arTech.Messages
 {
@@ -19,28 +21,34 @@ namespace Esh3arTech.Messages
         private readonly IRepository<Message, Guid> _messageRepository;
         private readonly IRepository<MobileUser, Guid> _mobileUserRepository;
         private readonly MessageManager _messageManager;
+        private readonly IBlobService _blobService;
 
         public MessageAppService(
             IDistributedEventBus distributedEventBus,
-            IUnitOfWorkManager unitOfWorkManager,
             IRepository<Message, Guid> messageRepository,
             IRepository<MobileUser, Guid> mobileUserRepository,
-            MessageManager messageManager)
+            MessageManager messageManager,
+            IBlobService blobService)
         {
             _distributedEventBus = distributedEventBus;
             _messageRepository = messageRepository;
             _mobileUserRepository = mobileUserRepository;
             _messageManager = messageManager;
+            _blobService = blobService;
         }
 
-        [Authorize]
         public async Task<IReadOnlyList<PendingMessageDto>> GetPendingMessagesAsync(string phoneNumber)
         {
-            var pendingMessages = await _messageRepository.GetListAsync(m => m.RecipientPhoneNumber.Equals(phoneNumber) && m.Status.Equals(MessageStatus.Pending));
+            phoneNumber = MobileNumberPreparator.PrepareMobileNumber(phoneNumber);
 
-            IReadOnlyList<PendingMessageDto> list = ObjectMapper.Map<List<Message>, List<PendingMessageDto>>(pendingMessages);
+            if (!await _mobileUserRepository.AnyAsync(new MobileVerifiedSpecification(phoneNumber).ToExpression()))
+            {
+                throw new UserFriendlyException("Mobile not found or not verified!");
+            }
 
-            return list;
+            var pendingMessages = await _messageRepository.GetListAsync(new PendingMessageSpecification(phoneNumber).ToExpression());
+
+            return ObjectMapper.Map<List<Message>, List<PendingMessageDto>>(pendingMessages);
         }
 
         [Authorize]
@@ -59,7 +67,7 @@ namespace Esh3arTech.Messages
         {
             input.RecipientPhoneNumber = MobileNumberPreparator.PrepareMobileNumber(input.RecipientPhoneNumber);
 
-            if (!await _mobileUserRepository.AnyAsync(m => m.MobileNumber.Equals(input.RecipientPhoneNumber) && m.Status.Equals(MobileUserRegisterStatus.Verified)))
+            if (!await _mobileUserRepository.AnyAsync(new MobileVerifiedSpecification(input.RecipientPhoneNumber).ToExpression()))
             {
                 throw new UserFriendlyException("Mobile not found or not verified!");
             }
@@ -75,7 +83,6 @@ namespace Esh3arTech.Messages
 
             await _distributedEventBus.PublishAsync(sendMsgEto);
 
-            // to update the status to "Queued" immediately after enqueuing.
             createdMessage.SetMessageStatusType(MessageStatus.Queued);
             await _messageRepository.InsertAsync(createdMessage);
 
@@ -85,9 +92,14 @@ namespace Esh3arTech.Messages
         public async Task UpdateMessageStatus(UpdateMessageStatusDto input)
         {
             var message = await _messageRepository.GetAsync(input.Id);
-
             message.SetMessageStatusType(input.Status);
             await _messageRepository.UpdateAsync(message);
+        }
+
+        public async Task<MessageDto> SendOneWayMessageWithMediaAsync(SendOneWayMessageWithMediaDto input)
+        {
+            await _blobService.SaveAsync(input.MediaFile, GuidGenerator.Create().ToString());
+            return null;
         }
     }
 }
