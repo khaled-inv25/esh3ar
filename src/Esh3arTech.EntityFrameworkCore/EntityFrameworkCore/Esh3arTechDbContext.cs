@@ -4,7 +4,6 @@ using Esh3arTech.EntityFrameworkCore.Plans;
 using Esh3arTech.EntityFrameworkCore.Registrations;
 using Esh3arTech.EntityFrameworkCore.Subscriptions;
 using Esh3arTech.Messages;
-using Esh3arTech.Messages.Attachments;
 using Esh3arTech.MobileUsers;
 using Esh3arTech.Plans;
 using Esh3arTech.Plans.Subscriptions;

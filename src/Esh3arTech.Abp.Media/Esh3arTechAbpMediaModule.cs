@@ -1,4 +1,5 @@
-﻿using Volo.Abp.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using Volo.Abp.AspNetCore.Mvc;
 using Volo.Abp.Autofac;
 using Volo.Abp.Modularity;
 
@@ -18,6 +19,7 @@ namespace Esh3arTech.Abp.Media
 
         public override void ConfigureServices(ServiceConfigurationContext context)
         {
+            context.Services.AddAssemblyOf<Esh3arTechAbpMediaModule>();
         }
     }
 }

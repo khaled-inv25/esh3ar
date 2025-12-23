@@ -1,4 +1,4 @@
-﻿namespace Esh3arTech.Messages.Attachments
+﻿namespace Esh3arTech.Messages
 {
     public enum ContentType : byte
     {

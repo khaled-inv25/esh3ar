@@ -76,7 +76,7 @@ namespace Esh3arTech.Messages
             var createdMessage = await _messageManager.CreateOneWayMessage(currentUserId, input.RecipientPhoneNumber);
             createdMessage.SetSubject(input.Subject);
             createdMessage.SetMessageStatusType(MessageStatus.Pending);
-            createdMessage.SetMessageContent(input.MessageContent);
+            createdMessage.SetMessageContentOrNull(input.MessageContent);
 
             var sendMsgEto = ObjectMapper.Map<Message, SendOneWayMessageEto>(createdMessage);
             sendMsgEto.From = CurrentUser.Name!;
@@ -89,6 +89,35 @@ namespace Esh3arTech.Messages
             return new MessageDto { Id = createdMessage.Id };
         }
 
+        //[Authorize(Esh3arTechPermissions.Esh3arSendMessages)]
+        public async Task<MessageDto> SendMessageWithAttachmentAsync(SendOneWayMessageWithAttachmentDto input)
+        {
+            input.RecipientPhoneNumber = MobileNumberPreparator.PrepareMobileNumber(input.RecipientPhoneNumber);
+
+            if (!await _mobileUserRepository.AnyAsync(new MobileVerifiedSpecification(input.RecipientPhoneNumber).ToExpression()))
+            {
+                throw new UserFriendlyException("Mobile not found or not verified!");
+            }
+
+            var currentUserId = CurrentUser.Id!.Value;
+            var createdMessage = await _messageManager.CreateOneWayMessageWithAttachmentAsync(
+                currentUserId, 
+                input.RecipientPhoneNumber, 
+                input.MessageContent, 
+                input.Base64OrJson,
+                input.Type
+                );
+            createdMessage.SetSubject(input.Subject);
+            createdMessage.SetMessageStatusType(MessageStatus.Pending);
+
+            var sendMsgEto = ObjectMapper.Map<Message, SendOneWayMessageEto>(createdMessage);
+            sendMsgEto.From = CurrentUser.Name!;
+
+            await _distributedEventBus.PublishAsync(sendMsgEto);
+
+            return new MessageDto { Id = createdMessage.Id };
+        }
+
         public async Task UpdateMessageStatus(UpdateMessageStatusDto input)
         {
             var message = await _messageRepository.GetAsync(input.Id);
@@ -96,9 +125,17 @@ namespace Esh3arTech.Messages
             await _messageRepository.UpdateAsync(message);
         }
 
-        public async Task<MessageDto> SendOneWayMessageWithMediaAsync(SendOneWayMessageWithMediaDto input)
+        public async Task<MessageDto> SendMessageWithAttachmentFromUiAsync(SendOneWayMessageWithAttachmentFromUiDto input)
         {
-            await _blobService.SaveAsync(input.StringBase64, GuidGenerator.Create().ToString());
+            input.RecipientPhoneNumber = MobileNumberPreparator.PrepareMobileNumber(input.RecipientPhoneNumber);
+
+            if (!await _mobileUserRepository.AnyAsync(new MobileVerifiedSpecification(input.RecipientPhoneNumber).ToExpression()))
+            {
+                throw new UserFriendlyException("Mobile not found or not verified!");
+            }
+
+            await _blobService.SaveToFileSystemAsync(input.ImageStreamContent, "blobName");
+
             return null;
         }
     }

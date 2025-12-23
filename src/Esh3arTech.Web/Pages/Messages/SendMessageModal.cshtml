@@ -1,5 +1,7 @@
 ﻿@page
 @using Esh3arTech.Localization
+@using Esh3arTech.Web.Pages.Messages.Components
+@using Esh3arTech.Web.Pages.Messages.Components.SendAttachmentArea
 @using Microsoft.Extensions.Localization
 @using Volo.Abp.AspNetCore.Mvc.UI.Bootstrap.TagHelpers.Modal
 @model Esh3arTech.Web.Pages.Messages.SendMessageModalModel
@@ -8,7 +10,7 @@
     Layout = null;
 }
 
-<form asp-page="/Messages/SendMessageModal">
+<form asp-page="/Messages/SendMessageModal" enctype="multipart/form-data">
     <abp-modal size="Large">
         <abp-modal-header title="@L["Hdr:SendManualMessage"].Value"></abp-modal-header>
         <abp-modal-body>
@@ -17,6 +19,17 @@
             </div>
             <div class="col-md-12">
                 <abp-input asp-for="Model.MessageContent" title="@L["MessageContent"].Value"></abp-input>
+            </div>
+            <div class="col-md-12">
+                <h4 class="mb-4">Image</h4>
+                <div class="row">
+                    <div class="col-6">
+                        <div>
+                            <input type="file" id="Send_ImageFile" asp-for="Model.ImageFile" class="form-control border-0" hidden>
+                            <label id="upload-label" for="Send_ImageFile" class="btn btn-primary btn-lg text-white">Choose file</label>
+                        </div>
+                    </div>
+                </div>
             </div>
         </abp-modal-body>
         <abp-modal-footer buttons="@(AbpModalButtons.Cancel|AbpModalButtons.Save)"></abp-modal-footer>

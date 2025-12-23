@@ -130,6 +130,7 @@ SELECT
 FROM EtMessages Order by CreationTime DESC;
 
 SELECT * FROM EtMessages
+SELECT * FROM EtMessageAttachments
 
 SELECT COUNT(*) FROM EtMessages
 

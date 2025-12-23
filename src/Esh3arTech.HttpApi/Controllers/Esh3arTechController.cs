@@ -3,8 +3,6 @@ using Volo.Abp.AspNetCore.Mvc;
 
 namespace Esh3arTech.Controllers;
 
-/* Inherit your controllers from this class.
- */
 public abstract class Esh3arTechController : AbpControllerBase
 {
     protected Esh3arTechController()

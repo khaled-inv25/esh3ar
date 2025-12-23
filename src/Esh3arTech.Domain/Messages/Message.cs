@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.RegularExpressions;
 using Volo.Abp;
@@ -8,13 +9,13 @@ using Volo.Abp.Validation;
 namespace Esh3arTech.Messages
 {
     [Table(Esh3arTechConsts.TblMessage)]
-    public class Message : FullAuditedEntity<Guid>
+    public class Message : FullAuditedAggregateRoot<Guid>
     {
         public string RecipientPhoneNumber { get; private set; }
 
         public string Subject { get; private set; }
 
-        public string MessageContent { get; private set; }
+        public string? MessageContent { get; private set; }
 
         public MessageStatus Status { get; private set; }
 
@@ -33,7 +34,12 @@ namespace Esh3arTech.Messages
         public string? FailureReason { get; private set; }
 
         public Priority Priority { get; private set; }
-        
+
+        public ICollection<MessageAttachment> Attachments { get; private set; }
+
+        [NotMapped]
+        public short MaxAllowedAttchments { get; private set; }
+
         public Message(
             Guid id,
             string recipientPhoneNumber,
@@ -64,9 +70,9 @@ namespace Esh3arTech.Messages
             return this;
         }
 
-        public Message SetMessageContent(string content)
+        public Message SetMessageContentOrNull(string? content = null)
         {
-            MessageContent = Check.NotNullOrWhiteSpace(content, nameof(content));
+            MessageContent = content;
 
             return this;
         }
@@ -110,22 +116,36 @@ namespace Esh3arTech.Messages
             return this;
         }
 
+        public Message AddAttachment(Guid attachmentId, ContentType type, string url, long size, DateTime? urlExpiresAt = null)
+        {
+            IncrementAttachmentCount(size);
+            Attachments.Add(new MessageAttachment(attachmentId, Id, GenerateFileName("png"), type, url, urlExpiresAt));
+            return this;
+        }
+
         private void MarkAsDelivered()
         {
             DeliveredAt = (Status.Equals(MessageStatus.Delivered)) ? DateTime.Now : null;
         }
 
-        /*
-         * * Methods needed:
-         * 
-         * 
-         * SetMessageType ✅
-         * MarkAsDelivered ✅
-         * IncrementRetryCount
-         * SetConversation
-         * MarkAsRead
-         * MarkAsFailed --> we should have the reson for failure.
-         */
+        private string GenerateFileName(string extension)
+        {
+            return Id.ToString() + "_" + CreationTime + "." + extension;
+        }
 
+        private void IncrementAttachmentCount(long size)
+        {
+            if (Attachments != null && Attachments.Count >= AttachmenstConsts.MaxAllowedAttchments)
+            {
+                throw new BusinessException("Maximum number of attachments reached.");
+            }
+
+            if (size > MessageConts.MaxSize)
+            {
+                throw new BusinessException("Allowed size 1MB file too large!");
+            }
+
+            MaxAllowedAttchments++;
+        }
     }
 }

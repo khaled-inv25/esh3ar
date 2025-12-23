@@ -4,6 +4,7 @@ using Esh3arTech.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Volo.Abp.EntityFrameworkCore;
 
@@ -12,9 +13,11 @@ using Volo.Abp.EntityFrameworkCore;
 namespace Esh3arTech.Migrations
 {
     [DbContext(typeof(Esh3arTechDbContext))]
-    partial class Esh3arTechDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251223071335_AddFkToAttachmentAltrClmNullableMsgContent")]
+    partial class AddFkToAttachmentAltrClmNullableMsgContent
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -34,10 +37,18 @@ namespace Esh3arTech.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
+                    b.Property<string>("BlobName")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("nvarchar(1024)");
+
                     b.Property<string>("FileName")
                         .IsRequired()
                         .HasMaxLength(1024)
                         .HasColumnType("nvarchar(1024)");
+
+                    b.Property<long>("FileSize")
+                        .HasColumnType("bigint");
 
                     b.Property<Guid>("MessageId")
                         .HasColumnType("uniqueidentifier");

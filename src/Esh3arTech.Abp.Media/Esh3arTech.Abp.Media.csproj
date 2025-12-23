@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers\" />
+    <ProjectReference Include="..\Esh3arTech.Abp.Blob\Esh3arTech.Abp.Blob.csproj" />
   </ItemGroup>
 
 </Project>

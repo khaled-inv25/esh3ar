@@ -12,7 +12,9 @@ namespace Esh3arTech.Messages
 
         Task<MessageDto> SendOneWayMessageAsync(SendOneWayMessageDto input);
 
-        Task<MessageDto> SendOneWayMessageWithMediaAsync(SendOneWayMessageWithMediaDto input);
+        Task<MessageDto> SendMessageWithAttachmentAsync(SendOneWayMessageWithAttachmentDto input);
+
+        Task<MessageDto> SendMessageWithAttachmentFromUiAsync(SendOneWayMessageWithAttachmentFromUiDto input);
 
         Task UpdateMessageStatus(UpdateMessageStatusDto input);
     }
