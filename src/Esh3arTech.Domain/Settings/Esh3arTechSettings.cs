@@ -4,6 +4,7 @@ public static class Esh3arTechSettings
 {
     private const string Prefix = "Et";
     private const string NetPrefix = "Net";
+    private const string BlobPrefix = "Blob";
 
     public static class Otp
     {
@@ -37,5 +38,11 @@ public static class Esh3arTechSettings
     public static class Registretion
     {
         public const string SendOtpToStaticMobileNumber = Prefix + ".Registration.SendOtpToStaticMobileNumber";
+    }
+
+    public static class Blob
+    {
+        public const string AccessUrl = BlobPrefix + ".AccessUrl";
+        public const string Path = BlobPrefix + ".Path";
     }
 }

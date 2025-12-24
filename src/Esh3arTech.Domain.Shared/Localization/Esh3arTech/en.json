@@ -40,9 +40,8 @@
     "Permission:Subscription": "Subscriptions",
     "LongWelcomeMessage": "Welcome to the application. This is a startup project based on the ABP framework. For more information visit",
     "WriteMessageToSend": "Write your message here, to send it to a particular number.",
-    "MessageContent": "Message text",
-    "RecipientPhoneNumber": "The number the message will send.",
-    "RecipientNumber": "Phone Number",
+    "MessageContent": "Type your message here",
+    "RecipientPhoneNumber": "Recipient number",
     "Welcome": "Welcome",
     "SelectFeaturesForPlan": "Select features for plan",
     "UpdateFeaturesForPlan": "Update features for plan",
@@ -57,6 +56,7 @@
     "CostPerYear": "Year",
     "AutoRenew": "Auto Renew",
     "IsActive": "Active",
+    "UploadImage": "Max image size 1MB",
     "SuccessfullyDeleted": "Deleted Successfully"
   }
 }

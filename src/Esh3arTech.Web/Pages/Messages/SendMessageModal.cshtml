@@ -14,22 +14,16 @@
     <abp-modal size="Large">
         <abp-modal-header title="@L["Hdr:SendManualMessage"].Value"></abp-modal-header>
         <abp-modal-body>
-            <div class="col-md-3">
-                <abp-input asp-for="Model.RecipientPhoneNumber" title="@L["RecipientNumber"].Value"></abp-input>
-            </div>
-            <div class="col-md-12">
-                <abp-input asp-for="Model.MessageContent" title="@L["MessageContent"].Value"></abp-input>
-            </div>
-            <div class="col-md-12">
-                <h4 class="mb-4">Image</h4>
-                <div class="row">
-                    <div class="col-6">
-                        <div>
-                            <input type="file" id="Send_ImageFile" asp-for="Model.ImageFile" class="form-control border-0" hidden>
-                            <label id="upload-label" for="Send_ImageFile" class="btn btn-primary btn-lg text-white">Choose file</label>
-                        </div>
-                    </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <abp-input asp-for="Model.RecipientPhoneNumber" label="@L["RecipientPhoneNumber"].Value"></abp-input>
                 </div>
+                <div class="col-md-6">
+                    <abp-input type="file" id="Send_ImageFile" asp-for="Model.ImageFile" label="@L["UploadImage"].Value"></abp-input>
+                </div>
+            </div>
+            <div class="col-md-12">
+                <abp-input asp-for="Model.MessageContent" label="@L["MessageContent"].Value"></abp-input>
             </div>
         </abp-modal-body>
         <abp-modal-footer buttons="@(AbpModalButtons.Cancel|AbpModalButtons.Save)"></abp-modal-footer>

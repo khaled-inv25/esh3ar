@@ -12,7 +12,7 @@ namespace Esh3arTech.Messages
 
         public string FileName { get; private set; }
 
-        public ContentType Type { get; private set; }
+        public string Type { get; private set; }
 
         public string AccessUrl { get; private set; }
 
@@ -21,8 +21,8 @@ namespace Esh3arTech.Messages
         public MessageAttachment(
             Guid Id,
             Guid messageId, 
-            string fileName, 
-            ContentType type,
+            string fileName,
+            string type,
             string accessUrl, 
             DateTime? urlExpiresAt = null)
             : base(Id)

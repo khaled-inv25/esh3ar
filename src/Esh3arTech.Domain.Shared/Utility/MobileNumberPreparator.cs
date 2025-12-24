@@ -7,6 +7,12 @@ namespace Esh3arTech.Utility
     {
         public static string PrepareMobileNumber(string mobileNumber)
         {
+            // To prepare for check by removing 967 if exists
+            if (mobileNumber.StartsWith("967"))
+            {
+                mobileNumber = mobileNumber[3..];
+            }
+
             // Remove any non-digit characters
             var digitsOnly = Regex.Replace(mobileNumber, @"\D", string.Empty);
             // Ensure the number starts with '77, 78, 73, 71, 70' and is 9 digits long

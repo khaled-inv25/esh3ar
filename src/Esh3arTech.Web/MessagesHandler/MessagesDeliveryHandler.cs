@@ -1,4 +1,5 @@
 ﻿using Esh3arTech.Messages;
+using Esh3arTech.Messages.Eto;
 using Esh3arTech.Web.Hubs;
 using Esh3arTech.Web.MessagesHandler.CacheItems;
 using Esh3arTech.Web.MobileUsers;
@@ -34,10 +35,10 @@ namespace Esh3arTech.Web.MessagesHandler
 
         public async Task HandleEventAsync(SendOneWayMessageEto eventData)
         {
-            await SendRealTimeOrPendMessageAsync(eventData.Id, eventData.RecipientPhoneNumber, eventData.MessageContent, eventData.From);
+            await SendRealTimeOrPendMessageAsync(eventData.Id, eventData.RecipientPhoneNumber, eventData.MessageContent, eventData.From, eventData.AccessUrl);
         }
 
-        private async Task SendRealTimeOrPendMessageAsync(Guid id, string phoneNumber, string messageContent, string from)
+        private async Task SendRealTimeOrPendMessageAsync(Guid id, string phoneNumber, string messageContent, string from, string accessUrl)
         {
             var connectionId = await _onlineUserTrackerService.GetFirstConnectionIdByPhoneNumberAsync(phoneNumber);
 
@@ -49,7 +50,8 @@ namespace Esh3arTech.Web.MessagesHandler
                     Id = id,
                     RecipientPhoneNumber = phoneNumber,
                     MessageContent = messageContent,
-                    From = from
+                    From = from,
+                    AccessUrl = accessUrl
                 };
 
                 await _hubContext.Clients.Client(connectionId).SendAsync(HubMethods.ReceiveMessage, JsonSerializer.Serialize(model));
@@ -64,7 +66,8 @@ namespace Esh3arTech.Web.MessagesHandler
                     Id = id,
                     RecipientPhoneNumber = phoneNumber,
                     MessageContent = messageContent,
-                    From = from
+                    From = from,
+                    AccessUrl = accessUrl
                 };
 
                 var cacheKey = phoneNumber;
@@ -85,7 +88,8 @@ namespace Esh3arTech.Web.MessagesHandler
             public string RecipientPhoneNumber { get; set; }
             public string MessageContent { get; set; }
             public string From { get; set; }
-
+            public string AccessUrl { get; set; }
+            public DateTime? UrlExpiresAt { get; set; }
         }
     }
 }

@@ -23,7 +23,9 @@ public class Esh3arTechSettingDefinitionProvider : SettingDefinitionProvider
             new SettingDefinition(Email.Sender, GetFromSettings(Email.Sender.Replace(".", ":")) ?? ""),
             new SettingDefinition(Email.From, GetFromSettings(Email.From.Replace(".", ":")) ?? ""),
             new SettingDefinition(Email.SmtpHost, GetFromSettings(Email.SmtpHost.Replace(".", ":")) ?? ""),
-            new SettingDefinition(Email.Password, GetFromSettings(Email.Password.Replace(".", ":")) ?? "")
+            new SettingDefinition(Email.Password, GetFromSettings(Email.Password.Replace(".", ":")) ?? ""),
+            new SettingDefinition(Blob.AccessUrl, GetFromSettings(Blob.AccessUrl.Replace(".", ":")) ?? ""),
+            new SettingDefinition(Blob.Path, GetFromSettings(Blob.Path.Replace(".", ":")) ?? "")
             );
     }
 

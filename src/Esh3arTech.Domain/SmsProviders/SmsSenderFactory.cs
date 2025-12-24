@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System;
 using Volo.Abp.DependencyInjection;
-using static Esh3arTech.Settings.Esh3arTechSettings;
 
 namespace Esh3arTech.SmsProviders
 {

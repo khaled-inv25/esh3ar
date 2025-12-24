@@ -13,8 +13,8 @@ using Volo.Abp.EntityFrameworkCore;
 namespace Esh3arTech.Migrations
 {
     [DbContext(typeof(Esh3arTechDbContext))]
-    [Migration("20251220070020_AlterColumnsMessagesTbl")]
-    partial class AlterColumnsMessagesTbl
+    [Migration("20251224133741_Initial")]
+    partial class Initial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -31,6 +31,13 @@ namespace Esh3arTech.Migrations
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ConcurrencyStamp")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)")
+                        .HasColumnName("ConcurrencyStamp");
 
                     b.Property<Guid?>("ConversationId")
                         .HasColumnType("uniqueidentifier");
@@ -54,6 +61,11 @@ namespace Esh3arTech.Migrations
                     b.Property<DateTime?>("DeliveredAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("ExtraProperties")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("ExtraProperties");
+
                     b.Property<string>("FailureReason")
                         .HasColumnType("nvarchar(max)");
 
@@ -72,7 +84,6 @@ namespace Esh3arTech.Migrations
                         .HasColumnName("LastModifierId");
 
                     b.Property<string>("MessageContent")
-                        .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<byte>("Priority")
@@ -108,6 +119,38 @@ namespace Esh3arTech.Migrations
                     b.HasIndex("CreatorId");
 
                     b.ToTable("EtMessages");
+                });
+
+            modelBuilder.Entity("Esh3arTech.Messages.MessageAttachment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AccessUrl")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(1024)
+                        .HasColumnType("nvarchar(1024)");
+
+                    b.Property<Guid>("MessageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Type")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime?>("UrlExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MessageId");
+
+                    b.ToTable("EtMessageAttachments");
                 });
 
             modelBuilder.Entity("Esh3arTech.MobileUsers.MobileUser", b =>
@@ -2291,6 +2334,15 @@ namespace Esh3arTech.Migrations
                         .IsRequired();
                 });
 
+            modelBuilder.Entity("Esh3arTech.Messages.MessageAttachment", b =>
+                {
+                    b.HasOne("Esh3arTech.Messages.Message", null)
+                        .WithMany("Attachments")
+                        .HasForeignKey("MessageId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Esh3arTech.Plans.Subscriptions.Subscription", b =>
                 {
                     b.HasOne("Esh3arTech.Plans.UserPlan", null)
@@ -2475,6 +2527,11 @@ namespace Esh3arTech.Migrations
                         .HasForeignKey("TenantId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Esh3arTech.Messages.Message", b =>
+                {
+                    b.Navigation("Attachments");
                 });
 
             modelBuilder.Entity("Esh3arTech.MobileUsers.MobileUser", b =>

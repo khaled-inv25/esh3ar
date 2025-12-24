@@ -279,7 +279,7 @@ public class Esh3arTechWebModule : AbpModule
             {
                 container.UseFileSystem(fileSystem =>
                 {
-                    fileSystem.BasePath = configuration["Blob"] ?? throw new NullReferenceException("BLOB Path is null");
+                    fileSystem.BasePath = configuration["Blob:Path"] ?? throw new NullReferenceException("BLOB Path is null");
                 });
             });
         });

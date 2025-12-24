@@ -1,5 +1,6 @@
 using AutoMapper;
 using Esh3arTech.Messages;
+using Esh3arTech.Messages.Eto;
 using Esh3arTech.Plans;
 using Esh3arTech.Plans.Subscriptions;
 using Esh3arTech.Users;

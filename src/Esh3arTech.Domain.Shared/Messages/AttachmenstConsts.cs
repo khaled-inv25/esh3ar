@@ -4,6 +4,7 @@
     {
         public const int MaxFileNameLength = 1024;
         public const int MaxBlobNameLength = 1024;
+        public const int MaxFileTypeLength = 255;
 
         public const int MaxAccessUrlLength = 255;
 

@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Esh3arTech.Migrations
 {
     /// <inheritdoc />
-    public partial class AlterColumnsMessagesTbl : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -819,7 +819,7 @@ namespace Esh3arTech.Migrations
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     RecipientPhoneNumber = table.Column<string>(type: "nvarchar(14)", maxLength: 14, nullable: false),
                     Subject = table.Column<string>(type: "nvarchar(32)", maxLength: 32, nullable: true),
-                    MessageContent = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    MessageContent = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Status = table.Column<byte>(type: "tinyint", nullable: false),
                     Type = table.Column<byte>(type: "tinyint", nullable: false),
                     ConversationId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
@@ -829,6 +829,8 @@ namespace Esh3arTech.Migrations
                     ReadAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     FailureReason = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Priority = table.Column<byte>(type: "tinyint", nullable: false),
+                    ExtraProperties = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ConcurrencyStamp = table.Column<string>(type: "nvarchar(40)", maxLength: 40, nullable: false),
                     CreationTime = table.Column<DateTime>(type: "datetime2", nullable: false),
                     CreatorId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     LastModificationTime = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -956,6 +958,28 @@ namespace Esh3arTech.Migrations
                         name: "FK_AbpEntityPropertyChanges_AbpEntityChanges_EntityChangeId",
                         column: x => x.EntityChangeId,
                         principalTable: "AbpEntityChanges",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "EtMessageAttachments",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    MessageId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    FileName = table.Column<string>(type: "nvarchar(1024)", maxLength: 1024, nullable: false),
+                    Type = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
+                    AccessUrl = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    UrlExpiresAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_EtMessageAttachments", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_EtMessageAttachments_EtMessages_MessageId",
+                        column: x => x.MessageId,
+                        principalTable: "EtMessages",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -1259,6 +1283,11 @@ namespace Esh3arTech.Migrations
                 column: "UserName");
 
             migrationBuilder.CreateIndex(
+                name: "IX_EtMessageAttachments_MessageId",
+                table: "EtMessageAttachments",
+                column: "MessageId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_EtMessages_CreatorId",
                 table: "EtMessages",
                 column: "CreatorId");
@@ -1396,7 +1425,7 @@ namespace Esh3arTech.Migrations
                 name: "AbpUserTokens");
 
             migrationBuilder.DropTable(
-                name: "EtMessages");
+                name: "EtMessageAttachments");
 
             migrationBuilder.DropTable(
                 name: "EtRegistretionRequest");
@@ -1424,6 +1453,9 @@ namespace Esh3arTech.Migrations
 
             migrationBuilder.DropTable(
                 name: "AbpRoles");
+
+            migrationBuilder.DropTable(
+                name: "EtMessages");
 
             migrationBuilder.DropTable(
                 name: "EtMobileUsers");

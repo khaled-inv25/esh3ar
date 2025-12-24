@@ -6,15 +6,15 @@ namespace Esh3arTech.Messages
 {
     public interface IMessageAppService
     {
+        Task<MessageDto> SendOneWayMessageAsync(SendOneWayMessageDto input);
+
+        //Task<MessageDto> SendMessageWithAttachmentAsync(SendOneWayMessageWithAttachmentDto input);
+
+        Task<MessageDto> SendMessageWithAttachmentFromUiAsync(SendOneWayMessageWithAttachmentFromUiDto input);
+
         Task<IReadOnlyList<PendingMessageDto>> GetPendingMessagesAsync(string phoneNumber);
 
         Task<PagedResultDto<MessageInListDto>> GetOneWayMessagesAsync();
-
-        Task<MessageDto> SendOneWayMessageAsync(SendOneWayMessageDto input);
-
-        Task<MessageDto> SendMessageWithAttachmentAsync(SendOneWayMessageWithAttachmentDto input);
-
-        Task<MessageDto> SendMessageWithAttachmentFromUiAsync(SendOneWayMessageWithAttachmentFromUiDto input);
 
         Task UpdateMessageStatus(UpdateMessageStatusDto input);
     }

@@ -29,5 +29,10 @@ namespace Esh3arTech.Abp.Blob.Services
         {
             return _container;
         }
+
+        public async Task<bool> DeleteBlobAsync(string blobName)
+        {
+            return await _container.DeleteAsync(blobName);
+        }
     }
 }

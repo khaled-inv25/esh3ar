@@ -121,6 +121,8 @@ namespace Esh3arTech.Web.Hubs
             public string RecipientPhoneNumber { get; set; }
             public string MessageContent { get; set; }
             public string From { get; set; }
+            public string AccessUrl { get; set; }
+            public DateTime? UrlExpiresAt { get; set; }
 
         }
     }

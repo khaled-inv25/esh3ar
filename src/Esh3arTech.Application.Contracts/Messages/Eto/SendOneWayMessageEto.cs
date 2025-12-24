@@ -1,7 +1,7 @@
 ﻿using System;
 using Volo.Abp.EventBus;
 
-namespace Esh3arTech.Messages
+namespace Esh3arTech.Messages.Eto
 {
     [EventName("Esh3arTech.Messages.SendMessageEto")]
     public class SendOneWayMessageEto : MessageBaseDto
@@ -12,10 +12,9 @@ namespace Esh3arTech.Messages
 
         public string Subject { get; set; }
 
-        public MessageStatus Status { get; private set; }
+        public string AccessUrl { get; set; }
 
-        public MessageType Type { get; private set; }
+        public DateTime? UrlExpiresAt { get; set; }
 
-        public Priority Priority { get; private set; }
     }
 }

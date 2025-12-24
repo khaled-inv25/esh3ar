@@ -8,6 +8,5 @@ namespace Esh3arTech.Abp.Blob
         )]
     public class Esh3arTechAbpBlobModule : AbpModule
     {
-
     }
 }

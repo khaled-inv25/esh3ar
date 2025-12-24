@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Security.AccessControl;
 using System.Text.RegularExpressions;
 using Volo.Abp;
 using Volo.Abp.Domain.Entities.Auditing;
@@ -43,12 +45,13 @@ namespace Esh3arTech.Messages
         public Message(
             Guid id,
             string recipientPhoneNumber,
-            MessageType type ) 
+            MessageType type)
             : base(id)
         {
             SetRecipientPhoneNumber(recipientPhoneNumber);
             SetMessageType(type);
             SetPriority(Priority.Normal);
+            Attachments = new Collection<MessageAttachment>();
         }
 
         public Message SetRecipientPhoneNumber(string number)
@@ -116,10 +119,10 @@ namespace Esh3arTech.Messages
             return this;
         }
 
-        public Message AddAttachment(Guid attachmentId, ContentType type, string url, long size, DateTime? urlExpiresAt = null)
+        public Message AddAttachment(Guid attachmentId, string fileName, string type, string accessUrl, DateTime? urlExpiresAt = null)
         {
-            IncrementAttachmentCount(size);
-            Attachments.Add(new MessageAttachment(attachmentId, Id, GenerateFileName("png"), type, url, urlExpiresAt));
+            IncrementAttachmentCount();
+            Attachments.Add(new MessageAttachment(attachmentId, Id, fileName, type, accessUrl, urlExpiresAt));
             return this;
         }
 
@@ -128,21 +131,11 @@ namespace Esh3arTech.Messages
             DeliveredAt = (Status.Equals(MessageStatus.Delivered)) ? DateTime.Now : null;
         }
 
-        private string GenerateFileName(string extension)
-        {
-            return Id.ToString() + "_" + CreationTime + "." + extension;
-        }
-
-        private void IncrementAttachmentCount(long size)
+        private void IncrementAttachmentCount()
         {
             if (Attachments != null && Attachments.Count >= AttachmenstConsts.MaxAllowedAttchments)
             {
                 throw new BusinessException("Maximum number of attachments reached.");
-            }
-
-            if (size > MessageConts.MaxSize)
-            {
-                throw new BusinessException("Allowed size 1MB file too large!");
             }
 
             MaxAllowedAttchments++;

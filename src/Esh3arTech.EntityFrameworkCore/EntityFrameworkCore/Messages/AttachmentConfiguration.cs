@@ -11,6 +11,8 @@ namespace Esh3arTech.EntityFrameworkCore.Messages
             builder.Property(ma => ma.MessageId).IsRequired();
 
             builder.Property(ma => ma.FileName).IsRequired().HasMaxLength(AttachmenstConsts.MaxFileNameLength);
+
+            builder.Property(ma => ma.Type).IsRequired(false).HasMaxLength(AttachmenstConsts.MaxFileTypeLength);
             
             builder.Property(ma => ma.AccessUrl).IsRequired().HasMaxLength(AttachmenstConsts.MaxAccessUrlLength);
 

@@ -24,7 +24,7 @@ namespace Esh3arTech.Web.Pages.Messages
         [BindProperty]
         public SendMessageViewModal Model { get; set; }
 
-        public void OnGetAsync()
+        public void OnGet()
         {
         }
 
@@ -51,9 +51,8 @@ namespace Esh3arTech.Web.Pages.Messages
                 using var stream = Model.ImageFile.OpenReadStream();
                 dto.ImageStreamContent = new RemoteStreamContent(
                     stream,
-                    "icon",
-                    Model.ImageFile.ContentType
-                    );
+                    Model.ImageFile.FileName,
+                    Model.ImageFile.ContentType);
 
                 await _messageAppService.SendMessageWithAttachmentFromUiAsync(dto);
             }
@@ -70,19 +69,19 @@ namespace Esh3arTech.Web.Pages.Messages
     public class SendMessageViewModal
     {
         [RegularExpression(@"^(77|78|70|73|71)\d{7}$")]
-        [Length(maximumLength: 9, minimumLength: 9)]
+        [Length(maximumLength: MessageConts.MobileNumberLength, minimumLength: MessageConts.MobileNumberLength)]
+        [Required]
         public string RecipientPhoneNumber { get; set; }
 
-        [Required]
-        public string MessageContent { get; set; }
+        [CanBeNull]
+        public string? MessageContent { get; set; }
 
         public string Subject { get; set; } = "Manual Message";
 
         [CanBeNull]
-        [Display(Name = "Image")]
         [DataType(DataType.Upload)]
-        [MaxFileSize(MessageConts.MaxSize)]
+        [MaxFileSize(MessageConts.MaxFileSize)]
         [AllowedExtensions([".jpg", ".png", ".jpeg"])]
-        public IFormFile ImageFile { get; set; }
+        public IFormFile? ImageFile { get; set; }
     }
 }
