@@ -104,9 +104,7 @@ namespace Esh3arTech.Web.Hubs
 
             try
             {
-                using var uow = _unitOfWorkManager.Begin();
                 await _messageAppService.UpdateMessageStatus(new UpdateMessageStatusDto() { Id = messageId, Status = MessageStatus.Delivered });
-                await uow.CompleteAsync();
             }
             catch (AbpDbConcurrencyException ex)
             {

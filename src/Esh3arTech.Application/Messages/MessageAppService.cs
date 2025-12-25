@@ -7,6 +7,7 @@ using Esh3arTech.MobileUsers.Specs;
 using Esh3arTech.Permissions;
 using Esh3arTech.Utility;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,6 +17,7 @@ using Volo.Abp.Application.Dtos;
 using Volo.Abp.Data;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.EventBus.Distributed;
+using Volo.Abp.Uow;
 
 namespace Esh3arTech.Messages
 {
@@ -26,19 +28,25 @@ namespace Esh3arTech.Messages
         private readonly IRepository<Message, Guid> _messageRepository;
         private readonly IRepository<MobileUser, Guid> _mobileUserRepository;
         private readonly IBlobService _blobService;
+        private readonly IUnitOfWorkManager _unitOfWorkManager;
+        private readonly IMessageStatusUpdater _messageStatusUpdater;
 
         public MessageAppService(
             IMessageFactory messageFactory,
             IDistributedEventBus distributedEventBus,
             IRepository<Message, Guid> messageRepository,
             IRepository<MobileUser, Guid> mobileUserRepository,
-            IBlobService blobService)
+            IBlobService blobService,
+            IUnitOfWorkManager unitOfWorkManager,
+            IMessageStatusUpdater messageStatusUpdater = null)
         {
             _messageFactory = messageFactory;
             _distributedEventBus = distributedEventBus;
             _messageRepository = messageRepository;
             _mobileUserRepository = mobileUserRepository;
             _blobService = blobService;
+            _unitOfWorkManager = unitOfWorkManager;
+            _messageStatusUpdater = messageStatusUpdater;
         }
 
         [Authorize(Esh3arTechPermissions.Esh3arSendMessages)]
@@ -146,8 +154,7 @@ namespace Esh3arTech.Messages
 
         public async Task UpdateMessageStatus(UpdateMessageStatusDto input)
         {
-            var message = await _messageRepository.GetAsync(input.Id);
-            message.SetMessageStatusType(input.Status);
+            await _messageStatusUpdater.UpdateStatusAsync(input.Id, input.Status);
         }
     }
 }

@@ -131,6 +131,9 @@ FROM EtMessages Order by CreationTime DESC;
 
 SELECT * FROM EtMessageAttachments
 
+DELETE FROM EtMessages
+DELETE FROM EtMessageAttachments
+
 update EtMessages set Status = 2
 
 SELECT * FROM EtMessages
@@ -143,7 +146,7 @@ UPDATE EtMessages SET Status = 2
 SELECT * FROM AbpUsers
 SELECT * FROM EtMobileUsers
 
-
+SELECT * FROM EtMobileUsers
 -- INSERT INTO EtMobileUsers (Id, MobileNumber, Status, IsStatic, CreationTime, IsDeleted)
 -- VALUES 
 -- (NEWID(), '967775265496', 1, 0, GETDATE(), 0),
