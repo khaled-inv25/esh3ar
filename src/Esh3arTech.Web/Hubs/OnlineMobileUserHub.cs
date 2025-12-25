@@ -27,20 +27,17 @@ namespace Esh3arTech.Web.Hubs
         private readonly IMessageAppService _messageAppService;
         private readonly IDistributedCache<UserPendingMessageItem> _cache;
         private readonly IUnitOfWorkManager _unitOfWorkManager;
-        private readonly ILogger _logger;
 
         public OnlineMobileUserHub(
             OnlineUserTrackerService onlineUserTrackerService,
             IMessageAppService messageAppService,
             IDistributedCache<UserPendingMessageItem> cache,
-            IUnitOfWorkManager unitOfWorkManager,
-            ILogger logger)
+            IUnitOfWorkManager unitOfWorkManager)
         {
             _onlineUserTrackerService = onlineUserTrackerService;
             _messageAppService = messageAppService;
             _cache = cache;
             _unitOfWorkManager = unitOfWorkManager;
-            _logger = logger;
         }
 
         public override async Task OnConnectedAsync()
@@ -113,7 +110,7 @@ namespace Esh3arTech.Web.Hubs
             }
             catch (AbpDbConcurrencyException ex)
             {
-                _logger.Error($"Ack: {ex.Message}");
+                //_logger.Error($"Ack: {ex.Message}");
             }
         }
 

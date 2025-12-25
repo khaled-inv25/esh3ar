@@ -131,6 +131,8 @@ FROM EtMessages Order by CreationTime DESC;
 
 SELECT * FROM EtMessageAttachments
 
+update EtMessages set Status = 2
+
 SELECT * FROM EtMessages
 
 
