@@ -129,8 +129,9 @@ SELECT
 	CreationTime
 FROM EtMessages Order by CreationTime DESC;
 
-SELECT * FROM EtMessages
 SELECT * FROM EtMessageAttachments
+
+SELECT * FROM EtMessages
 
 
 SELECT COUNT(*) FROM EtMessages

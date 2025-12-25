@@ -13,6 +13,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
+using Volo.Abp.Data;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.EventBus.Distributed;
 
@@ -147,7 +148,6 @@ namespace Esh3arTech.Messages
         {
             var message = await _messageRepository.GetAsync(input.Id);
             message.SetMessageStatusType(input.Status);
-            await _messageRepository.UpdateAsync(message);
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using Esh3arTech.Messages;
+﻿using Castle.Core.Logging;
+using Esh3arTech.Messages;
 using Esh3arTech.Web.MessagesHandler.CacheItems;
 using Esh3arTech.Web.MobileUsers;
 using Microsoft.AspNetCore.Authorization;
@@ -12,6 +13,7 @@ using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.AspNetCore.SignalR;
 using Volo.Abp.Caching;
+using Volo.Abp.Data;
 using Volo.Abp.Uow;
 using static Esh3arTech.Esh3arTechConsts;
 
@@ -25,17 +27,20 @@ namespace Esh3arTech.Web.Hubs
         private readonly IMessageAppService _messageAppService;
         private readonly IDistributedCache<UserPendingMessageItem> _cache;
         private readonly IUnitOfWorkManager _unitOfWorkManager;
+        private readonly ILogger _logger;
 
         public OnlineMobileUserHub(
             OnlineUserTrackerService onlineUserTrackerService,
             IMessageAppService messageAppService,
             IDistributedCache<UserPendingMessageItem> cache,
-            IUnitOfWorkManager unitOfWorkManager)
+            IUnitOfWorkManager unitOfWorkManager,
+            ILogger logger)
         {
             _onlineUserTrackerService = onlineUserTrackerService;
             _messageAppService = messageAppService;
             _cache = cache;
             _unitOfWorkManager = unitOfWorkManager;
+            _logger = logger;
         }
 
         public override async Task OnConnectedAsync()
@@ -100,9 +105,16 @@ namespace Esh3arTech.Web.Hubs
                 return;
             }
 
-            using var uow = _unitOfWorkManager.Begin(requiresNew: true);
-            await _messageAppService.UpdateMessageStatus(new UpdateMessageStatusDto() { Id = messageId, Status = MessageStatus.Delivered });
-            await uow.CompleteAsync();
+            try
+            {
+                using var uow = _unitOfWorkManager.Begin();
+                await _messageAppService.UpdateMessageStatus(new UpdateMessageStatusDto() { Id = messageId, Status = MessageStatus.Delivered });
+                await uow.CompleteAsync();
+            }
+            catch (AbpDbConcurrencyException ex)
+            {
+                _logger.Error($"Ack: {ex.Message}");
+            }
         }
 
         private string? GetMobileNumber()
