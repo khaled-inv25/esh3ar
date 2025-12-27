@@ -34,13 +34,15 @@ namespace Esh3arTech.Messages
             IRepository<Message, Guid> messageRepository,
             IRepository<MobileUser, Guid> mobileUserRepository,
             IBlobService blobService,
-            IUnitOfWorkManager unitOfWorkManager)
+            IUnitOfWorkManager unitOfWorkManager,
+            IMessageStatusUpdater messageStatusUpdater)
         {
             _messageFactory = messageFactory;
             _distributedEventBus = distributedEventBus;
             _messageRepository = messageRepository;
             _mobileUserRepository = mobileUserRepository;
             _blobService = blobService;
+            _messageStatusUpdater = messageStatusUpdater;
         }
 
         [Authorize(Esh3arTechPermissions.Esh3arSendMessages)]
@@ -134,14 +136,23 @@ namespace Esh3arTech.Messages
         }
 
         [Authorize]
-        public async Task<PagedResultDto<MessageInListDto>> GetOneWayMessagesAsync()
+        public async Task<PagedResultDto<MessageInListDto>> GetOneWayMessagesAsync(PagedAndSortedResultRequestDto input)
         {
+            var queryable = await _messageRepository.GetQueryableAsync();
             var currentUserId = CurrentUser.Id!.Value;
 
-            var messages = await _messageRepository.GetListAsync(m => m.CreatorId.Equals(currentUserId));
+            queryable = queryable
+                .Where(m => m.CreatorId.Equals(currentUserId))
+                .Skip(input.SkipCount)
+                .Take(input.MaxResultCount)
+                .OrderByDescending(m => m.CreationTime);
+
+            var messages = await AsyncExecuter.ToListAsync(queryable);
+            var count = await AsyncExecuter.CountAsync(queryable);
+
             var dtos = ObjectMapper.Map<List<Message>, List<MessageInListDto>>(messages);
 
-            return new PagedResultDto<MessageInListDto>(dtos.Count, dtos);
+            return new PagedResultDto<MessageInListDto>(count, dtos);
         }
 
         public async Task UpdateMessageStatus(UpdateMessageStatusDto input)

@@ -6,7 +6,7 @@
         abp.libs.datatables.normalizeConfiguration({
             serverSide: true,
             paging: true,
-            order: [[1, "desc"]],
+            order: [[0, "desc"]],
             searching: false,
             scrollX: true,
             ajax: abp.libs.datatables.createAjax(esh3arTech.messages.message.getOneWayMessages),

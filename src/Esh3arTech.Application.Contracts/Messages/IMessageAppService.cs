@@ -14,7 +14,7 @@ namespace Esh3arTech.Messages
 
         Task<IReadOnlyList<PendingMessageDto>> GetPendingMessagesAsync(string phoneNumber);
 
-        Task<PagedResultDto<MessageInListDto>> GetOneWayMessagesAsync();
+        Task<PagedResultDto<MessageInListDto>> GetOneWayMessagesAsync(PagedAndSortedResultRequestDto input);
 
         Task UpdateMessageStatus(UpdateMessageStatusDto input);
     }

@@ -12,23 +12,18 @@ namespace Esh3arTech.Messages
     public class MessageStatusUpdater : IMessageStatusUpdater, ITransientDependency
     {
         private readonly IRepository<Message, Guid> _messageRepository;
-        private readonly IUnitOfWorkManager _unitOfWorkManager;
         private readonly ILogger<MessageStatusUpdater> _logger;
 
         public MessageStatusUpdater(
-            IRepository<Message, Guid> messageRepository, 
-            IUnitOfWorkManager unitOfWorkManager, 
+            IRepository<Message, Guid> messageRepository,
             ILogger<MessageStatusUpdater> logger)
         {
             _messageRepository = messageRepository;
-            _unitOfWorkManager = unitOfWorkManager;
             _logger = logger;
         }
 
         public async Task UpdateStatusAsync(Guid messageId, MessageStatus status)
         {
-            //using var uow = _unitOfWorkManager.Begin(requiresNew: true);
-
             var message = await _messageRepository.FindAsync(messageId);
             if (message == null)
             {
@@ -43,7 +38,6 @@ namespace Esh3arTech.Messages
                 message.SetMessageStatusType(status);
                 await _messageRepository.UpdateAsync(message);
                 _logger.LogInformation($"Message {messageId} status updated to {status}.");
-                //await uow.CompleteAsync();
             }
             catch (AbpDbConcurrencyException ex)
             {
