@@ -1,5 +1,4 @@
-﻿using Castle.Core.Logging;
-using Esh3arTech.Messages;
+﻿using Esh3arTech.Messages;
 using Esh3arTech.Web.MessagesHandler.CacheItems;
 using Esh3arTech.Web.MobileUsers;
 using Microsoft.AspNetCore.Authorization;
@@ -13,8 +12,6 @@ using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.AspNetCore.SignalR;
 using Volo.Abp.Caching;
-using Volo.Abp.Data;
-using Volo.Abp.Uow;
 using static Esh3arTech.Esh3arTechConsts;
 
 namespace Esh3arTech.Web.Hubs
@@ -26,18 +23,15 @@ namespace Esh3arTech.Web.Hubs
         private readonly OnlineUserTrackerService _onlineUserTrackerService;
         private readonly IMessageAppService _messageAppService;
         private readonly IDistributedCache<UserPendingMessageItem> _cache;
-        private readonly IUnitOfWorkManager _unitOfWorkManager;
 
         public OnlineMobileUserHub(
             OnlineUserTrackerService onlineUserTrackerService,
             IMessageAppService messageAppService,
-            IDistributedCache<UserPendingMessageItem> cache,
-            IUnitOfWorkManager unitOfWorkManager)
+            IDistributedCache<UserPendingMessageItem> cache)
         {
             _onlineUserTrackerService = onlineUserTrackerService;
             _messageAppService = messageAppService;
             _cache = cache;
-            _unitOfWorkManager = unitOfWorkManager;
         }
 
         public override async Task OnConnectedAsync()
@@ -102,14 +96,11 @@ namespace Esh3arTech.Web.Hubs
                 return;
             }
 
-            try
+            await _messageAppService.UpdateMessageStatus(new UpdateMessageStatusDto
             {
-                await _messageAppService.UpdateMessageStatus(new UpdateMessageStatusDto() { Id = messageId, Status = MessageStatus.Delivered });
-            }
-            catch (AbpDbConcurrencyException ex)
-            {
-                //_logger.Error($"Ack: {ex.Message}");
-            }
+                Id = messageId,
+                Status = MessageStatus.Delivered
+            });
         }
 
         private string? GetMobileNumber()

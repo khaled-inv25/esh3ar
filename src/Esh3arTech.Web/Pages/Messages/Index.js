@@ -21,7 +21,8 @@
                 },
                 {
                     title: l('Clm:CreationTime'),
-                    data: "creationTime"
+                    data: "creationTime",
+                    dataFormat: "datetime"
                 },
                 {
                     title: l('Clm:MessageStatus'),

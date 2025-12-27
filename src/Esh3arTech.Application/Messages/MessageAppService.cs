@@ -26,7 +26,6 @@ namespace Esh3arTech.Messages
         private readonly IRepository<Message, Guid> _messageRepository;
         private readonly IRepository<MobileUser, Guid> _mobileUserRepository;
         private readonly IBlobService _blobService;
-        private readonly IUnitOfWorkManager _unitOfWorkManager;
         private readonly IMessageStatusUpdater _messageStatusUpdater;
 
         public MessageAppService(
@@ -35,16 +34,13 @@ namespace Esh3arTech.Messages
             IRepository<Message, Guid> messageRepository,
             IRepository<MobileUser, Guid> mobileUserRepository,
             IBlobService blobService,
-            IUnitOfWorkManager unitOfWorkManager,
-            IMessageStatusUpdater messageStatusUpdater = null)
+            IUnitOfWorkManager unitOfWorkManager)
         {
             _messageFactory = messageFactory;
             _distributedEventBus = distributedEventBus;
             _messageRepository = messageRepository;
             _mobileUserRepository = mobileUserRepository;
             _blobService = blobService;
-            _unitOfWorkManager = unitOfWorkManager;
-            _messageStatusUpdater = messageStatusUpdater;
         }
 
         [Authorize(Esh3arTechPermissions.Esh3arSendMessages)]
@@ -53,15 +49,13 @@ namespace Esh3arTech.Messages
             var messageManager = _messageFactory.Create(MessageType.OneWay);
             var createdMessage = await messageManager.CreateMessageAsync(input.RecipientPhoneNumber, input.MessageContent);
 
-            createdMessage.SetMessageStatusType(MessageStatus.Pending);
+            createdMessage.SetMessageStatusType(MessageStatus.Queued);
+            await _messageRepository.InsertAsync(createdMessage, autoSave: true);
 
             var sendMsgEto = ObjectMapper.Map<Message, SendOneWayMessageEto>(createdMessage);
             sendMsgEto.From = CurrentUser.Name!;
 
             await _distributedEventBus.PublishAsync(sendMsgEto);
-
-            createdMessage.SetMessageStatusType(MessageStatus.Queued);
-            await _messageRepository.InsertAsync(createdMessage);
 
             return new MessageDto { Id = createdMessage.Id };
         }

@@ -9,6 +9,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Volo.Abp.Caching;
 using Volo.Abp.DependencyInjection;
+using Volo.Abp.Domain.Repositories;
 using Volo.Abp.EventBus.Distributed;
 using static Esh3arTech.Esh3arTechConsts;
 
@@ -18,78 +19,55 @@ namespace Esh3arTech.Web.MessagesHandler
     {
         private readonly IHubContext<OnlineMobileUserHub> _hubContext;
         private readonly OnlineUserTrackerService _onlineUserTrackerService;
-        private readonly IMessageAppService _messageAppService;
         private readonly IDistributedCache<UserPendingMessageItem> _cache;
+        private readonly IMessageAppService _messageAppService;
 
         public MessagesDeliveryHandler(
             IHubContext<OnlineMobileUserHub> hubContext,
             OnlineUserTrackerService onlineUserTrackerService,
-            IMessageAppService messageAppService,
-            IDistributedCache<UserPendingMessageItem> distributedCache)
+            IDistributedCache<UserPendingMessageItem> distributedCache,
+            IMessageAppService messageAppService)
         {
             _hubContext = hubContext;
             _onlineUserTrackerService = onlineUserTrackerService;
-            _messageAppService = messageAppService;
             _cache = distributedCache;
+            _messageAppService = messageAppService;
         }
 
         public async Task HandleEventAsync(SendOneWayMessageEto eventData)
         {
-            await SendRealTimeOrPendMessageAsync(eventData.Id, eventData.RecipientPhoneNumber, eventData.MessageContent, eventData.From, eventData.AccessUrl);
+            await SendRealTimeOrPendMessageAsync(eventData);
         }
 
-        private async Task SendRealTimeOrPendMessageAsync(Guid id, string phoneNumber, string messageContent, string from, string accessUrl)
+        private async Task SendRealTimeOrPendMessageAsync(SendOneWayMessageEto eto)
         {
-            var connectionId = await _onlineUserTrackerService.GetFirstConnectionIdByPhoneNumberAsync(phoneNumber);
+            var connectionId = await _onlineUserTrackerService.GetFirstConnectionIdByPhoneNumberAsync(eto.RecipientPhoneNumber);
 
             // To send message if user online other ways save it in db and cache as pending message.
             if (!string.IsNullOrEmpty(connectionId))
             {
-                var model = new SendMessageModel
-                {
-                    Id = id,
-                    RecipientPhoneNumber = phoneNumber,
-                    MessageContent = messageContent,
-                    From = from,
-                    AccessUrl = accessUrl
-                };
-
-                await _hubContext.Clients.Client(connectionId).SendAsync(HubMethods.ReceiveMessage, JsonSerializer.Serialize(model));
-                await _messageAppService.UpdateMessageStatus(new UpdateMessageStatusDto() { Id = id, Status = MessageStatus.Sent });
+                await UpdateMessageStatusAsync(eto.Id, MessageStatus.Sent);
+                await _hubContext.Clients.Client(connectionId).SendAsync(HubMethods.ReceiveMessage, JsonSerializer.Serialize(eto));
             }
             else
             {
-                await _messageAppService.UpdateMessageStatus(new UpdateMessageStatusDto() { Id = id, Status = MessageStatus.Pending });
+                await UpdateMessageStatusAsync(eto.Id, MessageStatus.Pending);
 
-                var model = new SendMessageModel()
-                {
-                    Id = id,
-                    RecipientPhoneNumber = phoneNumber,
-                    MessageContent = messageContent,
-                    From = from,
-                    AccessUrl = accessUrl
-                };
-
-                var cacheKey = phoneNumber;
+                var cacheKey = eto.RecipientPhoneNumber;
                 var cacheItem = await _cache.GetAsync(cacheKey);
                 if (cacheItem == null)
                 {
                     cacheItem = new UserPendingMessageItem();
                 }
-                cacheItem.penddingMessages.Add(JsonSerializer.Serialize(model));
+                cacheItem.penddingMessages.Add(JsonSerializer.Serialize(eto));
 
                 await _cache.SetAsync(cacheKey, cacheItem);
             }
         }
 
-        public class SendMessageModel
+        private async Task UpdateMessageStatusAsync(Guid id, MessageStatus status)
         {
-            public Guid Id { get; set; }
-            public string RecipientPhoneNumber { get; set; }
-            public string MessageContent { get; set; }
-            public string From { get; set; }
-            public string AccessUrl { get; set; }
-            public DateTime? UrlExpiresAt { get; set; }
+            await _messageAppService.UpdateMessageStatus(new UpdateMessageStatusDto { Id = id, Status = status});
         }
     }
 }

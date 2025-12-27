@@ -127,17 +127,17 @@ SELECT
     END AS StatusDescription,
 	CreatorId,
 	CreationTime
-FROM EtMessages Order by CreationTime DESC;
+FROM EtMessages Order by CreationTime DESC
 
 SELECT * FROM EtMessageAttachments
 
 DELETE FROM EtMessages
+
 DELETE FROM EtMessageAttachments
 
 update EtMessages set Status = 2
 
 SELECT * FROM EtMessages
-
 
 SELECT COUNT(*) FROM EtMessages
 
