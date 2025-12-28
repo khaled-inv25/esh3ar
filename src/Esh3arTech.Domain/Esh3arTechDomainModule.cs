@@ -1,3 +1,4 @@
+using Esh3arTech.Messages;
 using Esh3arTech.MultiTenancy;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -45,8 +46,7 @@ public class Esh3arTechDomainModule : AbpModule
         });
 
         // Configure message reliability options
-        context.Services.Configure<Messages.RetryPolicy.MessageReliabilityOptions>(
-            configuration.GetSection("MessageReliability"));
+        Configure<MessageReliabilityOptions>(configuration.GetSection("MessageReliability"));
 
 #if DEBUG
         context.Services.Replace(ServiceDescriptor.Singleton<IEmailSender, NullEmailSender>());

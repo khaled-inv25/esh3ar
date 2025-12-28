@@ -156,7 +156,7 @@ public class Esh3arTechWebModule : AbpModule
         Configure<AbpRabbitMqEventBusOptions>(options =>
         {
             options.PrefetchCount = 100;
-            
+            /*
             // Configure priority queues
             options.ConfigureQueue("esh3artech.messages.high", queue =>
             {
@@ -211,6 +211,7 @@ public class Esh3arTechWebModule : AbpModule
                 queue.Arguments.Add("x-dead-letter-exchange", "esh3artech.messages.dlx");
                 queue.Arguments.Add("x-dead-letter-routing-key", "failed");
             });
+            */
         });
     }
 
@@ -349,7 +350,7 @@ public class Esh3arTechWebModule : AbpModule
         var env = context.GetEnvironment();
 
         // Register background workers
-        await context.AddBackgroundWorkerAsync<Esh3arTech.EntityFrameworkCore.BackgroundWorkers.MessageRetryWorker>();
+        //await context.AddBackgroundWorkerAsync<Esh3arTech.EntityFrameworkCore.BackgroundWorkers.MessageRetryWorker>();
 
         app.UseForwardedHeaders();
 

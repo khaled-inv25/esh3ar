@@ -13,7 +13,7 @@ using Volo.Abp.EntityFrameworkCore;
 namespace Esh3arTech.Migrations
 {
     [DbContext(typeof(Esh3arTechDbContext))]
-    [Migration("20251225032757_Initial")]
+    [Migration("20251228131920_Initial")]
     partial class Initial
     {
         /// <inheritdoc />
@@ -69,6 +69,9 @@ namespace Esh3arTech.Migrations
                     b.Property<string>("FailureReason")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("IdempotencyKey")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<bool>("IsDeleted")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -83,8 +86,14 @@ namespace Esh3arTech.Migrations
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("LastModifierId");
 
+                    b.Property<DateTime?>("LastRetryAt")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("MessageContent")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("NextRetryAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<byte>("Priority")
                         .HasColumnType("tinyint");

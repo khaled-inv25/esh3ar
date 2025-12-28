@@ -11,14 +11,10 @@ namespace Esh3arTech.Messages.Idempotency
     public class IdempotencyService : IIdempotencyService, ITransientDependency
     {
         private readonly IDistributedCache<IdempotencyRecord> _cache;
-        private readonly MessageReliabilityOptions _options;
 
-        public IdempotencyService(
-            IDistributedCache<IdempotencyRecord> cache,
-            IOptions<MessageReliabilityOptions> options)
+        public IdempotencyService(IDistributedCache<IdempotencyRecord> cache)
         {
             _cache = cache;
-            _options = options.Value;
         }
 
         public async Task<bool> IsProcessedAsync(string idempotencyKey)

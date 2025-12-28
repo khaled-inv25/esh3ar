@@ -110,6 +110,7 @@ UPDATE EtSubscriptions SET IsActive = 1
 -- Failed = 5      // Delivery failed after retries
 
 SELECT * FROM AbpUsers
+SELECT * FROM EtMobileUsers
 
 SELECT 
 	Id,

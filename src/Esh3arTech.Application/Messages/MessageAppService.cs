@@ -55,7 +55,6 @@ namespace Esh3arTech.Messages
             var messageManager = _messageFactory.Create(MessageType.OneWay);
             var createdMessage = await messageManager.CreateMessageAsync(input.RecipientPhoneNumber, input.MessageContent);
 
-            // Generate and set idempotency key
             var idempotencyKey = await _idempotencyService.GenerateKeyAsync(createdMessage.Id);
             createdMessage.SetIdempotencyKey(idempotencyKey);
 
@@ -64,8 +63,6 @@ namespace Esh3arTech.Messages
 
             var sendMsgEto = ObjectMapper.Map<Message, SendOneWayMessageEto>(createdMessage);
             sendMsgEto.From = CurrentUser.Name!;
-            sendMsgEto.IdempotencyKey = idempotencyKey;
-            sendMsgEto.Priority = createdMessage.Priority;
 
             await _distributedEventBus.PublishAsync(sendMsgEto);
 
@@ -188,6 +185,11 @@ namespace Esh3arTech.Messages
         public async Task ResendOneWayMessageAsync(Guid messageId)
         {
             await Task.CompletedTask;
+        }
+
+        public async Task<object> GetMessageById(Guid messageId)
+        {
+            return await _messageRepository.GetAsync(messageId);
         }
     }
 }

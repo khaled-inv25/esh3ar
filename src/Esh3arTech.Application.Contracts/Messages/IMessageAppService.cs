@@ -21,6 +21,8 @@ namespace Esh3arTech.Messages
 
         Task<bool> IsExistsAsync(Guid messageId);
 
+        Task<object> GetMessageById(Guid messageId);
+
         Task<MessageStatus> GetMessageStatusById(Guid messageId);
 
         Task ResendOneWayMessageAsync(Guid messageId);

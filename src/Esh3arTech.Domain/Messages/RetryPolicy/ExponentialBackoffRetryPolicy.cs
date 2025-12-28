@@ -29,18 +29,5 @@ namespace Esh3arTech.Messages.RetryPolicy
             return retryCount < MaxRetries;
         }
     }
-
-    public class MessageReliabilityOptions
-    {
-        public int MaxRetries { get; set; } = 5;
-        public int BaseRetryDelaySeconds { get; set; } = 5;
-        public int MaxRetryDelaySeconds { get; set; } = 300;
-        public int IdempotencyTtlHours { get; set; } = 24;
-        public double CircuitBreakerFailureThreshold { get; set; } = 0.5;
-        public int CircuitBreakerSampleSize { get; set; } = 10;
-        public int CircuitBreakerTimeoutSeconds { get; set; } = 30;
-        public int AcknowledgmentTimeoutMinutes { get; set; } = 5;
-        public int BatchSizeLimit { get; set; } = 1000;
-    }
 }
 

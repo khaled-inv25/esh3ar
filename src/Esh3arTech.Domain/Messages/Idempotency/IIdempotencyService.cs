@@ -1,9 +1,8 @@
 using System.Threading.Tasks;
-using Volo.Abp.DependencyInjection;
 
 namespace Esh3arTech.Messages.Idempotency
 {
-    public interface IIdempotencyService : ITransientDependency
+    public interface IIdempotencyService
     {
         Task<bool> IsProcessedAsync(string idempotencyKey);
         Task MarkAsProcessedAsync(string idempotencyKey, System.TimeSpan ttl);
