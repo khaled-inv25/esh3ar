@@ -1,19 +1,25 @@
 # Product Overview
 
-Esh3arTech is a subscription and messaging management platform built on the ABP Framework. The application manages user plans, subscriptions, and real-time messaging capabilities.
+Esh3arTech is a messaging and subscription management platform built on ABP Framework. The system enables:
 
-## Core Features
+- **One-way messaging**: Send messages (with optional attachments) to mobile users via Custom mobile app
+- **Subscription management**: Manage user plans, subscriptions, billing intervals, and renewals
+- **User registration**: Mobile user registration with OTP verification
+- **Real-time communication**: SignalR hub for tracking online mobile users and message delivery
+- **Message tracking**: Queue, deliver, and track message status with retry mechanisms
 
-- **User Plan Management**: Create and manage subscription plans with pricing tiers (daily, weekly, monthly, annual), trial periods, and expiration policies
-- **Subscription System**: Handle user subscriptions with auto-renewal, billing intervals, and subscription history tracking
-- **Messaging System**: Real-time message delivery using SignalR with support for one-way messages, broadcast messages, and message status tracking (pending, sent, delivered, read, queued, failed)
-- **Mobile User Management**: Track mobile users with registration requests, OTP verification, and online status tracking
-- **Feature Management**: ABP feature system for plan-based feature access control
+## Core Business Domains
 
-## Domain Concepts
+- **Messages**: One-way messaging with attachment support, status tracking, and delivery confirmation
+- **Plans & Subscriptions**: Feature-based plans with billing intervals, renewal history, and expiration management
+- **Mobile Users**: User registration, verification, and connection tracking
+- **Registrations**: OTP-based registration flow for mobile users
 
-- **UserPlan**: Subscription plans with pricing, trial periods, and expiration fallback plans
-- **Subscription**: User subscriptions with billing intervals, renewal history, and payment status
-- **Message**: Messages with content types, priorities, and delivery status
-- **MobileUser**: Mobile application users with registration status and device information
-- **RegistrationRequest**: OTP-based user registration workflow
+## Key Features
+
+- Multi-language support (Arabic/English)
+- Permission-based access control
+- Background workers for subscription renewals
+- Distributed event bus (RabbitMQ) for message processing
+- Blob storage for file attachments
+- Email and SMS provider integration

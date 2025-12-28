@@ -1,154 +1,111 @@
 # Project Structure
 
-## Solution Architecture
+## Solution Organization
 
-Esh3arTech follows ABP's layered architecture based on Domain-Driven Design (DDD) principles. The solution is organized into the following projects:
+The solution follows **ABP Framework's layered architecture** based on Domain-Driven Design (DDD) principles.
 
-## Core Layers
+## Core Projects
 
-### Domain Layer (`Esh3arTech.Domain`)
-Contains business logic, domain entities, domain services, and repository interfaces.
+### Domain Layer
 
-**Key folders**:
-- `Plans/`: UserPlan entity, UserPlanManager, IUserPlanRepository
-- `Plans/Subscriptions/`: Subscription entity, SubscriptionManager, renewal history
-- `Messages/`: Message entity, MessageManager
-- `MobileUsers/`: MobileUser entity, MobileUserManager
-- `Registretions/`: RegistrationRequest entity, RegistrationRequestManager
-- `Otp/`: OTP management service
-- `Features/`: Custom feature management providers
-- `SmsProviders/`: SMS/Email sending abstractions and implementations
-- `BackgroundJobs/`: Background job definitions (e.g., EmailSendingJob)
-- `Settings/`: Application settings definitions
-- `Data/`: Database migration service and schema migrator interface
+- **Esh3arTech.Domain.Shared**: Enums, constants, shared types (no dependencies)
+  - Localization resources (ar.json, en.json)
+  - Domain constants (MessageConsts, UserConsts, SubscriptionConsts)
+  - Enums (MessageStatus, MessageType, Priority, BillingInterval, SubscriptionStatus)
 
-### Domain.Shared Layer (`Esh3arTech.Domain.Shared`)
-Contains constants, enums, and shared types used across all layers.
+- **Esh3arTech.Domain**: Domain entities, domain services, repositories
+  - Entities: Message, MobileUser, UserPlan, Subscription, RegistrationRequest
+  - Domain services: MessageManager, OneWayMessageManager, UserPlanManager, SubscriptionManager
+  - Specifications: PendingMessageSpecification, MobileVerifiedSpecification
+  - Background jobs: EmailSendingJob
+  - Settings & feature providers
 
-**Key folders**:
-- `Localization/Esh3arTech/`: Localization resources (en.json, ar.json)
-- `Messages/`: Message-related enums (MessageStatus, MessageType, Priority, MessageContentType)
-- `MobileUsers/`: MobileUser constants and enums
-- `Plans/Subscriptions/`: Subscription enums (BillingInterval, SubscriptionStatus, LastPaymentStatus)
-- `Users/`: User constants
-- `Utility/`: Helper utilities (e.g., MobileNumberPreparator)
+### Application Layer
 
-### Application Layer (`Esh3arTech.Application`)
-Contains application services implementing business use cases.
+- **Esh3arTech.Application.Contracts**: DTOs, interfaces, permissions
+  - Application service interfaces (IMessageAppService, IPlanAppService, ISubscriptionAppService)
+  - DTOs for input/output
+  - Permission definitions (Esh3arTechPermissions)
+  - Feature definitions (Esh3arTechFeatureDefinitionProvider)
+  - Event Transfer Objects (ETOs) for distributed events
 
-**Key folders**:
-- `Plans/`: PlanAppService for plan CRUD and feature management
-- `Plans/Subscriptions/`: SubscriptionAppService for subscription management
-- `Messages/`: MessageAppService for message operations
-- `Users/`: UserAppService for user operations
-- `Registrations/`: RegistrationAppService for user registration and OTP verification
-- `Tokens/`: TokenProvider for JWT token generation
-- `Sandbox/`: Testing/sandbox services
+- **Esh3arTech.Application**: Application service implementations
+  - Application services: MessageAppService, PlanAppService, SubscriptionAppService, UserAppService
+  - AutoMapper profiles
+  - Business logic orchestration
 
-**Conventions**:
-- Application services inherit from `Esh3arTechAppService`
-- Use AutoMapper for DTO mapping (profiles in `Esh3arTechApplicationAutoMapperProfile.cs`)
-- Implement interfaces from Application.Contracts layer
+### Infrastructure Layer
 
-### Application.Contracts Layer (`Esh3arTech.Application.Contracts`)
-Contains DTOs, application service interfaces, and permissions.
+- **Esh3arTech.EntityFrameworkCore**: EF Core implementation
+  - DbContext configuration (Esh3arTechDbContext)
+  - Entity configurations (MessageConfiguration, SubscriptionConfiguration)
+  - Custom repositories (UserPlanRepository, SubscriptionRepository)
+  - Migrations
+  - Background workers (IdentifySubscriptionsDueForRenewalWorker)
 
-**Key folders**:
-- `Plans/`: Plan DTOs (CreatePlanDto, UpdatePlanDto, PlanDto, PlanInListDto, etc.)
-- `Plans/Subscriptions/`: Subscription DTOs
-- `Messages/`: Message DTOs and events (OneWayMessageCreatedEvent, SendOneWayMessageEto)
-- `Registrations/`: Registration DTOs (RegisterRequestDto, VerifyOtpRequestDto)
-- `Permissions/`: Permission definitions (Esh3arTechPermissions, Esh3arTechPermissionDefinitionProvider)
-- `Feature/`: Feature definitions (Esh3arTechFeatureDefinitionProvider)
+### Presentation Layer
 
-**Naming conventions**:
-- DTOs: `{Entity}Dto`, `Create{Entity}Dto`, `Update{Entity}Dto`, `{Entity}InListDto`
-- Interfaces: `I{Entity}AppService`
-- Events: `{Event}Eto` (Event Transfer Object) or `{Event}Event`
+- **Esh3arTech.HttpApi**: HTTP API controllers
+  - Base controller (Esh3arTechController)
+  - API models
 
-## Infrastructure Layer
+- **Esh3arTech.HttpApi.Client**: HTTP client proxies for remote API calls
 
-### EntityFrameworkCore Layer (`Esh3arTech.EntityFrameworkCore`)
-Contains EF Core DbContext, configurations, and repository implementations.
+- **Esh3arTech.Web**: ASP.NET Core MVC/Razor Pages application
+  - Pages: Messages, Plans, Subscriptions
+  - Components: Toolbar, ViewComponents
+  - SignalR Hubs: OnlineMobileUserHub
+  - Services: OnlineUserTrackerService, MessagesDeliveryHandler
+  - Static files (wwwroot)
 
-**Key folders**:
-- `EntityFrameworkCore/`: DbContext and module configuration
-- `EntityFrameworkCore/Plans/`: UserPlanConfiguration, UserPlanRepository
-- `EntityFrameworkCore/Subscriptions/`: SubscriptionConfiguration, SubscriptionRepository
-- `EntityFrameworkCore/Messages/`: MessageConfiguration
-- `EntityFrameworkCore/MobileUsers/`: MobileUserConfiguration
-- `EntityFrameworkCore/Registrations/`: RegistrationRequestConfiguration
-- `Migrations/`: EF Core migrations
-- `BackgroundWorkers/`: Background workers (e.g., IdentifySubscriptionsDueForRenewalWorker)
+### Utility Projects
 
-**Conventions**:
-- Entity configurations use Fluent API in separate `{Entity}Configuration` classes
-- Custom repositories implement domain repository interfaces
-- Table names use `Et` prefix (defined in `Esh3arTechConsts.DbTablePrefix`)
+- **Esh3arTech.DbMigrator**: Console app for database migrations and seeding
 
-### DbMigrator (`Esh3arTech.DbMigrator`)
-Console application for applying migrations and seeding initial data.
+- **Esh3arTech.Abp.Media**: Separate microservice for media/blob handling
+  - MediaController for file upload/download
+  - Runs independently from main web app
 
-## Presentation Layer
+- **Esh3arTech.Abp.Blob**: Blob storage service library
+  - BlobService, IBlobService
 
-### Web Layer (`Esh3arTech.Web`)
-ASP.NET Core MVC/Razor Pages application.
+## Folder Conventions
 
-**Key folders**:
-- `Pages/`: Razor Pages organized by feature (Plans, Messages, etc.)
-- `Pages/{Feature}/`: Each feature has Index.cshtml, Index.cshtml.cs, Index.js
-- `Pages/{Feature}/`: Modals for create/edit operations (CreateModal.cshtml, EditModal.cshtml)
-- `Menus/`: Menu and toolbar contributors
-- `Hubs/`: SignalR hubs (OnlineMobileUserHub)
-- `MessagesHandler/`: Message delivery handlers
-- `MobileUsers/`: Online user tracking services and cache items
-- `HealthChecks/`: Health check implementations
-- `wwwroot/`: Static files (CSS, JS, images, client libraries)
+### Domain Entities
+- Located in `src/Esh3arTech.Domain/{EntityName}/`
+- Entity classes use aggregate root pattern
+- Specifications in `Specs/` subfolder
 
-**Conventions**:
-- Page models inherit from `Esh3arTechPageModel`
-- JavaScript files use ABP's AJAX helpers and DataTables
-- Modals follow ABP modal conventions
+### Application Services
+- Located in `src/Esh3arTech.Application/{EntityName}/`
+- Corresponding contracts in `src/Esh3arTech.Application.Contracts/{EntityName}/`
+- DTOs suffixed with `Dto` (e.g., MessageDto, CreatePlanDto)
 
-### HttpApi Layer (`Esh3arTech.HttpApi`)
-Contains API controllers exposing application services as REST endpoints.
+### EF Core Configurations
+- Entity configurations in `src/Esh3arTech.EntityFrameworkCore/EntityFrameworkCore/{EntityName}/`
+- Configuration classes suffixed with `Configuration` (e.g., MessageConfiguration)
 
-**Key folders**:
-- `Controllers/`: API controllers inheriting from `Esh3arTechController`
-
-**Conventions**:
-- Controllers inherit from `Esh3arTechController` which inherits from `AbpControllerBase`
-- ABP auto-generates REST endpoints from application services
-
-### HttpApi.Client Layer (`Esh3arTech.HttpApi.Client`)
-Contains HTTP client proxies for consuming the API.
-
-## Configuration & Scripts
-
-- `etc/scripts/`: PowerShell scripts for initialization and migration
-- `etc/abp-studio/run-profiles/`: ABP Studio run configurations
-- `.editorconfig`: Code style configuration
-- `common.props`: Shared MSBuild properties
+### Web Pages
+- Razor pages in `src/Esh3arTech.Web/Pages/{EntityName}/`
+- JavaScript files alongside .cshtml files
+- Modals suffixed with `Modal.cshtml`
 
 ## Naming Conventions
 
-- **Namespaces**: Follow folder structure (e.g., `Esh3arTech.Plans.Subscriptions`)
-- **Entities**: PascalCase, singular (e.g., `UserPlan`, `Subscription`)
-- **Services**: `{Entity}Manager` (domain), `{Entity}AppService` (application)
-- **Repositories**: `I{Entity}Repository` (interface), `{Entity}Repository` (implementation)
-- **Constants**: Defined in `Esh3arTechConsts` class with `Tbl` prefix for table names
-- **Localization keys**: Use dot notation (e.g., `Menu:Plans`, `Clm:DisplayName`, `Enum:MessageStatus.0`)
+- **Entities**: PascalCase, singular (Message, MobileUser, Subscription)
+- **DTOs**: PascalCase with `Dto` suffix (MessageDto, SendOneWayMessageDto)
+- **Interfaces**: PascalCase with `I` prefix (IMessageAppService, IBlobService)
+- **App Services**: PascalCase with `AppService` suffix (MessageAppService)
+- **Managers**: PascalCase with `Manager` suffix (MessageManager, UserPlanManager)
+- **Repositories**: PascalCase with `Repository` suffix (UserPlanRepository)
+- **Permissions**: Const strings in Esh3arTechPermissions class
+- **Table names**: Defined in Esh3arTechConsts (e.g., TblMessage)
 
-## Module System
+## Key Patterns
 
-Each layer has a module class (e.g., `Esh3arTechDomainModule`, `Esh3arTechApplicationModule`) that:
-- Inherits from `AbpModule`
-- Declares dependencies via `[DependsOn]` attribute
-- Configures services in `ConfigureServices` method
-
-## File Organization
-
-- Group related files by feature/aggregate (Plans, Messages, Subscriptions)
-- Keep DTOs close to their service interfaces in Application.Contracts
-- Entity configurations separate from entities in EntityFrameworkCore layer
-- JavaScript files alongside their Razor Pages in Web layer
+- **Repository Pattern**: Custom repositories for complex queries
+- **Specification Pattern**: For reusable query logic (e.g., PendingMessageSpecification)
+- **Factory Pattern**: MessageFactory for creating different message types
+- **Event-Driven**: Distributed events (ETOs) via RabbitMQ for async processing
+- **Unit of Work**: Automatic transaction management via ABP
+- **Authorization**: Attribute-based with [Authorize(Esh3arTechPermissions.X)]
