@@ -37,11 +37,16 @@ public class Esh3arTechDomainModule : AbpModule
 {
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
+        var configuration = context.Services.GetConfiguration();
+        
         Configure<AbpMultiTenancyOptions>(options =>
         {
             options.IsEnabled = MultiTenancyConsts.IsEnabled;
         });
 
+        // Configure message reliability options
+        context.Services.Configure<Messages.RetryPolicy.MessageReliabilityOptions>(
+            configuration.GetSection("MessageReliability"));
 
 #if DEBUG
         context.Services.Replace(ServiceDescriptor.Singleton<IEmailSender, NullEmailSender>());

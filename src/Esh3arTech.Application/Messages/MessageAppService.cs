@@ -1,5 +1,6 @@
 ﻿using Esh3arTech.Abp.Blob.Services;
 using Esh3arTech.Messages.Eto;
+using Esh3arTech.Messages.Idempotency;
 using Esh3arTech.Messages.SendBehavior;
 using Esh3arTech.Messages.Specs;
 using Esh3arTech.MobileUsers;
@@ -27,6 +28,7 @@ namespace Esh3arTech.Messages
         private readonly IRepository<MobileUser, Guid> _mobileUserRepository;
         private readonly IBlobService _blobService;
         private readonly IMessageStatusUpdater _messageStatusUpdater;
+        private readonly IIdempotencyService _idempotencyService;
 
         public MessageAppService(
             IMessageFactory messageFactory,
@@ -35,7 +37,8 @@ namespace Esh3arTech.Messages
             IRepository<MobileUser, Guid> mobileUserRepository,
             IBlobService blobService,
             IUnitOfWorkManager unitOfWorkManager,
-            IMessageStatusUpdater messageStatusUpdater)
+            IMessageStatusUpdater messageStatusUpdater,
+            IIdempotencyService idempotencyService)
         {
             _messageFactory = messageFactory;
             _distributedEventBus = distributedEventBus;
@@ -43,6 +46,7 @@ namespace Esh3arTech.Messages
             _mobileUserRepository = mobileUserRepository;
             _blobService = blobService;
             _messageStatusUpdater = messageStatusUpdater;
+            _idempotencyService = idempotencyService;
         }
 
         [Authorize(Esh3arTechPermissions.Esh3arSendMessages)]
@@ -51,11 +55,17 @@ namespace Esh3arTech.Messages
             var messageManager = _messageFactory.Create(MessageType.OneWay);
             var createdMessage = await messageManager.CreateMessageAsync(input.RecipientPhoneNumber, input.MessageContent);
 
+            // Generate and set idempotency key
+            var idempotencyKey = await _idempotencyService.GenerateKeyAsync(createdMessage.Id);
+            createdMessage.SetIdempotencyKey(idempotencyKey);
+
             createdMessage.SetMessageStatusType(MessageStatus.Queued);
             await _messageRepository.InsertAsync(createdMessage, autoSave: true);
 
             var sendMsgEto = ObjectMapper.Map<Message, SendOneWayMessageEto>(createdMessage);
             sendMsgEto.From = CurrentUser.Name!;
+            sendMsgEto.IdempotencyKey = idempotencyKey;
+            sendMsgEto.Priority = createdMessage.Priority;
 
             await _distributedEventBus.PublishAsync(sendMsgEto);
 
@@ -99,10 +109,12 @@ namespace Esh3arTech.Messages
             var messageManager = _messageFactory.Create(MessageType.OneWay);
             var createdMessageWithAttachment = await messageManager.CreateMessageWithAttachmentFromUiAsync(input.RecipientPhoneNumber, input.MessageContent, input.ImageStreamContent);
 
+            createdMessageWithAttachment.SetMessageStatusType(MessageStatus.Queued);
+
             var attachment = createdMessageWithAttachment.Attachments.FirstOrDefault();
             await _blobService.SaveToFileSystemAsync(input.ImageStreamContent, attachment!.FileName);
 
-            createdMessageWithAttachment.SetMessageStatusType(MessageStatus.Pending);
+            await _messageRepository.InsertAsync(createdMessageWithAttachment);
 
             var msgWithAttachmentEto = new SendOneWayMessageEto
             {
@@ -114,9 +126,6 @@ namespace Esh3arTech.Messages
             };
 
             await _distributedEventBus.PublishAsync(msgWithAttachmentEto);
-
-            createdMessageWithAttachment.SetMessageStatusType(MessageStatus.Queued);
-            await _messageRepository.InsertAsync(createdMessageWithAttachment);
 
             return new MessageDto { Id = createdMessageWithAttachment.Id }; ;
         }
@@ -158,6 +167,27 @@ namespace Esh3arTech.Messages
         public async Task UpdateMessageStatus(UpdateMessageStatusDto input)
         {
             await _messageStatusUpdater.UpdateStatusAsync(input.Id, input.Status);
+        }
+
+        public async Task<bool> IsExistsAsync(Guid messageId)
+        {
+            return await _messageRepository.AnyAsync(m => m.Id.Equals(messageId));
+        }
+
+        public async Task<MessageStatus> GetMessageStatusById(Guid messageId)
+        {
+            if (!await IsExistsAsync(messageId))
+            {
+                throw new UserFriendlyException("Message not found! it does not inseted correctly!");
+            }
+
+            var message = await _messageRepository.GetAsync(m => m.Id.Equals(messageId));
+            return message.Status;
+        }
+
+        public async Task ResendOneWayMessageAsync(Guid messageId)
+        {
+            await Task.CompletedTask;
         }
     }
 }

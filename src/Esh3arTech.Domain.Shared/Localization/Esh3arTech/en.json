@@ -11,6 +11,7 @@
     "Action:Delete": "Delete",
     "Action:AssignToUser": "Assign to user",
     "Action:MoveUsersToPlan": "Move users to plan",
+    "Action:Resend": "Resend",
     "Clm:Actions": "Actions",
     "Clm:DisplayName": "Name",
     "Clm:ExpiringPlan": "Expiring plan",
@@ -61,6 +62,7 @@
     "AutoRenew": "Auto Renew",
     "IsActive": "Active",
     "UploadImage": "Max image size 1MB",
-    "SuccessfullyDeleted": "Deleted Successfully"
+    "SuccessfullyDeleted": "Deleted Successfully",
+    "MessageResentSuccessfully": "The message was resent successfully"
   }
 }

@@ -127,9 +127,9 @@ SELECT
     END AS StatusDescription,
 	CreatorId,
 	CreationTime
-FROM EtMessages WHERE Status = 4
+FROM EtMessages ORDER By CreationTime DESC
 
-SELECT COUNT(*) FROM EtMessages
+SELECT COUNT(*) FROM EtMessages WHERE Status = 4
 
 SELECT * FROM EtMessages WHERE Id = '0D429AAC-FAD9-3187-115B-3A1E7210D640'
 

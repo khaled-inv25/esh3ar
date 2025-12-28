@@ -16,5 +16,8 @@ namespace Esh3arTech.Messages.Eto
 
         public DateTime? UrlExpiresAt { get; set; }
 
+        public string? IdempotencyKey { get; set; }
+
+        public Priority Priority { get; set; }
     }
 }

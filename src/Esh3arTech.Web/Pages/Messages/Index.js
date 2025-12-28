@@ -12,6 +12,23 @@
             ajax: abp.libs.datatables.createAjax(esh3arTech.messages.message.getOneWayMessages),
             columnDefs: [
                 {
+                    title: l('Clm:Actions'),
+                    rowAction: {
+                        items: [
+                            {
+                                text: l("Action:Resend"),
+                                action: function (data) {
+                                    esh3arTech.messages.message.resendOneWayMessage(data.record.id)
+                                        .then(function () {
+                                            abp.notify.info(l('MessageResentSuccessfully'));
+                                            dataTable.ajax.reload();
+                                        });
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
                     title: l('Clm:To'),
                     data: "recipientPhoneNumber"
                 },

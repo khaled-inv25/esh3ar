@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Volo.Abp.Application.Dtos;
 
@@ -17,5 +18,11 @@ namespace Esh3arTech.Messages
         Task<PagedResultDto<MessageInListDto>> GetOneWayMessagesAsync(PagedAndSortedResultRequestDto input);
 
         Task UpdateMessageStatus(UpdateMessageStatusDto input);
+
+        Task<bool> IsExistsAsync(Guid messageId);
+
+        Task<MessageStatus> GetMessageStatusById(Guid messageId);
+
+        Task ResendOneWayMessageAsync(Guid messageId);
     }
 }

@@ -46,6 +46,7 @@ using Volo.Abp.TenantManagement.Web;
 using Volo.Abp.UI.Navigation;
 using Volo.Abp.UI.Navigation.Urls;
 using Volo.Abp.VirtualFileSystem;
+using Volo.Abp.BackgroundWorkers;
 
 namespace Esh3arTech.Web;
 
@@ -155,6 +156,61 @@ public class Esh3arTechWebModule : AbpModule
         Configure<AbpRabbitMqEventBusOptions>(options =>
         {
             options.PrefetchCount = 100;
+            
+            // Configure priority queues
+            options.ConfigureQueue("esh3artech.messages.high", queue =>
+            {
+                queue.Arguments.Add("x-max-priority", 10);
+                queue.Durable = true;
+            });
+            
+            options.ConfigureQueue("esh3artech.messages.normal", queue =>
+            {
+                queue.Arguments.Add("x-max-priority", 5);
+                queue.Durable = true;
+            });
+            
+            options.ConfigureQueue("esh3artech.messages.low", queue =>
+            {
+                queue.Arguments.Add("x-max-priority", 1);
+                queue.Durable = true;
+            });
+            
+            // Configure dead letter exchange
+            options.ConfigureExchange("esh3artech.messages.dlx", exchange =>
+            {
+                exchange.Type = "direct";
+                exchange.Durable = true;
+            });
+            
+            // Configure dead letter queue
+            options.ConfigureQueue("esh3artech.messages.dlq", queue =>
+            {
+                queue.Durable = true;
+                queue.Arguments.Add("x-message-ttl", 86400000); // 24 hours
+            });
+            
+            // Bind DLQ to DLX
+            options.ConfigureBinding("esh3artech.messages.dlq", "esh3artech.messages.dlx", "failed");
+            
+            // Configure main queues with DLX
+            options.ConfigureQueue("esh3artech.messages.high", queue =>
+            {
+                queue.Arguments.Add("x-dead-letter-exchange", "esh3artech.messages.dlx");
+                queue.Arguments.Add("x-dead-letter-routing-key", "failed");
+            });
+            
+            options.ConfigureQueue("esh3artech.messages.normal", queue =>
+            {
+                queue.Arguments.Add("x-dead-letter-exchange", "esh3artech.messages.dlx");
+                queue.Arguments.Add("x-dead-letter-routing-key", "failed");
+            });
+            
+            options.ConfigureQueue("esh3artech.messages.low", queue =>
+            {
+                queue.Arguments.Add("x-dead-letter-exchange", "esh3artech.messages.dlx");
+                queue.Arguments.Add("x-dead-letter-routing-key", "failed");
+            });
         });
     }
 
@@ -287,10 +343,13 @@ public class Esh3arTechWebModule : AbpModule
     }
 
 
-    public override void OnApplicationInitialization(ApplicationInitializationContext context)
+    public override async void OnApplicationInitialization(ApplicationInitializationContext context)
     {
         var app = context.GetApplicationBuilder();
         var env = context.GetEnvironment();
+
+        // Register background workers
+        await context.AddBackgroundWorkerAsync<Esh3arTech.EntityFrameworkCore.BackgroundWorkers.MessageRetryWorker>();
 
         app.UseForwardedHeaders();
 
