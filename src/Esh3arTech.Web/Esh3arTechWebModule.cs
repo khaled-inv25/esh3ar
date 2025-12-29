@@ -1,4 +1,6 @@
 using Esh3arTech.Abp.Blob;
+using Esh3arTech.Abp.Worker;
+using Esh3arTech.Abp.Worker.Messages;
 using Esh3arTech.EntityFrameworkCore;
 using Esh3arTech.Localization;
 using Esh3arTech.MultiTenancy;
@@ -17,6 +19,7 @@ using OpenIddict.Server.AspNetCore;
 using OpenIddict.Validation.AspNetCore;
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using Volo.Abp;
 using Volo.Abp.Account.Web;
 using Volo.Abp.AspNetCore.Mvc;
@@ -31,6 +34,7 @@ using Volo.Abp.AspNetCore.SignalR;
 using Volo.Abp.Autofac;
 using Volo.Abp.AutoMapper;
 using Volo.Abp.BackgroundJobs.Hangfire;
+using Volo.Abp.BackgroundWorkers;
 using Volo.Abp.BlobStoring;
 using Volo.Abp.BlobStoring.FileSystem;
 using Volo.Abp.EventBus.RabbitMq;
@@ -65,7 +69,8 @@ namespace Esh3arTech.Web;
     typeof(AbpBackgroundJobsHangfireModule),
     typeof(AbpEventBusRabbitMqModule),
     typeof(AbpAspNetCoreSignalRModule),
-    typeof(Esh3arTechAbpBlobModule)
+    typeof(Esh3arTechAbpBlobModule),
+    typeof(Esh3arTechAbpWorkerModule)
 )]
 public class Esh3arTechWebModule : AbpModule
 {
@@ -291,6 +296,9 @@ public class Esh3arTechWebModule : AbpModule
     {
         var app = context.GetApplicationBuilder();
         var env = context.GetEnvironment();
+
+        // Register background workers
+        context.AddBackgroundWorkerAsync<MessageRetryWorker>().GetAwaiter().GetResult();
 
         app.UseForwardedHeaders();
 

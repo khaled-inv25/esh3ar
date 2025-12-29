@@ -29,6 +29,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Abp.Blob", "Abp.Blob", "{02
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Esh3arTech.Abp.Blob", "src\Esh3arTech.Abp.Blob\Esh3arTech.Abp.Blob.csproj", "{2F095634-B451-A1F9-77B8-A778D228E5A2}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Abp.Worker", "Abp.Worker", "{9E2D19A6-2087-4F06-9420-E94F7B52C89F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Esh3arTech.Abp.Worker", "..\Esh3arTech_v2\src\Esh3arTech.Abp.Worker\Esh3arTech.Abp.Worker.csproj", "{72C5D4C1-06A1-47C2-A29F-9F7EF502A0B4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -79,6 +83,10 @@ Global
 		{2F095634-B451-A1F9-77B8-A778D228E5A2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2F095634-B451-A1F9-77B8-A778D228E5A2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2F095634-B451-A1F9-77B8-A778D228E5A2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{72C5D4C1-06A1-47C2-A29F-9F7EF502A0B4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72C5D4C1-06A1-47C2-A29F-9F7EF502A0B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72C5D4C1-06A1-47C2-A29F-9F7EF502A0B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{72C5D4C1-06A1-47C2-A29F-9F7EF502A0B4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -96,6 +104,8 @@ Global
 		{63A79BAB-D0BE-4FFF-84EB-391C57F09B84} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{02EA681E-C7D8-13C7-8484-4AC65E1B71E8} = {CA9AC87F-097E-4F15-8393-4BC07735A5B0}
 		{2F095634-B451-A1F9-77B8-A778D228E5A2} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{9E2D19A6-2087-4F06-9420-E94F7B52C89F} = {CA9AC87F-097E-4F15-8393-4BC07735A5B0}
+		{72C5D4C1-06A1-47C2-A29F-9F7EF502A0B4} = {9E2D19A6-2087-4F06-9420-E94F7B52C89F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {28315BFD-90E7-4E14-A2EA-F3D23AF4126F}

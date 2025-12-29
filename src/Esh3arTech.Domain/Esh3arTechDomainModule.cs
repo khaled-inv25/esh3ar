@@ -1,3 +1,4 @@
+using Esh3arTech.Messages;
 using Esh3arTech.MultiTenancy;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -15,6 +16,7 @@ using Volo.Abp.PermissionManagement.Identity;
 using Volo.Abp.PermissionManagement.OpenIddict;
 using Volo.Abp.SettingManagement;
 using Volo.Abp.TenantManagement;
+using static Esh3arTech.Settings.Esh3arTechSettings;
 
 namespace Esh3arTech;
 
@@ -37,11 +39,14 @@ public class Esh3arTechDomainModule : AbpModule
 {
     public override void ConfigureServices(ServiceConfigurationContext context)
     {
+        var configuration = context.Services.GetConfiguration();
+
         Configure<AbpMultiTenancyOptions>(options =>
         {
             options.IsEnabled = MultiTenancyConsts.IsEnabled;
         });
 
+        Configure<MessageReliabilityOptions>(configuration.GetSection(MessageReliability.Section));
 
 #if DEBUG
         context.Services.Replace(ServiceDescriptor.Singleton<IEmailSender, NullEmailSender>());

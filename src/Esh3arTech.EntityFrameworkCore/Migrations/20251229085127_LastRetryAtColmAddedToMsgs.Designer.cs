@@ -4,6 +4,7 @@ using Esh3arTech.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Volo.Abp.EntityFrameworkCore;
 
@@ -12,9 +13,11 @@ using Volo.Abp.EntityFrameworkCore;
 namespace Esh3arTech.Migrations
 {
     [DbContext(typeof(Esh3arTechDbContext))]
-    partial class Esh3arTechDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251229085127_LastRetryAtColmAddedToMsgs")]
+    partial class LastRetryAtColmAddedToMsgs
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -85,9 +88,6 @@ namespace Esh3arTech.Migrations
 
                     b.Property<string>("MessageContent")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("NextRetryAt")
-                        .HasColumnType("datetime2");
 
                     b.Property<byte>("Priority")
                         .HasColumnType("tinyint");

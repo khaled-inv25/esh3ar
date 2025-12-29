@@ -113,10 +113,6 @@ SELECT * FROM AbpUsers
 SELECT * FROM EtMobileUsers
 
 SELECT 
-	Id,
-    RecipientPhoneNumber,
-    Subject,
-    MessageContent,
     CASE 
         WHEN Status = 0 THEN 'Pending'
         WHEN Status = 1 THEN 'Sent'
@@ -126,9 +122,28 @@ SELECT
         WHEN Status = 5 THEN 'Failed'
         ELSE 'Unknown'
     END AS StatusDescription,
-	CreatorId,
-	CreationTime
-FROM EtMessages
+	EtMessages.*
+FROM EtMessages ORDER BY CreationTime DESC
+
+SELECT 
+	 CASE 
+        WHEN Status = 0 THEN 'Pending'
+        WHEN Status = 1 THEN 'Sent'
+        WHEN Status = 2 THEN 'Delivered'
+        WHEN Status = 3 THEN 'Read'
+        WHEN Status = 4 THEN 'Queued'
+        WHEN Status = 5 THEN 'Failed'
+        ELSE 'Unknown'
+    END AS StatusDescription,
+	LastRetryAt,
+	NextRetryAt,
+	RetryCount,
+	FailureReason
+	FROM EtMessages ORDER BY CreationTime DESC
+
+SELECT * FROM EtMessages ORDER BY CreationTime DESC
+
+DELETE FROM EtMessages 
 
 SELECT COUNT(*) FROM EtMessages
 

@@ -23,7 +23,7 @@ namespace Esh3arTech.Messages
     {
         private readonly IMessageFactory _messageFactory;
         private readonly IDistributedEventBus _distributedEventBus;
-        private readonly IRepository<Message, Guid> _messageRepository;
+        private readonly IMessageRepository _messageRepository;
         private readonly IRepository<MobileUser, Guid> _mobileUserRepository;
         private readonly IBlobService _blobService;
         private readonly IMessageStatusUpdater _messageStatusUpdater;
@@ -31,7 +31,7 @@ namespace Esh3arTech.Messages
         public MessageAppService(
             IMessageFactory messageFactory,
             IDistributedEventBus distributedEventBus,
-            IRepository<Message, Guid> messageRepository,
+            IMessageRepository messageRepository,
             IRepository<MobileUser, Guid> mobileUserRepository,
             IBlobService blobService,
             IUnitOfWorkManager unitOfWorkManager,
@@ -159,5 +159,12 @@ namespace Esh3arTech.Messages
         {
             await _messageStatusUpdater.UpdateStatusAsync(input.Id, input.Status);
         }
+
+        public async Task<object> GetMessageById(Guid messageId)
+        {
+            return await _messageRepository.GetAsync(messageId);
+        }
+
+        public async Task UpdateMessage(object msg) => await _messageRepository.UpdateAsync((Message)msg, autoSave: true);
     }
 }

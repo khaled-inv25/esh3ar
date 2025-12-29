@@ -35,6 +35,10 @@ namespace Esh3arTech.Messages
 
         public string? FailureReason { get; private set; }
 
+        public DateTime? LastRetryAt { get; private set; }
+
+        public DateTime? NextRetryAt { get; private set; }
+
         public Priority Priority { get; private set; }
 
         public ICollection<MessageAttachment> Attachments { get; private set; }
@@ -126,6 +130,39 @@ namespace Esh3arTech.Messages
             return this;
         }
 
+        public Message SetFailureReason(string reason)
+        {
+            FailureReason = Check.NotNullOrEmpty(reason, nameof(reason));
+            return this;
+        }
+
+        public Message IncrementRetryCount()
+        {
+            RetryCount++;
+            LastRetryAt = DateTime.UtcNow;
+
+            return this;
+        }
+
+        public Message ScheduleNextRetry(TimeSpan delay)
+        {
+            NextRetryAt = DateTime.UtcNow.Add(delay);
+
+            return this;
+        }
+
+        public Message MarkAsRetrying()
+        {
+            if (Status != MessageStatus.Failed && Status != MessageStatus.Queued)
+            {
+                throw new BusinessException("Only failed or queued messages can be marked as retrying.");
+            }
+
+            Status = MessageStatus.Queued;
+
+            return this;
+        }
+
         private void MarkAsDelivered()
         {
             DeliveredAt = (Status.Equals(MessageStatus.Delivered)) ? DateTime.Now : null;
@@ -140,5 +177,6 @@ namespace Esh3arTech.Messages
 
             MaxAllowedAttchments++;
         }
+
     }
 }

@@ -45,4 +45,9 @@ public static class Esh3arTechSettings
         public const string AccessUrl = BlobPrefix + ".AccessUrl";
         public const string Path = BlobPrefix + ".Path";
     }
+
+    public static class MessageReliability
+    {
+        public const string Section = "MessageReliability";
+    }
 }
