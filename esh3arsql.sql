@@ -110,6 +110,7 @@ UPDATE EtSubscriptions SET IsActive = 1
 -- Failed = 5      // Delivery failed after retries
 
 SELECT * FROM AbpUsers
+SELECT * FROM EtMobileUsers
 
 SELECT 
 	Id,
@@ -127,7 +128,7 @@ SELECT
     END AS StatusDescription,
 	CreatorId,
 	CreationTime
-FROM EtMessages WHERE Status = 4
+FROM EtMessages
 
 SELECT COUNT(*) FROM EtMessages
 
