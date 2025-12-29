@@ -104,6 +104,7 @@ namespace Esh3arTech.Web.MessagesHandler
             else
             {
                 message.SetMessageStatusType(MessageStatus.Failed);
+                message.MarkAsPermanentlyFailed();
                 message.SetFailureReason($"Max retries reached. Last error: {ex.Message}");
             }
 

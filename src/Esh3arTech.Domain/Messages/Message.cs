@@ -163,6 +163,14 @@ namespace Esh3arTech.Messages
             return this;
         }
 
+        public Message MarkAsPermanentlyFailed()
+        {
+            NextRetryAt = null;
+            RetryCount--;
+
+            return this;
+        }
+
         private void MarkAsDelivered()
         {
             DeliveredAt = (Status.Equals(MessageStatus.Delivered)) ? DateTime.Now : null;
