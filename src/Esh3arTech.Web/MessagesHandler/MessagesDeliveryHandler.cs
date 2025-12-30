@@ -62,9 +62,6 @@ namespace Esh3arTech.Web.MessagesHandler
 
         private async Task DeliverMessageAsync(SendOneWayMessageEto eto)
         {
-            //if (eto.MessageContent!.Equals("ex", StringComparison.OrdinalIgnoreCase))
-            //    throw new Exception("Test exception");
-
             var connectionId = await _onlineUserTrackerService.GetFirstConnectionIdByPhoneNumberAsync(eto.RecipientPhoneNumber);
 
             // To send message if user online other ways save it in db and cache as pending message.
