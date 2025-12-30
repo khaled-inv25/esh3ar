@@ -141,6 +141,8 @@ SELECT
 	FailureReason
 	FROM EtMessages ORDER BY CreationTime DESC
 
+UPDATE EtMessages SET Status = 2
+
 SELECT * FROM EtMessages ORDER BY CreationTime DESC
 
 DELETE FROM EtMessages 

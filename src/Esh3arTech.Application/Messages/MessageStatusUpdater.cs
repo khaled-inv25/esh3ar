@@ -1,8 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
-using System;
+﻿using System;
 using System.Threading.Tasks;
-using Volo.Abp;
-using Volo.Abp.Data;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Uow;
@@ -12,43 +9,45 @@ namespace Esh3arTech.Messages
     public class MessageStatusUpdater : IMessageStatusUpdater, ITransientDependency
     {
         private readonly IRepository<Message, Guid> _messageRepository;
-        private readonly ILogger<MessageStatusUpdater> _logger;
+        private readonly IUnitOfWorkManager _unitOfWorkManager;
 
         public MessageStatusUpdater(
-            IRepository<Message, Guid> messageRepository,
-            ILogger<MessageStatusUpdater> logger)
+            IRepository<Message, Guid> messageRepository, 
+            IUnitOfWorkManager unitOfWorkManager)
         {
             _messageRepository = messageRepository;
-            _logger = logger;
+            _unitOfWorkManager = unitOfWorkManager;
         }
 
-        public async Task UpdateStatusAsync(Guid messageId, MessageStatus status)
+        public async Task SetMessageStatusToDeliveredInNewTransactionAsync(Guid messageId)
         {
-            var message = await _messageRepository.FindAsync(messageId);
-            if (message == null)
+            await SetMessageStatus(messageId, MessageStatus.Delivered);
+        }
+
+        public async Task SetMessageStatusToPendingInNewTransactionAsync(Guid messageId)
+        {
+            await SetMessageStatus(messageId, MessageStatus.Pending);
+        }
+
+        public async Task SetMessageStatusToSentInNewTransactionAsync(Guid messageId)
+        {
+            await SetMessageStatus(messageId, MessageStatus.Sent);
+        }
+
+        private async Task SetMessageStatus(Guid messageId, MessageStatus status)
+        {
+            using var uow = _unitOfWorkManager.Begin(requiresNew: true, isTransactional: true);
+
+            var message = await _messageRepository.GetAsync(messageId);
+
+            if (message.Status.Equals(status))
             {
-                _logger.LogWarning($"UpdateStatusAsync: message {messageId} not found (possibly deleted). Skipping update to {status}.");
                 return;
             }
 
-            _logger.LogInformation($"Updating message {messageId} status from {message.Status} to {status}.");
-
-            try
-            {
-                message.SetMessageStatusType(status);
-                await _messageRepository.UpdateAsync(message);
-                _logger.LogInformation($"Message {messageId} status updated to {status}.");
-            }
-            catch (AbpDbConcurrencyException ex)
-            {
-                _logger.LogError(ex, $"Concurrency exception updating message {messageId} status.");
-                throw new UserFriendlyException($"UpdateStatusAsync {ex.Message}.");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Error updating message {messageId} status.");
-                throw;
-            }
+            message.SetMessageStatusType(status);
+            await _messageRepository.UpdateAsync(message);
+            await uow.CompleteAsync();
         }
     }
 }

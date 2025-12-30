@@ -52,7 +52,7 @@ namespace Esh3arTech.Messages
 
             if (string.IsNullOrEmpty(content))
             {
-                throw new BusinessException("Message content with no attachment can't be empty!");
+                throw new UserFriendlyException("Message content with no attachment can't be empty!");
             }
 
             msgToReturn.SetMessageContentOrNull(content);

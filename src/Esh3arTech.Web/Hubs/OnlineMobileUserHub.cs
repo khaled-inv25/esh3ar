@@ -22,16 +22,19 @@ namespace Esh3arTech.Web.Hubs
     {
         private readonly OnlineUserTrackerService _onlineUserTrackerService;
         private readonly IMessageAppService _messageAppService;
+        private readonly IMessageStatusUpdater _messageStatusUpdater;
         private readonly IDistributedCache<UserPendingMessageItem> _cache;
 
         public OnlineMobileUserHub(
             OnlineUserTrackerService onlineUserTrackerService,
             IMessageAppService messageAppService,
+            IMessageStatusUpdater messageStatusUpdater,
             IDistributedCache<UserPendingMessageItem> cache)
         {
             _onlineUserTrackerService = onlineUserTrackerService;
             _messageAppService = messageAppService;
             _cache = cache;
+            _messageStatusUpdater = messageStatusUpdater;
         }
 
         public override async Task OnConnectedAsync()
@@ -96,11 +99,7 @@ namespace Esh3arTech.Web.Hubs
                 return;
             }
 
-            await _messageAppService.UpdateMessageStatus(new UpdateMessageStatusDto
-            {
-                Id = messageId,
-                Status = MessageStatus.Delivered
-            });
+            await _messageStatusUpdater.SetMessageStatusToDeliveredInNewTransactionAsync(messageId);
         }
 
         private string? GetMobileNumber()

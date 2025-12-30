@@ -7,6 +7,7 @@ using Esh3arTech.MobileUsers.Specs;
 using Esh3arTech.Permissions;
 using Esh3arTech.Utility;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,6 +27,7 @@ namespace Esh3arTech.Messages
         private readonly IMessageRepository _messageRepository;
         private readonly IRepository<MobileUser, Guid> _mobileUserRepository;
         private readonly IBlobService _blobService;
+        private readonly IUnitOfWorkManager _unitOfWorkManager;
         private readonly IMessageStatusUpdater _messageStatusUpdater;
 
         public MessageAppService(
@@ -43,16 +45,19 @@ namespace Esh3arTech.Messages
             _mobileUserRepository = mobileUserRepository;
             _blobService = blobService;
             _messageStatusUpdater = messageStatusUpdater;
+            _unitOfWorkManager = unitOfWorkManager;
         }
 
         [Authorize(Esh3arTechPermissions.Esh3arSendMessages)]
         public async Task<MessageDto> SendOneWayMessageAsync(SendOneWayMessageDto input)
         {
+            using var uow = _unitOfWorkManager.Begin(requiresNew: true);
             var messageManager = _messageFactory.Create(MessageType.OneWay);
             var createdMessage = await messageManager.CreateMessageAsync(input.RecipientPhoneNumber, input.MessageContent);
 
             createdMessage.SetMessageStatusType(MessageStatus.Queued);
             await _messageRepository.InsertAsync(createdMessage, autoSave: true);
+            await uow.CompleteAsync();
 
             var sendMsgEto = ObjectMapper.Map<Message, SendOneWayMessageEto>(createdMessage);
             sendMsgEto.From = CurrentUser.Name!;
@@ -155,16 +160,14 @@ namespace Esh3arTech.Messages
             return new PagedResultDto<MessageInListDto>(count, dtos);
         }
 
-        public async Task UpdateMessageStatus(UpdateMessageStatusDto input)
-        {
-            await _messageStatusUpdater.UpdateStatusAsync(input.Id, input.Status);
-        }
-
         public async Task<object> GetMessageById(Guid messageId)
         {
             return await _messageRepository.GetAsync(messageId);
         }
 
-        public async Task UpdateMessage(object msg) => await _messageRepository.UpdateAsync((Message)msg, autoSave: true);
+        public async Task UpdateMessage(object msg)
+        {
+            await _messageRepository.UpdateAsync((Message)msg, autoSave: true);
+        }
     }
 }

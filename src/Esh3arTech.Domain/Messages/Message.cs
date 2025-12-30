@@ -39,6 +39,8 @@ namespace Esh3arTech.Messages
 
         public DateTime? NextRetryAt { get; private set; }
 
+        public DateTime? MovedToDlqAt { get; private set; }
+
         public Priority Priority { get; private set; }
 
         public ICollection<MessageAttachment> Attachments { get; private set; }
@@ -166,7 +168,6 @@ namespace Esh3arTech.Messages
         public Message MarkAsPermanentlyFailed()
         {
             NextRetryAt = null;
-            RetryCount--;
 
             return this;
         }

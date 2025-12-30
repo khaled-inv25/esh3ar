@@ -151,6 +151,7 @@ public class Esh3arTechWebModule : AbpModule
         ConfigureSwaggerServices(context.Services);
         ConfigureHangfire(context, configuration);
         ConfigureBlobStoringFileSystem(configuration);
+        ConfigureRabbitmqDLQ();
 
         Configure<PermissionManagementOptions>(options =>
         {
@@ -291,6 +292,14 @@ public class Esh3arTechWebModule : AbpModule
 
     }
 
+    private void ConfigureRabbitmqDLQ()
+    {
+        Configure<AbpRabbitMqEventBusOptions>(options =>
+        {
+            options.QueueArguments["x-dead-letter-exchange"] = "esh3artech.dle.exchange";
+            options.QueueArguments["x-dead-letter-routing-key"] = "esh3artech.dlq.queue";
+        });
+    }
 
     public override void OnApplicationInitialization(ApplicationInitializationContext context)
     {

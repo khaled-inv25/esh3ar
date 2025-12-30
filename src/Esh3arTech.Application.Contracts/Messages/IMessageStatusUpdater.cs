@@ -1,10 +1,14 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
+using System;
 
 namespace Esh3arTech.Messages
 {
     public interface IMessageStatusUpdater
     {
-        Task UpdateStatusAsync(Guid messageId, MessageStatus status);
+        Task SetMessageStatusToSentInNewTransactionAsync(Guid messageId);
+
+        Task SetMessageStatusToPendingInNewTransactionAsync(Guid messageId);
+
+        Task SetMessageStatusToDeliveredInNewTransactionAsync(Guid messageId);
     }
 }

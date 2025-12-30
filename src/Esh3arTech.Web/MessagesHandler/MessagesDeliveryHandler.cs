@@ -5,7 +5,6 @@ using Esh3arTech.Web.Hubs;
 using Esh3arTech.Web.MessagesHandler.CacheItems;
 using Esh3arTech.Web.MobileUsers;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.Options;
 using System;
 using System.Text.Json;
 using System.Threading.Tasks;
@@ -22,32 +21,35 @@ namespace Esh3arTech.Web.MessagesHandler
         private readonly OnlineUserTrackerService _onlineUserTrackerService;
         private readonly IDistributedCache<UserPendingMessageItem> _cache;
         private readonly IMessageAppService _messageAppService;
-        private readonly MessageReliabilityOptions _options;
+        private readonly IMessageStatusUpdater _messageStatusUpdater;
         private readonly IRetryPolisyService _retryPolisyService;
-
-        private const int FailedAt = 3;
-        private int count = 0;
-
 
         public MessagesDeliveryHandler(
             IHubContext<OnlineMobileUserHub> hubContext,
             OnlineUserTrackerService onlineUserTrackerService,
             IDistributedCache<UserPendingMessageItem> distributedCache,
             IMessageAppService messageAppService,
-            IOptions<MessageReliabilityOptions> option,
+            IMessageStatusUpdater messageStatusUpdater,
             IRetryPolisyService retryPolisyService)
         {
             _hubContext = hubContext;
             _onlineUserTrackerService = onlineUserTrackerService;
             _cache = distributedCache;
             _messageAppService = messageAppService;
-            _options = option.Value;
             _retryPolisyService = retryPolisyService;
+            _messageStatusUpdater = messageStatusUpdater;
         }
 
         public async Task HandleEventAsync(SendOneWayMessageEto eventData)
         {
-            
+            var message = (Message) await _messageAppService.GetMessageById(eventData.Id);
+
+            // it's for Idempotency Guard
+            if (message.Status.Equals(MessageStatus.Delivered) || message.Status.Equals(MessageStatus.Sent))
+            {
+                return;
+            }
+
             try
             {
                 await DeliverMessageAsync(eventData);
@@ -60,22 +62,20 @@ namespace Esh3arTech.Web.MessagesHandler
 
         private async Task DeliverMessageAsync(SendOneWayMessageEto eto)
         {
-            if (eto.MessageContent!.Equals("ex", StringComparison.OrdinalIgnoreCase))
-            {
-                throw new Exception("Test exception");
-            }
+            //if (eto.MessageContent!.Equals("ex", StringComparison.OrdinalIgnoreCase))
+            //    throw new Exception("Test exception");
 
             var connectionId = await _onlineUserTrackerService.GetFirstConnectionIdByPhoneNumberAsync(eto.RecipientPhoneNumber);
 
             // To send message if user online other ways save it in db and cache as pending message.
             if (!string.IsNullOrEmpty(connectionId))
             {
-                await UpdateMessageStatusAsync(eto.Id, MessageStatus.Sent);
+                await _messageStatusUpdater.SetMessageStatusToSentInNewTransactionAsync(eto.Id);
                 await _hubContext.Clients.Client(connectionId).SendAsync(HubMethods.ReceiveMessage, JsonSerializer.Serialize(eto));
             }
             else
             {
-                await UpdateMessageStatusAsync(eto.Id, MessageStatus.Pending);
+                await _messageStatusUpdater.SetMessageStatusToPendingInNewTransactionAsync(eto.Id);
 
                 var cacheKey = eto.RecipientPhoneNumber;
                 var cacheItem = await _cache.GetAsync(cacheKey);
@@ -109,11 +109,6 @@ namespace Esh3arTech.Web.MessagesHandler
             }
 
             await _messageAppService.UpdateMessage(message);
-        }
-
-        private async Task UpdateMessageStatusAsync(Guid id, MessageStatus status)
-        {
-            await _messageAppService.UpdateMessageStatus(new UpdateMessageStatusDto { Id = id, Status = status});
         }
     }
 }
