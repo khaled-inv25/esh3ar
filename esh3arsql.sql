@@ -126,6 +126,7 @@ SELECT
 FROM EtMessages ORDER BY CreationTime DESC
 
 SELECT 
+	RecipientPhoneNumber,
 	 CASE 
         WHEN Status = 0 THEN 'Pending'
         WHEN Status = 1 THEN 'Sent'
@@ -135,9 +136,9 @@ SELECT
         WHEN Status = 5 THEN 'Failed'
         ELSE 'Unknown'
     END AS StatusDescription,
+	RetryCount,
 	LastRetryAt,
 	NextRetryAt,
-	RetryCount,
 	FailureReason
 	FROM EtMessages ORDER BY CreationTime DESC
 

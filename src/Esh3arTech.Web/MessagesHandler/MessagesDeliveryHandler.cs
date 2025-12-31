@@ -49,7 +49,7 @@ namespace Esh3arTech.Web.MessagesHandler
             {
                 return;
             }
-
+            
             try
             {
                 await DeliverMessageAsync(eventData);

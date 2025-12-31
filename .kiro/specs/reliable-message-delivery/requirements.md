@@ -26,7 +26,7 @@ This specification defines requirements for implementing reliable message delive
 1. WHEN a message delivery fails, THE Message_Queue SHALL automatically retry the delivery ✅
 2. WHEN retrying a message, THE Retry_Policy SHALL apply exponential backoff with configurable base delay and maximum delay ✅
 3. WHEN a message is retried, THE Message_Entity SHALL increment its RetryCount field ✅
-4. WHEN a message reaches the maximum retry count, THE Message_Queue SHALL move it to the Dead_Letter_Queue ✅
+4. WHEN a message reaches the maximum retry count, THE Message_Queue SHALL move it to the Dead_Letter_Queue
 5. THE Retry_Policy SHALL support configurable maximum retry attempts (default: 5 attempts) ✅
 6. THE Retry_Policy SHALL calculate delay as: min(base_delay \* 2^retry_count, max_delay) ✅
 7. WHEN a retry succeeds, THE Message_Status_Updater SHALL update the message status to Delivered ✅
