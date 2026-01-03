@@ -1,4 +1,5 @@
 ﻿using Esh3arTech.Abp.Blob.Services;
+using Esh3arTech.Messages.Buffer;
 using Esh3arTech.Messages.Eto;
 using Esh3arTech.Messages.SendBehavior;
 using Esh3arTech.Messages.Specs;
@@ -28,7 +29,7 @@ namespace Esh3arTech.Messages
         private readonly IRepository<MobileUser, Guid> _mobileUserRepository;
         private readonly IBlobService _blobService;
         private readonly IUnitOfWorkManager _unitOfWorkManager;
-        private readonly IMessageStatusUpdater _messageStatusUpdater;
+        private readonly IMessageBuffer _messageBuffer;
 
         public MessageAppService(
             IMessageFactory messageFactory,
@@ -37,15 +38,15 @@ namespace Esh3arTech.Messages
             IRepository<MobileUser, Guid> mobileUserRepository,
             IBlobService blobService,
             IUnitOfWorkManager unitOfWorkManager,
-            IMessageStatusUpdater messageStatusUpdater)
+            IMessageBuffer messageBuffer)
         {
             _messageFactory = messageFactory;
             _distributedEventBus = distributedEventBus;
             _messageRepository = messageRepository;
             _mobileUserRepository = mobileUserRepository;
             _blobService = blobService;
-            _messageStatusUpdater = messageStatusUpdater;
             _unitOfWorkManager = unitOfWorkManager;
+            _messageBuffer = messageBuffer;
         }
 
         [Authorize(Esh3arTechPermissions.Esh3arSendMessages)]
@@ -63,6 +64,17 @@ namespace Esh3arTech.Messages
             sendMsgEto.From = CurrentUser.Name!;
 
             await _distributedEventBus.PublishAsync(sendMsgEto);
+
+            return new MessageDto { Id = createdMessage.Id };
+        }
+        
+        [Authorize(Esh3arTechPermissions.Esh3arSendMessages)]
+        public async Task<MessageDto> IngestionSendOneWayMessageAsync(SendOneWayMessageDto input)
+        {
+            var messageManager = _messageFactory.Create(MessageType.OneWay);
+            var createdMessage = await messageManager.CreateMessageAsync(input.RecipientPhoneNumber, input.MessageContent);
+
+            await _messageBuffer.Writer.WriteAsync(ObjectMapper.Map<Message, MessageBufferDto>(createdMessage));
 
             return new MessageDto { Id = createdMessage.Id };
         }

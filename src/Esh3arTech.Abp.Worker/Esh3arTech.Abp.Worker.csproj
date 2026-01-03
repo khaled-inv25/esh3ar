@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\Esh3arTech\src\Esh3arTech.Domain\Esh3arTech.Domain.csproj" />
+    <ProjectReference Include="..\Esh3arTech.Application.Contracts\Esh3arTech.Application.Contracts.csproj" />
   </ItemGroup>
 
 </Project>

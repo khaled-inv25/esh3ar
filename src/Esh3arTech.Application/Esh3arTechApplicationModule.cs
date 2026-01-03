@@ -1,4 +1,7 @@
 ﻿using Esh3arTech.Features;
+using Esh3arTech.Messages.BackgroundWorkers;
+using Esh3arTech.Messages.Buffer;
+using Microsoft.Extensions.DependencyInjection;
 using Volo.Abp.Account;
 using Volo.Abp.AutoMapper;
 using Volo.Abp.FeatureManagement;
@@ -43,7 +46,5 @@ public class Esh3arTechApplicationModule : AbpModule
         {
             options.ValueProviders.Add<UserPlanFeatureValueProvider>();
         });
-
-
     }
 }

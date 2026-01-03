@@ -3,6 +3,7 @@ using Esh3arTech.Abp.Worker;
 using Esh3arTech.Abp.Worker.Messages;
 using Esh3arTech.EntityFrameworkCore;
 using Esh3arTech.Localization;
+using Esh3arTech.Messages.BackgroundWorkers;
 using Esh3arTech.MultiTenancy;
 using Esh3arTech.Web.HealthChecks;
 using Esh3arTech.Web.Menus;
@@ -19,7 +20,6 @@ using OpenIddict.Server.AspNetCore;
 using OpenIddict.Validation.AspNetCore;
 using System;
 using System.IO;
-using System.Threading.Tasks;
 using Volo.Abp;
 using Volo.Abp.Account.Web;
 using Volo.Abp.AspNetCore.Mvc;
@@ -133,7 +133,7 @@ public class Esh3arTechWebModule : AbpModule
             {
                 options.DisableTransportSecurityRequirement = true;
             });
-            
+
             Configure<ForwardedHeadersOptions>(options =>
             {
                 options.ForwardedHeaders = ForwardedHeaders.XForwardedProto;
@@ -308,6 +308,7 @@ public class Esh3arTechWebModule : AbpModule
 
         // Register background workers
         context.AddBackgroundWorkerAsync<MessageRetryWorker>().GetAwaiter().GetResult();
+        context.AddBackgroundWorkerAsync<MessageIngestionWorker>().GetAwaiter().GetResult();
 
         app.UseForwardedHeaders();
 

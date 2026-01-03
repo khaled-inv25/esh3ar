@@ -22,6 +22,8 @@ public static class Esh3arTechConsts
 
     public const string DefaultOtpSubject = "OTP";
 
+    public const int BufferLimit = 10000; // Limit to 10k to prevent OOM
+
     public static class HubMethods
     {
         public const string ReceivePendingMessages = "ReceivePendingMessages";
