@@ -56,7 +56,7 @@ namespace Esh3arTech.Web.MessagesHandler
             }
             catch (Exception ex)
             {
-                await HandleMessageDeliveryFailureAsync(eventData, ex);
+                await HandleMessageDeliveryFailureAsync(eventData, ex, message);
             }
         }
 
@@ -86,9 +86,8 @@ namespace Esh3arTech.Web.MessagesHandler
             }
         }
 
-        private async Task HandleMessageDeliveryFailureAsync(SendOneWayMessageEto eto, Exception ex)
+        private async Task HandleMessageDeliveryFailureAsync(SendOneWayMessageEto eto, Exception ex, Message message)
         {
-            var message = (Message)await _messageAppService.GetMessageById(eto.Id);
             message.IncrementRetryCount();
 
             if (_retryPolisyService.CanRetry(message.RetryCount))
