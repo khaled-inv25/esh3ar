@@ -3,7 +3,7 @@ using Volo.Abp.Application.Dtos;
 
 namespace Esh3arTech.Messages.Buffer
 {
-    public class MessageBufferDto : FullAuditedEntityDto<Guid>
+    public class MessageIngestionDto : FullAuditedEntityDto<Guid>
     {
         public string RecipientPhoneNumber { get; private set; }
 
@@ -14,5 +14,8 @@ namespace Esh3arTech.Messages.Buffer
         public MessageStatus Status { get; private set; }
 
         public MessageType Type { get; private set; }
+
     }
 }
+
+    

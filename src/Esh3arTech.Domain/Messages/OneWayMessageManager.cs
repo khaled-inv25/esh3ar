@@ -56,6 +56,7 @@ namespace Esh3arTech.Messages
             }
 
             msgToReturn.SetMessageContentOrNull(content);
+            msgToReturn.SetMessageStatusType(MessageStatus.Queued);
 
             return msgToReturn;
         }
@@ -74,6 +75,7 @@ namespace Esh3arTech.Messages
             var msgToReturn = new Message(_guidGenerator.Create(), $"967{recipient}", MessageType.OneWay);
             msgToReturn.SetSubject("default");
             msgToReturn.SetMessageContentOrNull(content ?? null);
+            msgToReturn.SetMessageStatusType(MessageStatus.Queued);
 
             var size = CalculateStreamSize(stream);
             var extension = Path.GetExtension(stream.FileName);

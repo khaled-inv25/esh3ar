@@ -15,6 +15,5 @@ namespace Esh3arTech.Messages.Eto
         public string AccessUrl { get; set; }
 
         public DateTime? UrlExpiresAt { get; set; }
-
     }
 }

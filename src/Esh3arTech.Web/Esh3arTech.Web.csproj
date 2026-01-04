@@ -42,18 +42,19 @@
     <PackageReference Include="AspNetCore.HealthChecks.UI" Version="9.0.0" />
     <PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="9.0.0" />
     <PackageReference Include="AspNetCore.HealthChecks.UI.InMemory.Storage" Version="9.0.0" />
+    <PackageReference Include="DistributedLock.Redis" Version="1.1.1" />
     <PackageReference Include="Hangfire.SqlServer" Version="1.8.18" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.5" />
     <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
     <PackageReference Include="Serilog.Sinks.Async" Version="2.1.0" />
     <PackageReference Include="Volo.Abp.AspNetCore.SignalR" Version="9.3.5" />
     <PackageReference Include="Volo.Abp.BackgroundJobs.HangFire" Version="9.3.6" />
+    <PackageReference Include="Volo.Abp.DistributedLocking" Version="9.3.5" />
     <PackageReference Include="Volo.Abp.EventBus.RabbitMQ" Version="9.3.5" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Esh3arTech.Abp.Blob\Esh3arTech.Abp.Blob.csproj" />
-    <ProjectReference Include="..\Esh3arTech.Abp.Worker\Esh3arTech.Abp.Worker.csproj" />
     <ProjectReference Include="..\Esh3arTech.Application\Esh3arTech.Application.csproj" />
     <ProjectReference Include="..\Esh3arTech.HttpApi\Esh3arTech.HttpApi.csproj" />
     <ProjectReference Include="..\Esh3arTech.EntityFrameworkCore\Esh3arTech.EntityFrameworkCore.csproj" />

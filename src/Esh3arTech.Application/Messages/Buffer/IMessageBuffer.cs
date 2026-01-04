@@ -4,7 +4,7 @@ namespace Esh3arTech.Messages.Buffer
 {
     public interface IMessageBuffer
     {
-        ChannelWriter<MessageBufferDto> Writer { get; }
-        ChannelReader<MessageBufferDto> Reader { get; }
+        ChannelWriter<Message> Writer { get; }
+        ChannelReader<Message> Reader { get; }
     }
 }

@@ -15,6 +15,7 @@ using Volo.Abp.BlobStoring.Database.EntityFrameworkCore;
 using Volo.Abp.Data;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.EntityFrameworkCore;
+using Volo.Abp.EntityFrameworkCore.DistributedEvents;
 using Volo.Abp.EntityFrameworkCore.Modeling;
 using Volo.Abp.FeatureManagement.EntityFrameworkCore;
 using Volo.Abp.Identity;
@@ -33,7 +34,8 @@ namespace Esh3arTech.EntityFrameworkCore;
 public class Esh3arTechDbContext :
     AbpDbContext<Esh3arTechDbContext>,
     ITenantManagementDbContext,
-    IIdentityDbContext
+    IIdentityDbContext,
+    IHasEventOutbox
 {
     public DbSet<MobileUser> MobileUsers { get; set; }
 
@@ -76,6 +78,9 @@ public class Esh3arTechDbContext :
     public DbSet<Tenant> Tenants { get; set; }
     public DbSet<TenantConnectionString> TenantConnectionStrings { get; set; }
 
+    // Event
+    public DbSet<OutgoingEventRecord> OutgoingEvents { get; set; }
+
     #endregion
 
     public Esh3arTechDbContext(DbContextOptions<Esh3arTechDbContext> options)
@@ -100,6 +105,7 @@ public class Esh3arTechDbContext :
         builder.ConfigureTenantManagement();
         builder.ConfigureBlobStoring();
         builder.Entity<Tenant>().ConfigureExtraProperties();
+        builder.ConfigureEventOutbox();
 
         builder.ApplyConfiguration(new MobileUserConfiguration());
         builder.ApplyConfiguration(new RegistrationRequestConfiguration());

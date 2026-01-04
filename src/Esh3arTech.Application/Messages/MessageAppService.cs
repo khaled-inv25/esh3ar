@@ -52,18 +52,14 @@ namespace Esh3arTech.Messages
         [Authorize(Esh3arTechPermissions.Esh3arSendMessages)]
         public async Task<MessageDto> SendOneWayMessageAsync(SendOneWayMessageDto input)
         {
-            using var uow = _unitOfWorkManager.Begin(requiresNew: true);
-            var messageManager = _messageFactory.Create(MessageType.OneWay);
-            var createdMessage = await messageManager.CreateMessageAsync(input.RecipientPhoneNumber, input.MessageContent);
-
-            createdMessage.SetMessageStatusType(MessageStatus.Queued);
-            await _messageRepository.InsertAsync(createdMessage, autoSave: true);
-            await uow.CompleteAsync();
+            var createdMessage = await CreateMessageAsync(input);
 
             var sendMsgEto = ObjectMapper.Map<Message, SendOneWayMessageEto>(createdMessage);
             sendMsgEto.From = CurrentUser.Name!;
 
             await _distributedEventBus.PublishAsync(sendMsgEto);
+
+            await _messageRepository.InsertAsync(createdMessage);
 
             return new MessageDto { Id = createdMessage.Id };
         }
@@ -71,44 +67,12 @@ namespace Esh3arTech.Messages
         [Authorize(Esh3arTechPermissions.Esh3arSendMessages)]
         public async Task<MessageDto> IngestionSendOneWayMessageAsync(SendOneWayMessageDto input)
         {
-            var messageManager = _messageFactory.Create(MessageType.OneWay);
-            var createdMessage = await messageManager.CreateMessageAsync(input.RecipientPhoneNumber, input.MessageContent);
+            var createdMessage = await CreateMessageAsync(input);
 
-            await _messageBuffer.Writer.WriteAsync(ObjectMapper.Map<Message, MessageBufferDto>(createdMessage));
-
-            return new MessageDto { Id = createdMessage.Id };
-        }
-
-        /*
-        [Authorize(Esh3arTechPermissions.Esh3arSendMessages)]
-        public async Task<MessageDto> SendMessageWithAttachmentAsync(SendOneWayMessageWithAttachmentDto input)
-        {
-            input.RecipientPhoneNumber = MobileNumberPreparator.PrepareMobileNumber(input.RecipientPhoneNumber);
-
-            if (!await _mobileUserRepository.AnyAsync(new MobileVerifiedSpecification(input.RecipientPhoneNumber).ToExpression()))
-            {
-                throw new UserFriendlyException("Mobile not found or not verified!");
-            }
-
-            var currentUserId = CurrentUser.Id!.Value;
-            var createdMessage = await _messageManager.CreateOneWayMessageWithAttachmentAsync(
-                currentUserId, 
-                input.RecipientPhoneNumber, 
-                input.MessageContent, 
-                input.Base64OrJson,
-                input.Type
-                );
-            createdMessage.SetSubject(input.Subject);
-            createdMessage.SetMessageStatusType(MessageStatus.Pending);
-
-            var sendMsgEto = ObjectMapper.Map<Message, SendOneWayMessageEto>(createdMessage);
-            sendMsgEto.From = CurrentUser.Name!;
-
-            await _distributedEventBus.PublishAsync(sendMsgEto);
+            await _messageBuffer.Writer.WriteAsync(createdMessage);
 
             return new MessageDto { Id = createdMessage.Id };
         }
-        */
         
         [Authorize(Esh3arTechPermissions.Esh3arSendMessages)]
         public async Task<MessageDto> SendMessageWithAttachmentFromUiAsync(SendOneWayMessageWithAttachmentFromUiDto input)
@@ -118,8 +82,6 @@ namespace Esh3arTech.Messages
 
             var attachment = createdMessageWithAttachment.Attachments.FirstOrDefault();
             await _blobService.SaveToFileSystemAsync(input.ImageStreamContent, attachment!.FileName);
-
-            createdMessageWithAttachment.SetMessageStatusType(MessageStatus.Pending);
 
             var msgWithAttachmentEto = new SendOneWayMessageEto
             {
@@ -180,6 +142,16 @@ namespace Esh3arTech.Messages
         public async Task UpdateMessage(object msg)
         {
             await _messageRepository.UpdateAsync((Message)msg, autoSave: true);
+        }
+
+        private async Task<Message> CreateMessageAsync(SendOneWayMessageDto input)
+        {
+            var messageManager = _messageFactory.Create(MessageType.OneWay);
+            var createdMessage = await messageManager.CreateMessageAsync(input.RecipientPhoneNumber, input.MessageContent);
+
+            createdMessage.SetMessageStatusType(MessageStatus.Queued);
+
+            return createdMessage;
         }
     }
 }

@@ -139,7 +139,8 @@ SELECT
 	RetryCount,
 	LastRetryAt,
 	NextRetryAt,
-	FailureReason
+	FailureReason,
+	CreatorId
 	FROM EtMessages ORDER BY CreationTime DESC
 
 UPDATE EtMessages SET Status = 2

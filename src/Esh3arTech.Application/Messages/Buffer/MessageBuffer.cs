@@ -5,12 +5,12 @@ namespace Esh3arTech.Messages.Buffer
 {
     public class MessageBuffer : IMessageBuffer, ISingletonDependency
     {
-        private readonly Channel<MessageBufferDto> _channel;
+        private readonly Channel<Message> _channel;
 
-        public MessageBuffer() => _channel = Channel.CreateBounded<MessageBufferDto>(Esh3arTechConsts.BufferLimit); // To prevent OOM
+        public MessageBuffer() => _channel = Channel.CreateBounded<Message>(Esh3arTechConsts.BufferLimit); // To prevent OOM
 
-        public ChannelWriter<MessageBufferDto> Writer => _channel.Writer;
+        public ChannelWriter<Message> Writer => _channel.Writer;
 
-        public ChannelReader<MessageBufferDto> Reader => _channel.Reader;
+        public ChannelReader<Message> Reader => _channel.Reader;
     }
 }

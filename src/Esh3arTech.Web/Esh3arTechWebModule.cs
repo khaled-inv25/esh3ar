@@ -8,6 +8,8 @@ using Esh3arTech.MultiTenancy;
 using Esh3arTech.Web.HealthChecks;
 using Esh3arTech.Web.Menus;
 using Hangfire;
+using Medallion.Threading;
+using Medallion.Threading.Redis;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Hosting;
@@ -18,6 +20,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 using OpenIddict.Server.AspNetCore;
 using OpenIddict.Validation.AspNetCore;
+using StackExchange.Redis;
 using System;
 using System.IO;
 using Volo.Abp;
@@ -37,6 +40,9 @@ using Volo.Abp.BackgroundJobs.Hangfire;
 using Volo.Abp.BackgroundWorkers;
 using Volo.Abp.BlobStoring;
 using Volo.Abp.BlobStoring.FileSystem;
+using Volo.Abp.DistributedLocking;
+using Volo.Abp.EntityFrameworkCore.DistributedEvents;
+using Volo.Abp.EventBus.Distributed;
 using Volo.Abp.EventBus.RabbitMq;
 using Volo.Abp.FeatureManagement;
 using Volo.Abp.Identity.Web;
@@ -70,7 +76,8 @@ namespace Esh3arTech.Web;
     typeof(AbpEventBusRabbitMqModule),
     typeof(AbpAspNetCoreSignalRModule),
     typeof(Esh3arTechAbpBlobModule),
-    typeof(Esh3arTechAbpWorkerModule)
+    typeof(Esh3arTechAbpWorkerModule),
+    typeof(AbpDistributedLockingModule)
 )]
 public class Esh3arTechWebModule : AbpModule
 {
@@ -161,6 +168,12 @@ public class Esh3arTechWebModule : AbpModule
         Configure<AbpRabbitMqEventBusOptions>(options =>
         {
             options.PrefetchCount = 100;
+        });
+
+        context.Services.AddSingleton<IDistributedLockProvider>(sp =>
+        {
+            var connection = ConnectionMultiplexer.Connect(configuration["Redis:Configuration"]!);
+            return new RedisDistributedSynchronizationProvider(connection.GetDatabase());
         });
     }
 
@@ -308,7 +321,7 @@ public class Esh3arTechWebModule : AbpModule
 
         // Register background workers
         context.AddBackgroundWorkerAsync<MessageRetryWorker>().GetAwaiter().GetResult();
-        context.AddBackgroundWorkerAsync<MessageIngestionWorker>().GetAwaiter().GetResult();
+        context.AddBackgroundWorkerAsync<MessageIngestionWorker>();
 
         app.UseForwardedHeaders();
 
