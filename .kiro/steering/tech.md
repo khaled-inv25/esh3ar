@@ -1,34 +1,29 @@
 # Technology Stack
 
 ## Framework & Runtime
-
-- **.NET 9.0**: Target framework for all projects
-- **ABP Framework**: Modular application framework with DDD architecture
-- **ASP.NET Core MVC/Razor Pages**: Web application layer
-- **Entity Framework Core**: ORM for database access
-- **OpenIddict**: Authentication and authorization (OAuth 2.0/OpenID Connect)
-
-## Key Libraries & Dependencies
-
-- **AutoMapper**: Object-to-object mapping
-- **Serilog**: Structured logging (file + console + ABP Studio)
-- **SignalR**: Real-time communication for message delivery
-- **RabbitMQ**: Distributed event bus for message processing
-- **ABP Modules**: Identity, Tenant Management, Feature Management, Permission Management, Audit Logging, Background Jobs, Blob Storage
-
-## Database
-
-- **SQL Server**: Primary database (connection string in appsettings.json)
-- **Entity Framework Core Migrations**: Database schema management
+- **.NET 9.0**: Primary runtime and SDK
+- **ABP Framework 9.3.5**: Enterprise application framework providing DDD, multi-tenancy, permissions, and modular architecture
+- **ASP.NET Core**: Web framework with MVC/Razor Pages
+- **Entity Framework Core 9.0**: ORM with SQL Server provider
 
 ## Frontend
+- **Razor Pages/MVC**: Server-side rendering
+- **LeptonX Lite Theme**: ABP's UI theme
+- **SignalR**: Real-time communication
+- **Node.js v18/20**: Frontend tooling
 
-- **jQuery**: DOM manipulation and AJAX
-- **Bootstrap 5**: UI framework
-- **DataTables**: Table management
-- **Select2**: Enhanced select controls
-- **SweetAlert2**: Modal dialogs
-- **SignalR Client**: Real-time communication
+## Infrastructure & Services
+- **SQL Server**: Primary database
+- **Redis**: Caching and distributed locking
+- **RabbitMQ**: Message queuing and event bus
+- **Hangfire**: Background job processing
+- **Serilog**: Structured logging
+
+## Key Libraries
+- **OpenIddict**: Authentication and authorization
+- **AutoMapper**: Object mapping
+- **DistributedLock.Redis**: Distributed locking
+- **AspNetCore.HealthChecks**: Health monitoring
 
 ## Common Commands
 
@@ -37,46 +32,46 @@
 # Install client-side dependencies
 abp install-libs
 
-# Run database migrations and seed data
-dotnet run --project src/Esh3arTech.DbMigrator
+# Run database migrations
+cd src/Esh3arTech.DbMigrator && dotnet run
+
+# Generate development certificates
+dotnet dev-certs https -v -ep openiddict.pfx -p 78711d2c-a333-42b6-90ba-a83863e4d241
 ```
 
-### Build & Run
+### Development
 ```bash
 # Build solution
 dotnet build
 
 # Run web application
-dotnet run --project src/Esh3arTech.Web
+cd src/Esh3arTech.Web && dotnet run
 
-# Run media service (separate microservice)
-dotnet run --project src/Esh3arTech.Abp.Media
-```
+# Run database migrator
+cd src/Esh3arTech.DbMigrator && dotnet run
 
-### Database Migrations
-```bash
-# Add new migration
-dotnet ef migrations add MigrationName --project src/Esh3arTech.EntityFrameworkCore
-
-# Update database
-dotnet ef database update --project src/Esh3arTech.EntityFrameworkCore
-```
-
-### Development
-```bash
-# Restore NuGet packages
+# Restore packages
 dotnet restore
-
-# Clean build artifacts
-dotnet clean
-
-# Watch for changes (auto-rebuild)
-dotnet watch run --project src/Esh3arTech.Web
 ```
 
-## Configuration Files
+### ABP CLI Commands
+```bash
+# Install ABP CLI
+dotnet tool install -g Volo.Abp.Cli
 
-- **appsettings.json**: Connection strings, authentication, external services (WhatsApp, Email, RabbitMQ)
-- **appsettings.secrets.json**: Sensitive configuration (not in source control)
-- **NuGet.Config**: Package sources
-- **.editorconfig**: Code style rules
+# Install client libraries
+abp install-libs
+
+# Generate proxy classes
+abp generate-proxy
+
+# Add new module
+abp add-module <module-name>
+```
+
+## Configuration Notes
+- Connection strings in `appsettings.json`
+- Redis configuration for caching and distributed locking
+- RabbitMQ for event bus messaging
+- WhatsApp API integration settings
+- Blob storage configuration for file attachments

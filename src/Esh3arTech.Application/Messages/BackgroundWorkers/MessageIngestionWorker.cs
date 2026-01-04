@@ -30,7 +30,7 @@ namespace Esh3arTech.Messages.BackgroundWorkers
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             var reader = _messageBuffer.Reader;
-            while(!stoppingToken.IsCancellationRequested)
+            while (!stoppingToken.IsCancellationRequested)
             {
                 if (await reader.WaitToReadAsync(stoppingToken))
                 {
@@ -52,7 +52,7 @@ namespace Esh3arTech.Messages.BackgroundWorkers
         }
 
         private async Task ProcessBatchAsync(List<Message> msgs)
-        {   
+        {
             await _messageRepository.InsertManyAsync(msgs);
 
             var serlizedMessages = JsonSerializer.Serialize(msgs);

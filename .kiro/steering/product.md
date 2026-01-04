@@ -1,25 +1,24 @@
 # Product Overview
 
-Esh3arTech is a messaging and subscription management platform built on ABP Framework. The system enables:
+Esh3arTech is a messaging platform built on the ABP Framework that provides reliable message delivery services with support for multiple communication channels. currently not implemented.
 
-- **One-way messaging**: Send messages (with optional attachments) to mobile users via Custom mobile app
-- **Subscription management**: Manage user plans, subscriptions, billing intervals, and renewals
-- **User registration**: Mobile user registration with OTP verification
-- **Real-time communication**: SignalR hub for tracking online mobile users and message delivery
-- **Message tracking**: Queue, deliver, and track message status with retry mechanisms
+## Core Features
 
-## Core Business Domains
+- **Message Management**: Send one-way messages with retry mechanisms and delivery tracking
+- **Multi-channel Support**: WhatsApp integration with extensible provider architecture
+- **File Attachments**: Support for media attachments with blob storage
+- **User Management**: Mobile user registration with OTP verification
+- **Subscription Plans**: Feature-based subscription management with billing intervals
+- **Real-time Communication**: SignalR integration for live message delivery
+- **Background Processing**: Hangfire-based job processing for reliable message delivery
 
-- **Messages**: One-way messaging with attachment support, status tracking, and delivery confirmation
-- **Plans & Subscriptions**: Feature-based plans with billing intervals, renewal history, and expiration management
-- **Mobile Users**: User registration, verification, and connection tracking
-- **Registrations**: OTP-based registration flow for mobile users
+## Key Business Domains
 
-## Key Features
+- **Messages**: Core messaging functionality with status tracking, retry policies, and attachment support
+- **Mobile Users**: User registration, verification, and management
+- **Plans & Subscriptions**: Feature-based subscription management with renewal tracking
+- **Registration**: OTP-based user verification system
 
-- Multi-language support (Arabic/English)
-- Permission-based access control
-- Background workers for subscription renewals
-- Distributed event bus (RabbitMQ) for message processing
-- Blob storage for file attachments
-- Email and SMS provider integration
+## Architecture
+
+The application follows Domain Driven Design (DDD) principles with a layered monolith architecture, built on the ABP Framework for enterprise-grade features like multi-tenancy, permissions, and localization.

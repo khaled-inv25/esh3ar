@@ -58,13 +58,13 @@ namespace Esh3arTech.EntityFrameworkCore;
             options.UseSqlServer();
         });
 
-        Configure<AbpDistributedEventBusOptions>(options =>
-        {
-            options.Outboxes.Configure(config =>
-            {
-                config.UseDbContext<Esh3arTechDbContext>();
-            });
-        });
+        //Configure<AbpDistributedEventBusOptions>(options =>
+        //{
+        //    options.Outboxes.Configure(config =>
+        //    {
+        //        config.UseDbContext<Esh3arTechDbContext>();
+        //    });
+        //});
 
     }
 }

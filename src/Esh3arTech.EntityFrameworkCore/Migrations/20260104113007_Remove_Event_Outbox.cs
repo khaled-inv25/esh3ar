@@ -1,0 +1,42 @@
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
+
+#nullable disable
+
+namespace Esh3arTech.Migrations
+{
+    /// <inheritdoc />
+    public partial class Remove_Event_Outbox : Migration
+    {
+        /// <inheritdoc />
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropTable(
+                name: "AbpEventOutbox");
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.CreateTable(
+                name: "AbpEventOutbox",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CreationTime = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    EventData = table.Column<byte[]>(type: "varbinary(max)", nullable: false),
+                    EventName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: false),
+                    ExtraProperties = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AbpEventOutbox", x => x.Id);
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AbpEventOutbox_CreationTime",
+                table: "AbpEventOutbox",
+                column: "CreationTime");
+        }
+    }
+}

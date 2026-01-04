@@ -8,7 +8,6 @@ using Esh3arTech.MobileUsers.Specs;
 using Esh3arTech.Permissions;
 using Esh3arTech.Utility;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -57,9 +56,9 @@ namespace Esh3arTech.Messages
             var sendMsgEto = ObjectMapper.Map<Message, SendOneWayMessageEto>(createdMessage);
             sendMsgEto.From = CurrentUser.Name!;
 
-            await _distributedEventBus.PublishAsync(sendMsgEto);
-
             await _messageRepository.InsertAsync(createdMessage);
+
+            await _distributedEventBus.PublishAsync(sendMsgEto);
 
             return new MessageDto { Id = createdMessage.Id };
         }

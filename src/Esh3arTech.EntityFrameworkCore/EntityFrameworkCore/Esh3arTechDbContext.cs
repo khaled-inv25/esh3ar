@@ -34,8 +34,7 @@ namespace Esh3arTech.EntityFrameworkCore;
 public class Esh3arTechDbContext :
     AbpDbContext<Esh3arTechDbContext>,
     ITenantManagementDbContext,
-    IIdentityDbContext,
-    IHasEventOutbox
+    IIdentityDbContext
 {
     public DbSet<MobileUser> MobileUsers { get; set; }
 
@@ -53,17 +52,6 @@ public class Esh3arTechDbContext :
 
     #region Entities from the modules
 
-    /* Notice: We only implemented IIdentityProDbContext and ISaasDbContext
-     * and replaced them for this DbContext. This allows you to perform JOIN
-     * queries for the entities of these modules over the repositories easily. You
-     * typically don't need that for other modules. But, if you need, you can
-     * implement the DbContext interface of the needed module and use ReplaceDbContext
-     * attribute just like IIdentityProDbContext and ISaasDbContext.
-     *
-     * More info: Replacing a DbContext of a module ensures that the related module
-     * uses this DbContext on runtime. Otherwise, it will use its own DbContext class.
-     */
-
     // Identity
     public DbSet<IdentityUser> Users { get; set; }
     public DbSet<IdentityRole> Roles { get; set; }
@@ -79,7 +67,7 @@ public class Esh3arTechDbContext :
     public DbSet<TenantConnectionString> TenantConnectionStrings { get; set; }
 
     // Event
-    public DbSet<OutgoingEventRecord> OutgoingEvents { get; set; }
+    //public DbSet<OutgoingEventRecord> OutgoingEvents { get; set; }
 
     #endregion
 
@@ -105,7 +93,7 @@ public class Esh3arTechDbContext :
         builder.ConfigureTenantManagement();
         builder.ConfigureBlobStoring();
         builder.Entity<Tenant>().ConfigureExtraProperties();
-        builder.ConfigureEventOutbox();
+        //builder.ConfigureEventOutbox();
 
         builder.ApplyConfiguration(new MobileUserConfiguration());
         builder.ApplyConfiguration(new RegistrationRequestConfiguration());
