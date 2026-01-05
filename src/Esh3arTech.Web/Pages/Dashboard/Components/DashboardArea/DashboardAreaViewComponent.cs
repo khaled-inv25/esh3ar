@@ -1,10 +1,12 @@
 ﻿using Esh3arTech.UserMessages;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using Volo.Abp.AspNetCore.Mvc;
 
 namespace Esh3arTech.Web.Pages.Dashboard.Components.DashboardArea
 {
+    [Authorize]
     public class DashboardAreaViewComponent : AbpViewComponent
     {
         private readonly IUserMessagesAppService _userMessagesAppService;

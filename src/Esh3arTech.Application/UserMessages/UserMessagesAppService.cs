@@ -1,5 +1,4 @@
 ﻿using Esh3arTech.Messages;
-using Microsoft.AspNetCore.Authorization;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -15,7 +14,6 @@ namespace Esh3arTech.UserMessages
             _messageRepository = messageRepository;
         }
 
-        [Authorize]
         public async Task<MessagesStatusDto> GetMessagesStatus()
         {
             var messageQueryable = await _messageRepository.GetQueryableAsync();
