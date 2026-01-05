@@ -1,447 +1,527 @@
-# Design Document: High-Throughput Messaging System
+# Design Document
 
 ## Overview
 
-This design document outlines the architecture for scaling the `SendOneWayMessageAsync` functionality to handle 10,000+ concurrent requests while maintaining system reliability, performance, and data consistency. The solution builds upon the existing ABP Framework architecture and introduces several new components for high-throughput message processing.
+The high-throughput messaging system is designed to handle 10,000+ concurrent individual API calls from business clients while delivering messages to mobile users in real-time via SignalR with zero message loss. The architecture emphasizes horizontal scalability, atomic transaction guarantees, and fault tolerance through event-driven patterns and intelligent load distribution.
+
+The system follows a multi-layered approach with clear separation between API ingestion, message processing, and delivery layers. Each layer can scale independently based on load patterns, ensuring optimal resource utilization and performance under varying traffic conditions.
 
 ## Architecture
 
-The high-throughput messaging system follows a multi-layered architecture with asynchronous processing pipelines:
+The system employs a distributed, event-driven architecture with the following key principles:
 
-```mermaid
-graph TB
-    Client[Client Applications] --> LB[Load Balancer]
-    LB --> API1[API Instance 1]
-    LB --> API2[API Instance 2]
-    LB --> API3[API Instance N]
-    
-    API1 --> RL[Rate Limiter]
-    API2 --> RL
-    API3 --> RL
-    
-    RL --> CB[Circuit Breaker]
-    CB --> MB[Message Buffer]
-    MB --> IW[Ingestion Worker]
-    IW --> DB[(Database)]
-    IW --> MQ[Message Queue]
-    
-    MQ --> PW[Processing Workers]
-    PW --> ES[External Services]
-    
-    Redis[(Redis Cache)] --> RL
-    Redis --> CB
-    Redis --> Metrics[Metrics Store]
-    
-    Monitor[Monitoring System] --> Metrics
-```
+### Layered Architecture
+- **API Layer**: Handles incoming business client requests with load balancing
+- **Caching Layer**: Redis-based distributed caching for performance optimization
+- **Ingestion Layer**: Processes and queues messages with atomic guarantees
+- **Processing Layer**: Routes messages and manages delivery workflows
+- **Delivery Layer**: Manages SignalR connections and real-time delivery
+- **Storage Layer**: Provides durable persistence and queue management
+
+### Caching Strategy
+- **Connection Caching**: Cache active SignalR connections and user online status
+- **Message Caching**: Cache frequently accessed messages and delivery status
+- **Load Balancer Caching**: Cache node metrics and routing decisions
+- **User State Caching**: Cache mobile user presence and pending message counts
+- **Configuration Caching**: Cache system configuration and routing rules
+
+### Event-Driven Communication
+- Asynchronous message processing using high-performance queues
+- Event sourcing for message state transitions
+- Distributed event bus for cross-service communication
+- Circuit breaker patterns for fault isolation
+- Cache invalidation events for consistency
+
+### Horizontal Scaling
+- Stateless service design for easy horizontal scaling
+- Load balancer with intelligent request distribution
+- Auto-scaling based on queue depth and system metrics
+- Connection pooling and resource optimization
+- Distributed caching with Redis clustering
 
 ## Components and Interfaces
 
-### 1. Enhanced Message Buffer System
+### Existing Components (Current Esh3arTech Architecture)
 
-#### IAdvancedMessageBuffer
+The high-throughput messaging system builds upon the existing Esh3arTech infrastructure:
+
+#### Current Message Domain
 ```csharp
-public interface IAdvancedMessageBuffer
+// Existing: src/Esh3arTech.Domain/Messages/Message.cs
+public class Message : FullAuditedAggregateRoot<Guid>
+{
+    // Current properties: RecipientPhoneNumber, Subject, MessageContent, Status, Type, etc.
+    // Existing retry logic: RetryCount, LastRetryAt, NextRetryAt, MovedToDlqAt
+    // Current methods: SetMessageStatusType, IncrementRetryCount, ScheduleNextRetry
+}
+
+// Existing: src/Esh3arTech.Domain/Messages/SendBehavior/IMessageFactory.cs
+public interface IMessageFactory
+{
+    IOneWayMessageManager Create(MessageType type);
+}
+```
+
+#### Current Application Services
+```csharp
+// Existing: src/Esh3arTech.Application/Messages/MessageAppService.cs
+public class MessageAppService : Esh3arTechAppService, IMessageAppService
+{
+    // Current methods: SendOneWayMessageAsync, IngestionSendOneWayMessageAsync
+    // Existing dependencies: IMessageFactory, IDistributedEventBus, IMessageRepository, IMessageBuffer
+}
+
+// Existing: src/Esh3arTech.Application/Messages/Buffer/IMessageBuffer.cs
+public interface IMessageBuffer
+{
+    ChannelWriter<Message> Writer { get; }
+    ChannelReader<Message> Reader { get; }
+}
+```
+
+#### Current SignalR Infrastructure
+```csharp
+// Existing: src/Esh3arTech.Web/Hubs/OnlineMobileUserHub.cs
+[Authorize]
+[HubRoute("online-mobile-user")]
+public class OnlineMobileUserHub : AbpHub
+{
+    // Current methods: OnConnectedAsync, OnDisconnectedAsync, AcknowledgeMessage
+    // Existing dependencies: OnlineUserTrackerService, IMessageAppService, IDistributedCache
+}
+
+// Existing: src/Esh3arTech.Web/MobileUsers/OnlineUserTrackerService.cs
+public class OnlineUserTrackerService : ITransientDependency
+{
+    // Current methods: AddConnection, RemoveConnection, GetFirstConnectionIdByPhoneNumberAsync
+    // Uses: IDistributedCache<MobileUserConnectionCacheItem>
+}
+```
+
+### Enhanced Components for High-Throughput
+
+#### Enhanced Load Balancer (New)
+```csharp
+public interface IHighThroughputLoadBalancer
+{
+    Task<IProcessingNode> SelectOptimalNodeAsync(LoadBalancingStrategy strategy);
+    Task RegisterNodeAsync(IProcessingNode node);
+    Task UnregisterNodeAsync(string nodeId);
+    Task<LoadMetrics> GetRealTimeLoadMetricsAsync();
+    Task<bool> CanHandleLoadAsync(int concurrentRequests);
+}
+
+public class ProcessingNode
+{
+    public string Id { get; set; }
+    public string Endpoint { get; set; }
+    public NodeStatus Status { get; set; }
+    public LoadMetrics CurrentLoad { get; set; }
+    public DateTime LastHeartbeat { get; set; }
+    public int MaxConcurrentRequests { get; set; }
+    public int CurrentActiveRequests { get; set; }
+}
+```
+
+#### Enhanced Message Buffer (Extends Existing)
+```csharp
+// Extends existing IMessageBuffer with high-throughput capabilities
+public interface IHighThroughputMessageBuffer : IMessageBuffer
 {
     Task<bool> TryWriteAsync(Message message, CancellationToken cancellationToken = default);
-    Task<IReadOnlyList<Message>> ReadBatchAsync(int maxBatchSize, CancellationToken cancellationToken = default);
-    Task<BufferStatus> GetStatusAsync();
-    event EventHandler<BufferPressureEventArgs> BackpressureTriggered;
+    Task<IEnumerable<Message>> ReadBatchAsync(int batchSize, CancellationToken cancellationToken = default);
+    Task<BufferMetrics> GetMetricsAsync();
+    Task<bool> IsNearCapacityAsync(double threshold = 0.8);
 }
 
-public class BufferStatus
+public class BufferMetrics
 {
-    public int CurrentCount { get; set; }
-    public int Capacity { get; set; }
+    public int CurrentDepth { get; set; }
+    public int MaxCapacity { get; set; }
     public double UtilizationPercentage { get; set; }
-    public bool IsBackpressureActive { get; set; }
+    public TimeSpan AverageProcessingTime { get; set; }
+    public int MessagesPerSecond { get; set; }
 }
 ```
 
-#### AdvancedMessageBuffer Implementation
+#### Enhanced SignalR Hub (Extends Existing)
 ```csharp
-public class AdvancedMessageBuffer : IAdvancedMessageBuffer, ISingletonDependency
+// Extends existing OnlineMobileUserHub with high-throughput capabilities
+public interface IHighThroughputSignalRHub
 {
-    private readonly Channel<Message> _channel;
-    private readonly IConfiguration _configuration;
-    private readonly ILogger<AdvancedMessageBuffer> _logger;
-    private readonly SemaphoreSlim _backpressureSemaphore;
-    
-    public AdvancedMessageBuffer(IConfiguration configuration, ILogger<AdvancedMessageBuffer> logger)
-    {
-        var capacity = configuration.GetValue<int>("MessageBuffer:Capacity", 50000);
-        var options = new BoundedChannelOptions(capacity)
-        {
-            FullMode = BoundedChannelFullMode.Wait,
-            SingleReader = false,
-            SingleWriter = false,
-            AllowSynchronousContinuations = false
-        };
-        
-        _channel = Channel.CreateBounded<Message>(options);
-        _configuration = configuration;
-        _logger = logger;
-        _backpressureSemaphore = new SemaphoreSlim(1, 1);
-    }
+    Task SendMessageToUserAsync(string userId, object message);
+    Task SendBatchMessagesToUserAsync(string userId, IEnumerable<object> messages);
+    Task SendMessageToMultipleUsersAsync(IEnumerable<string> userIds, object message);
+    Task<bool> IsUserConnectedAsync(string userId);
+    Task<int> GetActiveConnectionCountAsync();
+    Task<HubMetrics> GetHubMetricsAsync();
+}
+
+public class HubMetrics
+{
+    public int ActiveConnections { get; set; }
+    public int MessagesPerSecond { get; set; }
+    public TimeSpan AverageDeliveryLatency { get; set; }
+    public int FailedDeliveries { get; set; }
+    public DateTime LastUpdated { get; set; }
 }
 ```
 
-### 2. Rate Limiting System
-
-#### IRateLimiter
+#### Enhanced Connection Management (Extends Existing)
 ```csharp
-public interface IRateLimiter
+// Extends existing OnlineUserTrackerService with high-throughput capabilities
+public interface IHighThroughputConnectionManager
 {
-    Task<RateLimitResult> CheckRateLimitAsync(string userId, string operation, CancellationToken cancellationToken = default);
-    Task<UserRateLimits> GetUserLimitsAsync(string userId);
+    Task<bool> IsUserOnlineAsync(string phoneNumber);
+    Task<IEnumerable<string>> GetActiveConnectionsAsync(string phoneNumber);
+    Task RegisterConnectionAsync(string phoneNumber, string connectionId);
+    Task UnregisterConnectionAsync(string phoneNumber, string connectionId);
+    Task<ConnectionMetrics> GetConnectionMetricsAsync();
+    Task<bool> CanAcceptNewConnectionsAsync();
+    Task RedistributeConnectionsAsync();
 }
 
-public class RateLimitResult
+public class ConnectionMetrics
 {
-    public bool IsAllowed { get; set; }
-    public TimeSpan RetryAfter { get; set; }
-    public int RemainingRequests { get; set; }
-    public DateTime WindowResetTime { get; set; }
+    public int TotalActiveConnections { get; set; }
+    public int MaxConcurrentConnections { get; set; }
+    public double ConnectionUtilization { get; set; }
+    public TimeSpan AverageConnectionDuration { get; set; }
+    public int ConnectionsPerSecond { get; set; }
 }
 ```
 
-#### DistributedRateLimiter Implementation
+### Enhanced Caching Layer (Builds on Existing Redis)
 ```csharp
-public class DistributedRateLimiter : IRateLimiter, ITransientDependency
+// Builds upon existing IDistributedCache usage in OnlineUserTrackerService
+public interface IHighPerformanceCache
 {
-    private readonly IDistributedCache _cache;
-    private readonly IUserPlanRepository _userPlanRepository;
-    private readonly ILogger<DistributedRateLimiter> _logger;
-    
-    // Sliding window rate limiting using Redis sorted sets
-    public async Task<RateLimitResult> CheckRateLimitAsync(string userId, string operation, CancellationToken cancellationToken = default)
-    {
-        var userLimits = await GetUserLimitsAsync(userId);
-        var window = TimeSpan.FromMinutes(1); // 1-minute sliding window
-        var key = $"rate_limit:{userId}:{operation}";
-        
-        // Implementation using Redis ZREMRANGEBYSCORE and ZCARD commands
-        // for efficient sliding window rate limiting
-    }
+    Task<T?> GetAsync<T>(string key);
+    Task SetAsync<T>(string key, T value, TimeSpan? expiration = null);
+    Task<Dictionary<string, T?>> GetBatchAsync<T>(IEnumerable<string> keys);
+    Task SetBatchAsync<T>(Dictionary<string, T> items, TimeSpan? expiration = null);
+    Task InvalidatePatternAsync(string pattern);
+    Task<CacheMetrics> GetMetricsAsync();
+}
+
+public interface IMessageCache
+{
+    Task<Message?> GetMessageAsync(Guid messageId);
+    Task CacheMessageAsync(Message message, TimeSpan expiration);
+    Task<IEnumerable<Message>> GetPendingMessagesAsync(string phoneNumber);
+    Task CachePendingMessagesAsync(string phoneNumber, IEnumerable<Message> messages);
+    Task InvalidateUserMessagesAsync(string phoneNumber);
 }
 ```
 
-### 3. Circuit Breaker System
-
-#### ICircuitBreaker
+### Atomic Transaction Manager (New)
 ```csharp
-public interface ICircuitBreaker
+public interface IAtomicMessagePersistence
 {
-    Task<T> ExecuteAsync<T>(Func<Task<T>> operation, string operationName, CancellationToken cancellationToken = default);
-    Task<CircuitBreakerState> GetStateAsync(string operationName);
-    Task ResetAsync(string operationName);
+    Task<TransactionResult> PersistMessageAtomicallyAsync(Message message);
+    Task<bool> ValidateTransactionConsistencyAsync(Guid messageId);
+    Task<IEnumerable<Message>> GetInconsistentMessagesAsync();
+    Task RepairInconsistentMessageAsync(Guid messageId);
 }
 
-public enum CircuitBreakerState
+public class TransactionResult
 {
-    Closed,
-    Open,
-    HalfOpen
+    public bool Success { get; set; }
+    public Guid MessageId { get; set; }
+    public string TransactionId { get; set; }
+    public bool DatabasePersisted { get; set; }
+    public bool QueueInserted { get; set; }
+    public string? ErrorMessage { get; set; }
+    public DateTime Timestamp { get; set; }
 }
 ```
 
-#### DistributedCircuitBreaker Implementation
+### Message Queue System
 ```csharp
-public class DistributedCircuitBreaker : ICircuitBreaker, ISingletonDependency
+public interface IHighPerformanceMessageQueue
 {
-    private readonly IDistributedCache _cache;
-    private readonly ILogger<DistributedCircuitBreaker> _logger;
-    private readonly CircuitBreakerOptions _options;
-    
-    // Polly-based circuit breaker with Redis state storage
-    // for distributed circuit breaker functionality
+    Task<bool> EnqueueAsync(Message message, QueuePriority priority = QueuePriority.Normal);
+    Task<Message> DequeueAsync(CancellationToken cancellationToken);
+    Task<IEnumerable<Message>> DequeueBatchAsync(int batchSize, CancellationToken cancellationToken);
+    Task<bool> AcknowledgeAsync(string messageId);
+    Task<bool> RejectAsync(string messageId, string reason);
+    Task<QueueMetrics> GetMetricsAsync();
+}
+
+public interface IAtomicMessagePersistence
+{
+    Task<TransactionResult> PersistMessageAtomicallyAsync(Message message);
+    Task<bool> MarkAsProcessedAsync(string messageId);
+    Task<IEnumerable<Message>> GetUnprocessedMessagesAsync();
 }
 ```
 
-### 4. Enhanced Message Processing Pipeline
-
-#### IMessageProcessor
+### Message Processing and Routing
 ```csharp
 public interface IMessageProcessor
 {
-    Task<ProcessingResult> ProcessAsync(Message message, CancellationToken cancellationToken = default);
-    Task<BatchProcessingResult> ProcessBatchAsync(IReadOnlyList<Message> messages, CancellationToken cancellationToken = default);
+    Task ProcessMessageAsync(Message message);
+    Task ProcessBatchAsync(IEnumerable<Message> messages);
+    Task<ProcessingResult> ValidateAndRouteAsync(Message message);
 }
 
-public class ProcessingResult
+public interface IMessageRouter
 {
-    public bool IsSuccess { get; set; }
-    public string? ErrorMessage { get; set; }
-    public TimeSpan ProcessingTime { get; set; }
-    public Dictionary<string, object> Metadata { get; set; } = new();
+    Task<RoutingResult> RouteToMobileUserAsync(Message message, string mobileUserId);
+    Task<IEnumerable<string>> GetActiveConnectionsAsync(string mobileUserId);
+    Task<bool> IsUserOnlineAsync(string mobileUserId);
 }
 ```
 
-### 5. Performance Monitoring System
-
-#### IPerformanceMonitor
+### SignalR Hub and Connection Management
 ```csharp
-public interface IPerformanceMonitor
+public interface ISignalRMessageHub
 {
-    void RecordRequestMetrics(string operation, TimeSpan duration, bool success);
-    void RecordThroughputMetrics(string operation, int count);
-    void RecordResourceMetrics(ResourceType type, double value);
-    Task<SystemHealthStatus> GetHealthStatusAsync();
+    Task SendMessageToUserAsync(string userId, object message);
+    Task SendMessageToGroupAsync(string groupName, object message);
+    Task SendBatchMessagesAsync(string userId, IEnumerable<object> messages);
 }
 
-public class SystemHealthStatus
+public interface IConnectionManager
 {
-    public double RequestsPerSecond { get; set; }
-    public double AverageResponseTime { get; set; }
-    public double ErrorRate { get; set; }
-    public double MemoryUtilization { get; set; }
-    public double DatabaseConnectionUtilization { get; set; }
-    public Dictionary<string, CircuitBreakerState> CircuitBreakerStates { get; set; } = new();
+    Task<bool> IsConnectedAsync(string userId);
+    Task<IEnumerable<string>> GetConnectionIdsAsync(string userId);
+    Task RegisterConnectionAsync(string userId, string connectionId);
+    Task UnregisterConnectionAsync(string connectionId);
+    Task<ConnectionMetrics> GetConnectionMetricsAsync();
+}
+```
+
+### Circuit Breaker and Fault Tolerance
+```csharp
+public interface ICircuitBreaker
+{
+    Task<T> ExecuteAsync<T>(Func<Task<T>> operation);
+    CircuitBreakerState GetState();
+    Task ResetAsync();
+    event EventHandler<CircuitBreakerStateChangedEventArgs> StateChanged;
+}
+
+public interface IFaultTolerantDelivery
+{
+    Task<DeliveryResult> DeliverWithRetryAsync(Message message, RetryPolicy policy);
+    Task QueueForRetryAsync(Message message, TimeSpan delay);
+    Task MoveToDeadLetterQueueAsync(Message message, string reason);
 }
 ```
 
 ## Data Models
 
-### Enhanced Message Processing Configuration
+### Caching Strategy Details
+
+#### Connection State Caching
+- **User Online Status**: Cache with 30-second TTL, updated on connect/disconnect
+- **Active Connections**: Cache connection IDs per user with 60-second TTL
+- **Connection Metrics**: Cache hub load metrics with 10-second TTL
+- **Offline Message Queue**: Cache pending message counts per user
+
+#### Message Caching
+- **Recent Messages**: Cache last 100 messages per user with 5-minute TTL
+- **Delivery Status**: Cache message delivery status with 1-hour TTL
+- **Failed Messages**: Cache retry queue status with 30-second TTL
+- **Message Metadata**: Cache routing information with 10-minute TTL
+
+#### Load Balancer Caching
+- **Node Health**: Cache node status and metrics with 15-second TTL
+- **Routing Decisions**: Cache load balancing decisions with 5-second TTL
+- **Capacity Metrics**: Cache system capacity information with 30-second TTL
+
+#### Cache Invalidation Strategy
+- **Event-Driven**: Invalidate cache on state changes (connect/disconnect, message delivery)
+- **Time-Based**: Use appropriate TTL values based on data volatility
+- **Manual**: Provide cache invalidation APIs for administrative operations
+- **Distributed**: Use Redis pub/sub for cache invalidation across nodes
+
+### Core Message Model (Existing + Extensions)
+
+The existing `Message` entity in `src/Esh3arTech.Domain/Messages/Message.cs` already provides:
+- Retry logic: `RetryCount`, `LastRetryAt`, `NextRetryAt`
+- Status management: `Status`, `SetMessageStatusType()`
+- Priority handling: `Priority`, `SetPriority()`
+- Attachment support: `Attachments`, `AddAttachment()`
+- Dead letter queue support: `MovedToDlqAt`
 
 ```csharp
-public class HighThroughputOptions
+// Existing Message entity (no changes needed)
+[Table(Esh3arTechConsts.TblMessage)]
+public class Message : FullAuditedAggregateRoot<Guid>
 {
-    public MessageBufferOptions Buffer { get; set; } = new();
-    public RateLimitingOptions RateLimiting { get; set; } = new();
-    public CircuitBreakerOptions CircuitBreaker { get; set; } = new();
-    public DatabaseOptions Database { get; set; } = new();
-    public MonitoringOptions Monitoring { get; set; } = new();
+    public string RecipientPhoneNumber { get; private set; }
+    public string Subject { get; private set; }
+    public string? MessageContent { get; private set; }
+    public MessageStatus Status { get; private set; }
+    public MessageType Type { get; private set; }
+    public Priority Priority { get; private set; }
+    public int RetryCount { get; private set; }
+    public DateTime? DeliveredAt { get; private set; }
+    public DateTime? LastRetryAt { get; private set; }
+    public DateTime? NextRetryAt { get; private set; }
+    public DateTime? MovedToDlqAt { get; private set; }
+    public string? FailureReason { get; private set; }
+    // ... existing methods
 }
 
-public class MessageBufferOptions
+// Existing enums (already defined in Domain.Shared)
+public enum MessageStatus { Queued, Processing, Delivered, Failed, DeadLetter }
+public enum MessageType { OneWay, TwoWay }
+public enum Priority { Low, Normal, High, Critical }
+```
+
+### High-Throughput Processing Models (New)
+```csharp
+public class ProcessingNode
 {
-    public int Capacity { get; set; } = 50000;
-    public int BackpressureThreshold { get; set; } = 40000; // 80% of capacity
-    public int BatchSize { get; set; } = 1000;
-    public TimeSpan BatchTimeout { get; set; } = TimeSpan.FromMilliseconds(100);
+    public string Id { get; set; }
+    public string Endpoint { get; set; }
+    public NodeStatus Status { get; set; }
+    public LoadMetrics CurrentLoad { get; set; }
+    public DateTime LastHeartbeat { get; set; }
+    public int MaxConcurrentRequests { get; set; }
+    public int CurrentActiveRequests { get; set; }
+    public Dictionary<string, object> Capabilities { get; set; }
 }
 
-public class RateLimitingOptions
+public class LoadMetrics
 {
-    public Dictionary<string, UserTierLimits> TierLimits { get; set; } = new();
-    public TimeSpan WindowSize { get; set; } = TimeSpan.FromMinutes(1);
-    public bool EnableDistributedLimiting { get; set; } = true;
+    public double CpuUsage { get; set; }
+    public double MemoryUsage { get; set; }
+    public int ActiveConnections { get; set; }
+    public int QueueDepth { get; set; }
+    public double RequestsPerSecond { get; set; }
+    public TimeSpan AverageResponseTime { get; set; }
+    public DateTime LastUpdated { get; set; }
 }
 
-public class UserTierLimits
+public enum NodeStatus
 {
-    public int RequestsPerMinute { get; set; }
-    public int BurstLimit { get; set; }
-    public int ConcurrentRequests { get; set; }
+    Healthy,
+    Degraded,
+    Unhealthy,
+    Offline
 }
 ```
 
-### Message Processing Metrics
+### Connection and Delivery Models (Existing + Extensions)
+
+Building upon existing infrastructure in `OnlineUserTrackerService` and `OnlineMobileUserHub`:
 
 ```csharp
-public class MessageProcessingMetrics
+// Existing: MobileUserConnectionCacheItem (referenced in OnlineUserTrackerService)
+// Current structure handles connection tracking per mobile number
+
+// Enhanced connection model for high-throughput scenarios
+public class HighThroughputConnectionInfo
 {
-    public long TotalRequestsReceived { get; set; }
-    public long TotalRequestsProcessed { get; set; }
-    public long TotalRequestsFailed { get; set; }
-    public double AverageProcessingTime { get; set; }
-    public double RequestsPerSecond { get; set; }
-    public int CurrentBufferSize { get; set; }
-    public int ActiveConnections { get; set; }
-    public Dictionary<string, long> ErrorCounts { get; set; } = new();
+    public string PhoneNumber { get; set; }
+    public List<string> ConnectionIds { get; set; } = new();
+    public DateTime LastActivity { get; set; }
+    public ConnectionStatus Status { get; set; }
+    public int PendingMessageCount { get; set; }
+    public DateTime ConnectedAt { get; set; }
+    public string? UserAgent { get; set; }
+}
+
+// Extends existing delivery tracking
+public class DeliveryResult
+{
+    public bool Success { get; set; }
+    public Guid MessageId { get; set; }
+    public DateTime DeliveredAt { get; set; }
+    public string? ErrorMessage { get; set; }
+    public DeliveryChannel Channel { get; set; }
+    public TimeSpan DeliveryLatency { get; set; }
+    public string? ConnectionId { get; set; }
+    public int RetryAttempt { get; set; }
+}
+
+// Transaction result for atomic operations
+public class TransactionResult
+{
+    public bool Success { get; set; }
+    public Guid MessageId { get; set; }
+    public string TransactionId { get; set; }
+    public bool DatabasePersisted { get; set; }
+    public bool QueueInserted { get; set; }
+    public string? ErrorMessage { get; set; }
+    public DateTime Timestamp { get; set; }
+}
+
+// Cache entry wrapper for performance optimization
+public class CacheEntry<T>
+{
+    public T Value { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime ExpiresAt { get; set; }
+    public string Version { get; set; }
+    public int HitCount { get; set; }
+}
+
+public enum DeliveryChannel
+{
+    SignalR,
+    Fallback,
+    Retry
+}
+
+public enum ConnectionStatus
+{
+    Connected,
+    Disconnected,
+    Reconnecting,
+    Idle
 }
 ```
 
 ## Error Handling
 
-### Comprehensive Error Handling Strategy
+### Error Classification
+- **Transient Errors**: Network timeouts, temporary service unavailability
+- **Permanent Errors**: Invalid user IDs, malformed messages
+- **System Errors**: Database failures, memory exhaustion
+- **Business Errors**: Rate limiting, quota exceeded
 
-1. **Request Validation Errors**
-   - Return HTTP 400 with detailed validation messages
-   - Log validation failures for monitoring
+### Error Handling Strategy
+```csharp
+public class ErrorHandlingStrategy
+{
+    public async Task<ErrorHandlingResult> HandleErrorAsync(Exception error, Message message)
+    {
+        return error switch
+        {
+            TransientException => await HandleTransientErrorAsync(message),
+            PermanentException => await HandlePermanentErrorAsync(message),
+            SystemException => await HandleSystemErrorAsync(message),
+            BusinessException => await HandleBusinessErrorAsync(message),
+            _ => await HandleUnknownErrorAsync(message)
+        };
+    }
+    
+    private async Task<ErrorHandlingResult> HandleTransientErrorAsync(Message message)
+    {
+        // Implement exponential backoff retry
+        var delay = CalculateExponentialBackoff(message.RetryCount);
+        await _faultTolerantDelivery.QueueForRetryAsync(message, delay);
+        return ErrorHandlingResult.Retry;
+    }
+    
+    private async Task<ErrorHandlingResult> HandlePermanentErrorAsync(Message message)
+    {
+        // Move to dead letter queue immediately
+        await _faultTolerantDelivery.MoveToDeadLetterQueueAsync(message, "Permanent error");
+        return ErrorHandlingResult.DeadLetter;
+    }
+}
+```
 
-2. **Rate Limiting Errors**
-   - Return HTTP 429 with Retry-After header
-   - Include remaining quota in response headers
+### Circuit Breaker Implementation
+- **Closed State**: Normal operation, requests flow through
+- **Open State**: Failures detected, requests fail fast
+- **Half-Open State**: Testing if service has recovered
+- **Failure Threshold**: 5 consecutive failures or 50% failure rate
+- **Recovery Timeout**: 30 seconds before attempting recovery
 
-3. **Buffer Overflow Errors**
-   - Return HTTP 503 with backpressure indication
-   - Implement exponential backoff for clients
-
-4. **Database Errors**
-   - Retry with exponential backoff
-   - Circuit breaker protection for persistent failures
-   - Graceful degradation to read-only mode if needed
-
-5. **External Service Errors**
-   - Circuit breaker protection
-   - Message queuing for retry when services recover
-   - Fallback to alternative providers if available
-
-## Testing Strategy
-
-### Unit Testing
-- Test individual components (rate limiter, circuit breaker, buffer)
-- Mock external dependencies
-- Verify error handling and edge cases
-- Test configuration validation
-
-### Integration Testing
-- Test component interactions
-- Database connection pooling
-- Redis integration
-- Message flow through the pipeline
-
-### Load Testing
-- Simulate 10k+ concurrent requests
-- Test backpressure mechanisms
-- Verify graceful degradation
-- Monitor resource utilization
-
-### Property-Based Testing
-
-*A property is a characteristic or behavior that should hold true across all valid executions of a system-essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.*
-
-Now I'll analyze the acceptance criteria to determine which can be tested as properties:
-
-<function_calls>
-<invoke name="prework">
-<parameter name="featureName">high-throughput-messaging
-
-## Correctness Properties
-
-Based on the prework analysis, the following properties must hold for the high-throughput messaging system:
-
-### Property 1: Concurrent Request Acceptance
-*For any* set of up to 10,000 concurrent message requests, the system should accept all requests without timeout errors within reasonable time limits
-**Validates: Requirements 1.1**
-
-### Property 2: Backpressure Without Data Loss
-*For any* load that exceeds system capacity, applying backpressure should not result in request data loss or corruption
-**Validates: Requirements 1.2**
-
-### Property 3: Response Time Under Load
-*For any* concurrent load scenario, request acceptance response times should remain under 500ms
-**Validates: Requirements 1.3**
-
-### Property 4: Memory Flow Control
-*For any* memory usage scenario approaching system limits, flow control mechanisms should activate before out-of-memory conditions occur
-**Validates: Requirements 1.4**
-
-### Property 5: Buffer Backpressure Threshold
-*For any* buffer state at 80% capacity or higher, backpressure should be applied to incoming requests
-**Validates: Requirements 2.2**
-
-### Property 6: Full Buffer Handling
-*For any* full buffer condition, the system should either queue requests or return appropriate HTTP 503 status codes without data loss
-**Validates: Requirements 2.3**
-
-### Property 7: Batch Processing Optimization
-*For any* set of messages in the ingestion worker, messages should be processed in batches of optimal size for database throughput
-**Validates: Requirements 2.4**
-
-### Property 8: Graceful Shutdown Persistence
-*For any* graceful shutdown scenario, all buffered messages should be persisted without loss
-**Validates: Requirements 2.5**
-
-### Property 9: Database Connection Exhaustion Handling
-*For any* scenario where database connections are exhausted, operations should be queued rather than failed
-**Validates: Requirements 3.2**
-
-### Property 10: Exponential Backoff Retry
-*For any* transient database failure, retry attempts should follow exponential backoff patterns
-**Validates: Requirements 3.3**
-
-### Property 11: Tier-Based Rate Limiting
-*For any* user with a specific subscription tier, message sending limits should be enforced according to their plan
-**Validates: Requirements 4.1**
-
-### Property 12: Rate Limit Error Response
-*For any* request that exceeds rate limits, the system should return HTTP 429 status with appropriate retry-after headers
-**Validates: Requirements 4.2**
-
-### Property 13: Sliding Window Rate Limiting
-*For any* time window, rate limiting should implement sliding window behavior for smooth traffic distribution
-**Validates: Requirements 4.4**
-
-### Property 14: Circuit Breaker State Transition
-*For any* sequence of external service failures exceeding the threshold, the circuit breaker should transition to open state
-**Validates: Requirements 5.2**
-
-### Property 15: Circuit Open Message Queuing
-*For any* message sent when the circuit breaker is open, the message should be queued for retry when services recover
-**Validates: Requirements 5.3**
-
-### Property 16: Asynchronous Processing Separation
-*For any* message request, request acceptance should complete immediately while validation and processing occur asynchronously
-**Validates: Requirements 6.1**
-
-### Property 17: Immediate Response with Tracking
-*For any* message request received, the system should return immediately with a valid tracking ID
-**Validates: Requirements 6.2**
-
-### Property 18: Object Pooling Efficiency
-*For any* frequently created object type (Message DTOs, validation objects), object pooling should be used to reduce allocations
-**Validates: Requirements 7.1**
-
-### Property 19: Memory-Efficient Batch Processing
-*For any* large batch processing operation, the system should stream data rather than loading everything into memory
-**Validates: Requirements 7.2**
-
-### Property 20: Metrics Collection Accuracy
-*For any* system operation, throughput monitoring should accurately track requests per second, response times, and error rates
-**Validates: Requirements 8.1**
-
-### Property 21: Priority Queue Ordering
-*For any* set of messages with different priorities, high-priority messages should be processed before low-priority messages
-**Validates: Requirements 9.3**
-
-### Property 22: Runtime Configuration Updates
-*For any* runtime configuration change for buffer sizes, rate limits, or timeouts, the new configuration should be applied without system restart
-**Validates: Requirements 10.1**
-
-## Implementation Phases
-
-### Phase 1: Core Infrastructure (Weeks 1-2)
-- Enhanced message buffer with backpressure
-- Database connection pool optimization
-- Basic performance monitoring
-
-### Phase 2: Rate Limiting and Circuit Breaking (Weeks 3-4)
-- Distributed rate limiting with Redis
-- Circuit breaker implementation
-- Integration with existing authentication
-
-### Phase 3: Advanced Processing (Weeks 5-6)
-- Asynchronous processing pipeline
-- Object pooling and memory optimization
-- Priority queue implementation
-
-### Phase 4: Monitoring and Operations (Weeks 7-8)
-- Comprehensive metrics and alerting
-- Runtime configuration management
-- Load testing and performance tuning
-
-## Deployment Considerations
-
-### Infrastructure Requirements
-- **Redis Cluster**: For distributed rate limiting and circuit breaker state
-- **Database Connection Scaling**: Increase connection pool sizes
-- **Memory Allocation**: Minimum 8GB RAM per application instance
-- **Load Balancer Configuration**: Session affinity not required
-- **Monitoring Stack**: Prometheus + Grafana for metrics visualization
-
-### Configuration Management
-- Environment-specific configuration files
-- Runtime configuration through ABP Settings
-- Feature flags for gradual rollout
-- Circuit breaker thresholds per environment
-
-### Rollback Strategy
-- Blue-green deployment for zero-downtime updates
-- Database migration rollback procedures
-- Configuration rollback capabilities
-- Circuit breaker manual override controls
-
-This design provides a comprehensive solution for scaling the `SendOneWayMessageAsync` functionality to handle 10k+ concurrent requests while maintaining system reliability and performance.

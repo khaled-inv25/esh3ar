@@ -4,112 +4,90 @@
 
 The solution follows ABP Framework's layered architecture with DDD principles:
 
-```
-src/
-├── Esh3arTech.Domain.Shared/          # Shared constants, enums, DTOs
-├── Esh3arTech.Domain/                 # Domain entities, services, repositories
-├── Esh3arTech.Application.Contracts/  # Application service interfaces, DTOs
-├── Esh3arTech.Application/            # Application services implementation
-├── Esh3arTech.EntityFrameworkCore/    # EF Core configurations, repositories
-├── Esh3arTech.HttpApi/                # HTTP API controllers
-├── Esh3arTech.HttpApi.Client/         # HTTP client proxies
-├── Esh3arTech.Web/                    # Web UI (Razor Pages/MVC)
-├── Esh3arTech.DbMigrator/             # Database migration console app
-└── Custom Modules/
-    ├── Esh3arTech.Abp.Blob/           # Blob storage module
-    ├── Esh3arTech.Abp.Media/          # Media handling module
-    └── Esh3arTech.Abp.Worker/         # Background worker module
-```
+### Core Layers
+- **Domain.Shared**: Shared constants, enums, and DTOs
+- **Domain**: Business logic, entities, domain services, and specifications
+- **Application.Contracts**: Application service interfaces and DTOs
+- **Application**: Application services and business workflows
+- **EntityFrameworkCore**: Data access layer with repositories and DbContext
+- **HttpApi**: Web API controllers
+- **HttpApi.Client**: HTTP client proxies
+- **Web**: MVC/Razor Pages presentation layer
 
-## Layer Responsibilities
+### Additional Modules
+- **Abp.Blob**: File storage and blob management
+- **Abp.Media**: Media handling and processing
+- **Abp.Worker**: Background job processing
 
-### Domain Layer (`Esh3arTech.Domain`)
-- **Entities**: Core business objects (Message, MobileUser, UserPlan, Subscription)
-- **Domain Services**: Business logic that doesn't belong to entities
-- **Repositories**: Data access interfaces
-- **Specifications**: Query specifications for complex filtering
-- **Domain Events**: Business events
+### Support Projects
+- **DbMigrator**: Database migration console application
 
-### Application Layer (`Esh3arTech.Application`)
-- **Application Services**: Use case implementations
-- **DTOs**: Data transfer objects in contracts project
-- **AutoMapper Profiles**: Object mapping configurations
-- **Background Workers**: Long-running background services
+## Key Directories
 
-### Infrastructure Layer (`Esh3arTech.EntityFrameworkCore`)
-- **DbContext**: EF Core database context
-- **Entity Configurations**: Fluent API configurations
-- **Repository Implementations**: Data access implementations
-- **Migrations**: Database schema changes
+### `/src` - Source Code
+- Each project follows the naming convention `Esh3arTech.{Layer}`
+- Projects are organized by architectural layer
+- Custom ABP modules are grouped under solution folders
 
-### Presentation Layer (`Esh3arTech.Web`)
-- **Pages**: Razor Pages for UI
-- **Controllers**: MVC controllers for APIs
-- **Hubs**: SignalR hubs for real-time communication
-- **Menus**: Navigation configuration
+### `/test` - Test Projects
+- Unit and integration tests
+- Follows same naming convention with `.Tests` suffix
 
-## Domain Organization
+### `/etc` - Configuration & Scripts
+- `/etc/scripts/`: PowerShell scripts for setup and deployment
+- `/etc/abp-studio/`: ABP Studio configuration
 
-### Messages Domain
-```
-Messages/
-├── Message.cs                    # Aggregate root
-├── MessageAttachment.cs          # Value object
-├── MessageManager.cs             # Domain service
-├── IMessageRepository.cs         # Repository interface
-├── Specs/                        # Query specifications
-└── SendBehavior/                 # Message sending strategies
-```
-
-### Plans Domain
-```
-Plans/
-├── UserPlan.cs                   # Aggregate root
-├── UserPlanManager.cs            # Domain service
-├── Subscriptions/
-│   ├── Subscription.cs           # Aggregate root
-│   ├── SubscriptionManager.cs    # Domain service
-│   └── SubscriptionRenewalHistory.cs
-```
+### `/files` - File Storage
+- `/files/host/default/`: Default tenant file storage
+- Organized by tenant structure
 
 ## Naming Conventions
 
-### Files & Classes
-- **Entities**: PascalCase (e.g., `Message`, `MobileUser`)
-- **Services**: End with `Service` or `Manager` (e.g., `MessageManager`)
-- **DTOs**: End with `Dto` (e.g., `MessageDto`, `CreatePlanDto`)
-- **Repositories**: Start with `I` for interfaces (e.g., `IMessageRepository`)
-- **Specifications**: End with `Specification` (e.g., `PendingMessageSpecification`)
+### Projects
+- **Format**: `Esh3arTech.{Layer}.{Module?}`
+- **Examples**: `Esh3arTech.Domain`, `Esh3arTech.Abp.Blob`
 
-### Database
-- **Tables**: Use `Esh3arTechConsts.TblMessage` pattern for table names
-- **Columns**: PascalCase matching entity properties
-- **Indexes**: Descriptive names with purpose
+### Namespaces
+- Follow project structure: `Esh3arTech.{Domain}.{Feature}`
+- **Examples**: `Esh3arTech.Messages`, `Esh3arTech.Plans.Subscriptions`
+
+### Database Tables
+- Defined in `Esh3arTechConsts` class
+- **Format**: `TblMessage`, `TblMobileUser`, etc.
+
+### Files & Folders
+- Domain entities in `/Domain/{Feature}/`
+- Application services in `/Application/{Feature}/`
+- Controllers follow feature-based organization
+- Specifications in `/Domain/{Feature}/Specs/`
 
 ## Configuration Files
 
-- **appsettings.json**: Main configuration (connection strings, external services)
-- **common.props**: Shared MSBuild properties
-- **package.json**: Frontend dependencies (in Web project)
-- **.abppkg files**: ABP package configurations
+### Application Settings
+- `appsettings.json`: Main configuration
+- `appsettings.Development.json`: Development overrides
+- `appsettings.secrets.json`: Sensitive configuration
+
+### Build Configuration
+- `common.props`: Shared MSBuild properties
+- Individual `.csproj` files for project-specific settings
+- `NuGet.Config`: Package source configuration
 
 ## Key Patterns
 
-### Repository Pattern
-- Interfaces in Domain layer
-- Implementations in EntityFrameworkCore layer
-- Custom methods for complex queries
+### Domain Layer
+- Aggregate roots with business logic
+- Domain services for complex operations
+- Specifications for query logic
+- Domain events for cross-boundary communication
 
-### Specification Pattern
-- Used for complex query logic
-- Located in `Specs/` folders within domain folders
-- Composable and testable
+### Application Layer
+- Application services as use case orchestrators
+- DTOs for data transfer
+- AutoMapper profiles for object mapping
+- Background workers for async processing
 
-### Factory Pattern
-- `MessageFactory` for creating different message types
-- Extensible for new message providers
-
-### Event-Driven Architecture
-- Domain events for business logic
-- Distributed events for cross-service communication
-- ETOs (Event Transfer Objects) for event data
+### Infrastructure
+- Repository implementations in EntityFrameworkCore layer
+- External service integrations (WhatsApp, Email)
+- Caching and distributed locking implementations

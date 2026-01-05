@@ -21,6 +21,7 @@
     "Btn:ExportToExcel": "Export To Excel",
     "Btn:Refresh": "Refresh",
     "Btn:SendMessage": "Send Message",
+    "Btn:NewPlan": "Create new plan",
     "Clm:Actions": "Actions",
     "Clm:DisplayName": "Name",
     "Clm:ExpiringPlan": "Expiring plan",

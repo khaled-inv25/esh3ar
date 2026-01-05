@@ -2,28 +2,30 @@
 
 ## Framework & Runtime
 - **.NET 9.0**: Primary runtime and SDK
-- **ABP Framework 9.3.5**: Enterprise application framework providing DDD, multi-tenancy, permissions, and modular architecture
+- **ABP Framework 9.3.5**: Application framework providing DDD infrastructure
 - **ASP.NET Core**: Web framework with MVC/Razor Pages
-- **Entity Framework Core 9.0**: ORM with SQL Server provider
+- **Entity Framework Core**: ORM with SQL Server provider
+
+## Key Libraries & Dependencies
+- **AutoMapper**: Object-to-object mapping
+- **Hangfire**: Background job processing
+- **SignalR**: Real-time communication
+- **RabbitMQ**: Message queuing and event bus
+- **Redis**: Caching and distributed locking
+- **Serilog**: Structured logging
+- **OpenIddict**: OAuth2/OpenID Connect server
+- **Swashbuckle**: API documentation
 
 ## Frontend
-- **Razor Pages/MVC**: Server-side rendering
 - **LeptonX Lite Theme**: ABP's UI theme
-- **SignalR**: Real-time communication
 - **Node.js v18/20**: Frontend tooling
+- **Yarn**: Package management
 
-## Infrastructure & Services
+## Infrastructure
 - **SQL Server**: Primary database
-- **Redis**: Caching and distributed locking
-- **RabbitMQ**: Message queuing and event bus
-- **Hangfire**: Background job processing
-- **Serilog**: Structured logging
-
-## Key Libraries
-- **OpenIddict**: Authentication and authorization
-- **AutoMapper**: Object mapping
-- **DistributedLock.Redis**: Distributed locking
-- **AspNetCore.HealthChecks**: Health monitoring
+- **Redis**: Caching layer
+- **RabbitMQ**: Message broker
+- **File System**: Blob storage
 
 ## Common Commands
 
@@ -35,7 +37,7 @@ abp install-libs
 # Run database migrations
 cd src/Esh3arTech.DbMigrator && dotnet run
 
-# Generate development certificates
+# Generate development certificate
 dotnet dev-certs https -v -ep openiddict.pfx -p 78711d2c-a333-42b6-90ba-a83863e4d241
 ```
 
@@ -50,28 +52,18 @@ cd src/Esh3arTech.Web && dotnet run
 # Run database migrator
 cd src/Esh3arTech.DbMigrator && dotnet run
 
-# Restore packages
-dotnet restore
+# Add new migration
+dotnet ef migrations add <MigrationName> -p src/Esh3arTech.EntityFrameworkCore
 ```
 
-### ABP CLI Commands
+### Package Management
 ```bash
 # Install ABP CLI
 dotnet tool install -g Volo.Abp.Cli
 
-# Install client libraries
-abp install-libs
+# Update ABP packages
+abp update
 
-# Generate proxy classes
-abp generate-proxy
-
-# Add new module
-abp add-module <module-name>
+# Install frontend packages
+cd src/Esh3arTech.Web && yarn install
 ```
-
-## Configuration Notes
-- Connection strings in `appsettings.json`
-- Redis configuration for caching and distributed locking
-- RabbitMQ for event bus messaging
-- WhatsApp API integration settings
-- Blob storage configuration for file attachments

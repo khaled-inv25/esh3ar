@@ -82,7 +82,7 @@ namespace Esh3arTech.Plans
 
         private async Task<int> GetSentMessagesByUserId(Guid id)
         {
-            return await _messageRepository.CountAsync(m => m.CreatorId == id); ;
+            return await _messageRepository.CountAsync(m => m.CreatorId == id);
         }
     }
 }

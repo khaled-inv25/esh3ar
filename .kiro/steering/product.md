@@ -1,24 +1,23 @@
 # Product Overview
 
-Esh3arTech is a messaging platform built on the ABP Framework that provides reliable message delivery services with support for multiple communication channels. currently not implemented.
+Esh3arTech is a messaging platform built on the ABP Framework that provides reliable message delivery services with support for multiple communication channels.
 
 ## Core Features
 
-- **Message Management**: Send one-way messages with retry mechanisms and delivery tracking
-- **Multi-channel Support**: WhatsApp integration with extensible provider architecture
-- **File Attachments**: Support for media attachments with blob storage
-- **User Management**: Mobile user registration with OTP verification
-- **Subscription Plans**: Feature-based subscription management with billing intervals
-- **Real-time Communication**: SignalR integration for live message delivery
-- **Background Processing**: Hangfire-based job processing for reliable message delivery
+- **Message Management**: Send one-way messages with attachment support
+- **Mobile User Management**: User registration, verification, and tracking
+- **Plan & Subscription System**: Feature-based subscription management
+- **Message Reliability**: Retry mechanisms with exponential backoff for failed messages
+- **Real-time Communication**: SignalR integration for live updates
+- **Multi-channel Support**: WhatsApp and email integration
 
 ## Key Business Domains
 
-- **Messages**: Core messaging functionality with status tracking, retry policies, and attachment support
-- **Mobile Users**: User registration, verification, and management
+- **Messages**: Core messaging functionality with status tracking, attachments, and delivery confirmation
+- **Mobile Users**: User registration, OTP verification, and online status tracking
 - **Plans & Subscriptions**: Feature-based subscription management with renewal tracking
-- **Registration**: OTP-based user verification system
+- **Background Processing**: Message ingestion, retry handling, and subscription renewals
 
-## Architecture
+## Architecture Approach
 
-The application follows Domain Driven Design (DDD) principles with a layered monolith architecture, built on the ABP Framework for enterprise-grade features like multi-tenancy, permissions, and localization.
+The application follows Domain Driven Design (DDD) principles with a layered architecture, emphasizing message reliability and scalability through event-driven patterns and background processing.
