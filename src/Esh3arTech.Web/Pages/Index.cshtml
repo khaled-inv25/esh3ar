@@ -1,6 +1,7 @@
 ﻿@page
 @model Esh3arTech.Web.Pages.IndexModel
 @using Esh3arTech.Web.Menus
+@using Esh3arTech.Web.Pages.Dashboard.Components.DashboardArea
 @using Volo.Abp.AspNetCore.Mvc.UI.Layout
 @using Microsoft.AspNetCore.Mvc.Localization
 @using Esh3arTech.Localization
@@ -10,7 +11,7 @@
 @inject IHtmlLocalizer<Esh3arTechResource> L
 @inject ICurrentUser CurrentUser
 @{
-    ViewBag.PageTitle = L["Home"];
+    ViewBag.PageTitle = L["PageTitle:Dashboard"];
     PageLayout.Content.MenuItemName = Esh3arTechMenus.Home;
 }
 
@@ -26,36 +27,7 @@
 {
     @if (!CurrentUser.IsInRole("admin"))
     {
-        <div class="row mb-3">
-            <div class="col-xl-3">
-                <div class="card h-lg-100 w-100 overflow-hidden">
-                    <div class="card-body">
-                        Total Messages
-                    </div>
-                </div>
-            </div>
-            <div class="col-xl-3">
-                <div class="card h-lg-100 w-100 overflow-hidden">
-                    <div class="card-body">
-                        Total Messages this month
-                    </div>
-                </div>
-            </div>
-            <div class="col-xl-3">
-                <div class="card h-lg-100 w-100 overflow-hidden">
-                    <div class="card-body">
-                        Total Messages this week
-                    </div>
-                </div>
-            </div>
-            <div class="col-xl-3">
-                <div class="card h-lg-100 w-100 overflow-hidden">
-                    <div class="card-body">
-                        Total Messages today
-                    </div>
-                </div>
-            </div>
-        </div>
+        @await Component.InvokeAsync(typeof(DashboardAreaViewComponent))
     }    
 }
 

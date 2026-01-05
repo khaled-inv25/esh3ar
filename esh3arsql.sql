@@ -126,6 +126,7 @@ SELECT
 FROM EtMessages ORDER BY CreationTime DESC
 
 SELECT 
+	MessageContent
 	RecipientPhoneNumber,
 	 CASE 
         WHEN Status = 0 THEN 'Pending'

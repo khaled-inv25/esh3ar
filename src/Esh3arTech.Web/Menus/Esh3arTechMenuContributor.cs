@@ -23,13 +23,13 @@ public class Esh3arTechMenuContributor : IMenuContributor
     {
         var l = context.GetLocalizer<Esh3arTechResource>();
 
-        // Home
+        // Dashboard
         context.Menu.AddItem(
             new ApplicationMenuItem(
-                Esh3arTechMenus.Home,
-                l["Menu:Home"],
+                Esh3arTechMenus.Dashboard,
+                l["Menu:Dashboard"],
                 "~/",
-                icon: "fa fa-home",
+                icon: "fa fa-chart-line",
                 order: 1
             )
         );
