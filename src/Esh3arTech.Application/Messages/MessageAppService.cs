@@ -16,7 +16,6 @@ using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.EventBus.Distributed;
-using Volo.Abp.Uow;
 
 namespace Esh3arTech.Messages
 {
@@ -27,8 +26,7 @@ namespace Esh3arTech.Messages
         private readonly IMessageRepository _messageRepository;
         private readonly IRepository<MobileUser, Guid> _mobileUserRepository;
         private readonly IBlobService _blobService;
-        private readonly IUnitOfWorkManager _unitOfWorkManager;
-        private readonly IMessageBuffer _messageBuffer;
+        private readonly IHighThroughputMessageBuffer _highThroughputMessageBuffer;
 
         public MessageAppService(
             IMessageFactory messageFactory,
@@ -36,16 +34,14 @@ namespace Esh3arTech.Messages
             IMessageRepository messageRepository,
             IRepository<MobileUser, Guid> mobileUserRepository,
             IBlobService blobService,
-            IUnitOfWorkManager unitOfWorkManager,
-            IMessageBuffer messageBuffer)
+            IHighThroughputMessageBuffer highThroughputMessageBuffer)
         {
             _messageFactory = messageFactory;
             _distributedEventBus = distributedEventBus;
             _messageRepository = messageRepository;
             _mobileUserRepository = mobileUserRepository;
             _blobService = blobService;
-            _unitOfWorkManager = unitOfWorkManager;
-            _messageBuffer = messageBuffer;
+            _highThroughputMessageBuffer = highThroughputMessageBuffer;
         }
 
         [Authorize(Esh3arTechPermissions.Esh3arSendMessages)]
@@ -68,7 +64,7 @@ namespace Esh3arTech.Messages
         {
             var createdMessage = await CreateMessageAsync(input);
 
-            await _messageBuffer.Writer.WriteAsync(createdMessage);
+            await _highThroughputMessageBuffer.TryWriteAsync(createdMessage, TimeSpan.FromMilliseconds(50));
 
             return new MessageDto { Id = createdMessage.Id };
         }

@@ -12,24 +12,24 @@ namespace Esh3arTech.Messages.BackgroundWorkers
 {
     public class MessageIngestionWorker : BackgroundService, IBackgroundWorker
     {
-        private readonly IMessageBuffer _messageBuffer;
+        private readonly IHighThroughputMessageBuffer _highThroughputMessageBuffer;
         private const int BatchIntervalMs = 100;
         private readonly IDistributedEventBus _distributedEventBus;
         private readonly IMessageRepository _messageRepository;
 
         public MessageIngestionWorker(
-            IMessageBuffer messageBuffer,
+            IHighThroughputMessageBuffer highThroughputMessageBuffer,
             IDistributedEventBus distributedEventBus,
             IMessageRepository messageRepository)
         {
-            _messageBuffer = messageBuffer;
+            _highThroughputMessageBuffer = highThroughputMessageBuffer;
             _distributedEventBus = distributedEventBus;
             _messageRepository = messageRepository;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var reader = _messageBuffer.Reader;
+            var reader = _highThroughputMessageBuffer.Reader;
             while (!stoppingToken.IsCancellationRequested)
             {
                 if (await reader.WaitToReadAsync(stoppingToken))

@@ -1,0 +1,6 @@
+@Esh3arTech.Abp.Gateway_HostAddress = http://localhost:5037
+
+GET {{Esh3arTech.Abp.Gateway_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

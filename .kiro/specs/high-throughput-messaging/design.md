@@ -2,136 +2,512 @@
 
 ## Overview
 
-The high-throughput messaging system is designed to handle 10,000+ concurrent individual API calls from business clients while delivering messages to mobile users in real-time via SignalR with zero message loss. The architecture emphasizes horizontal scalability, atomic transaction guarantees, and fault tolerance through event-driven patterns and intelligent load distribution.
+The high-throughput messaging system enhances the existing Esh3arTech messaging platform to handle 10,000+ concurrent individual API calls from business clients. The design focuses on scaling the existing MessageAppService infrastructure through intelligent load balancing, enhanced message buffering, and rate limiting mechanisms while maintaining the current ABP Framework architecture.
 
-The system follows a multi-layered approach with clear separation between API ingestion, message processing, and delivery layers. Each layer can scale independently based on load patterns, ensuring optimal resource utilization and performance under varying traffic conditions.
+The system builds upon the existing components:
+- **MessageAppService**: Current application service handling SendOneWayMessageAsync calls
+- **MessageBuffer**: Existing Channel-based message queuing using IMessageBuffer
+- **Message Entity**: Current domain entity with Id, Status, and retry logic
+- **ABP Framework**: Existing dependency injection and service patterns
 
 ## Architecture
 
-The system employs a distributed, event-driven architecture with the following key principles:
+The enhanced system maintains the existing ABP layered architecture while adding high-throughput capabilities:
 
-### Layered Architecture
-- **API Layer**: Handles incoming business client requests with load balancing
-- **Caching Layer**: Redis-based distributed caching for performance optimization
-- **Ingestion Layer**: Processes and queues messages with atomic guarantees
-- **Processing Layer**: Routes messages and manages delivery workflows
-- **Delivery Layer**: Manages SignalR connections and real-time delivery
-- **Storage Layer**: Provides durable persistence and queue management
+### Enhanced Application Layer
+- **Load Balancer**: Distributes API calls across multiple MessageAppService instances
+- **Rate Limiter**: Controls concurrent API call rates per business client
+- **Enhanced MessageBuffer**: Extends existing IMessageBuffer with performance monitoring
 
-### Caching Strategy
-- **Connection Caching**: Cache active SignalR connections and user online status
-- **Message Caching**: Cache frequently accessed messages and delivery status
-- **Load Balancer Caching**: Cache node metrics and routing decisions
-- **User State Caching**: Cache mobile user presence and pending message counts
-- **Configuration Caching**: Cache system configuration and routing rules
+### Existing Infrastructure (Unchanged)
+- **Domain Layer**: Current Message entity and business logic
+- **EntityFrameworkCore Layer**: Existing repositories and DbContext
+- **Web Layer**: Current API controllers and SignalR hubs
 
-### Event-Driven Communication
-- Asynchronous message processing using high-performance queues
-- Event sourcing for message state transitions
-- Distributed event bus for cross-service communication
-- Circuit breaker patterns for fault isolation
-- Cache invalidation events for consistency
-
-### Horizontal Scaling
-- Stateless service design for easy horizontal scaling
-- Load balancer with intelligent request distribution
-- Auto-scaling based on queue depth and system metrics
-- Connection pooling and resource optimization
-- Distributed caching with Redis clustering
+### Horizontal Scaling Strategy
+- **Stateless Services**: MessageAppService instances can be scaled horizontally
+- **Shared Message Buffer**: Enhanced IMessageBuffer accessible across instances
+- **Load Distribution**: Intelligent request routing based on instance capacity
 
 ## Components and Interfaces
 
-### Existing Components (Current Esh3arTech Architecture)
-
-The high-throughput messaging system builds upon the existing Esh3arTech infrastructure:
-
-#### Current Message Domain
+### Load Balancer (New Component)
 ```csharp
-// Existing: src/Esh3arTech.Domain/Messages/Message.cs
-public class Message : FullAuditedAggregateRoot<Guid>
-{
-    // Current properties: RecipientPhoneNumber, Subject, MessageContent, Status, Type, etc.
-    // Existing retry logic: RetryCount, LastRetryAt, NextRetryAt, MovedToDlqAt
-    // Current methods: SetMessageStatusType, IncrementRetryCount, ScheduleNextRetry
-}
-
-// Existing: src/Esh3arTech.Domain/Messages/SendBehavior/IMessageFactory.cs
-public interface IMessageFactory
-{
-    IOneWayMessageManager Create(MessageType type);
-}
-```
-
-#### Current Application Services
-```csharp
-// Existing: src/Esh3arTech.Application/Messages/MessageAppService.cs
-public class MessageAppService : Esh3arTechAppService, IMessageAppService
-{
-    // Current methods: SendOneWayMessageAsync, IngestionSendOneWayMessageAsync
-    // Existing dependencies: IMessageFactory, IDistributedEventBus, IMessageRepository, IMessageBuffer
-}
-
-// Existing: src/Esh3arTech.Application/Messages/Buffer/IMessageBuffer.cs
-public interface IMessageBuffer
-{
-    ChannelWriter<Message> Writer { get; }
-    ChannelReader<Message> Reader { get; }
-}
-```
-
-#### Current SignalR Infrastructure
-```csharp
-// Existing: src/Esh3arTech.Web/Hubs/OnlineMobileUserHub.cs
-[Authorize]
-[HubRoute("online-mobile-user")]
-public class OnlineMobileUserHub : AbpHub
-{
-    // Current methods: OnConnectedAsync, OnDisconnectedAsync, AcknowledgeMessage
-    // Existing dependencies: OnlineUserTrackerService, IMessageAppService, IDistributedCache
-}
-
-// Existing: src/Esh3arTech.Web/MobileUsers/OnlineUserTrackerService.cs
-public class OnlineUserTrackerService : ITransientDependency
-{
-    // Current methods: AddConnection, RemoveConnection, GetFirstConnectionIdByPhoneNumberAsync
-    // Uses: IDistributedCache<MobileUserConnectionCacheItem>
-}
-```
-
-### Enhanced Components for High-Throughput
-
-#### Enhanced Load Balancer (New)
-```csharp
+// New interface in Application.Contracts layer
 public interface IHighThroughputLoadBalancer
 {
-    Task<IProcessingNode> SelectOptimalNodeAsync(LoadBalancingStrategy strategy);
-    Task RegisterNodeAsync(IProcessingNode node);
-    Task UnregisterNodeAsync(string nodeId);
-    Task<LoadMetrics> GetRealTimeLoadMetricsAsync();
-    Task<bool> CanHandleLoadAsync(int concurrentRequests);
+    /// <summary>
+    /// Selects the optimal MessageAppService instance based on current load
+    /// </summary>
+    /// <returns>MessageAppServiceInstance with lowest load and available capacity</returns>
+    /// <exception cref="BusinessException">When no healthy instances are available</exception>
+    Task<MessageAppServiceInstance> SelectOptimalInstanceAsync();
+    
+    /// <summary>
+    /// Registers a new MessageAppService instance for load balancing
+    /// </summary>
+    /// <param name="instance">Instance configuration with endpoint and capacity</param>
+    Task RegisterInstanceAsync(MessageAppServiceInstance instance);
+    
+    /// <summary>
+    /// Removes a MessageAppService instance from load balancing
+    /// </summary>
+    /// <param name="instanceId">Unique identifier of the instance to remove</param>
+    Task UnregisterInstanceAsync(string instanceId);
+    
+    /// <summary>
+    /// Gets current load metrics across all registered instances
+    /// </summary>
+    /// <returns>Aggregated load metrics for monitoring</returns>
+    Task<LoadMetrics> GetCurrentLoadAsync();
+    
+    /// <summary>
+    /// Checks if the system can handle additional concurrent requests
+    /// </summary>
+    /// <param name="requestCount">Number of additional requests to check capacity for</param>
+    /// <returns>True if system has capacity, false if at or near limit</returns>
+    Task<bool> CanHandleAdditionalLoadAsync(int requestCount);
 }
 
-public class ProcessingNode
+// Implementation in Application layer
+public class HighThroughputLoadBalancer : IHighThroughputLoadBalancer, ITransientDependency
 {
-    public string Id { get; set; }
-    public string Endpoint { get; set; }
-    public NodeStatus Status { get; set; }
-    public LoadMetrics CurrentLoad { get; set; }
-    public DateTime LastHeartbeat { get; set; }
-    public int MaxConcurrentRequests { get; set; }
-    public int CurrentActiveRequests { get; set; }
+    private readonly IDistributedCache<LoadMetrics> _loadCache;
+    private readonly ILogger<HighThroughputLoadBalancer> _logger;
+    
+    public HighThroughputLoadBalancer(
+        IDistributedCache<LoadMetrics> loadCache,
+        ILogger<HighThroughputLoadBalancer> logger)
+    {
+        _loadCache = loadCache;
+        _logger = logger;
+    }
+    
+    public async Task<MessageAppServiceInstance> SelectOptimalInstanceAsync()
+    {
+        var instances = await GetActiveInstancesAsync();
+        var optimalInstance = instances
+            .Where(i => i.IsHealthy && i.CurrentLoad < i.MaxCapacity * 0.8)
+            .OrderBy(i => i.CurrentLoad)
+            .FirstOrDefault();
+            
+        if (optimalInstance == null)
+        {
+            throw new BusinessException("No available instances to handle request");
+        }
+        
+        await IncrementInstanceLoadAsync(optimalInstance.Id);
+        return optimalInstance;
+    }
+    
+    public async Task RegisterInstanceAsync(MessageAppServiceInstance instance)
+    {
+        var cacheKey = $"instance:{instance.Id}";
+        await _loadCache.SetAsync(cacheKey, new LoadMetrics
+        {
+            InstanceId = instance.Id,
+            CurrentLoad = 0,
+            MaxCapacity = instance.MaxCapacity,
+            LastHeartbeat = DateTime.UtcNow,
+            IsHealthy = true
+        }, TimeSpan.FromMinutes(5));
+        
+        _logger.LogInformation("Registered MessageAppService instance {InstanceId}", instance.Id);
+    }
+    
+    public async Task UnregisterInstanceAsync(string instanceId)
+    {
+        var cacheKey = $"instance:{instanceId}";
+        await _loadCache.RemoveAsync(cacheKey);
+        _logger.LogInformation("Unregistered MessageAppService instance {InstanceId}", instanceId);
+    }
+    
+    public async Task<LoadMetrics> GetCurrentLoadAsync()
+    {
+        var instances = await GetActiveInstancesAsync();
+        return new LoadMetrics
+        {
+            TotalInstances = instances.Count,
+            TotalCurrentLoad = instances.Sum(i => i.CurrentLoad),
+            TotalMaxCapacity = instances.Sum(i => i.MaxCapacity),
+            AverageLoad = instances.Any() ? instances.Average(i => i.CurrentLoad) : 0
+        };
+    }
+    
+    public async Task<bool> CanHandleAdditionalLoadAsync(int requestCount)
+    {
+        var currentLoad = await GetCurrentLoadAsync();
+        var availableCapacity = currentLoad.TotalMaxCapacity - currentLoad.TotalCurrentLoad;
+        return availableCapacity >= requestCount;
+    }
+    
+    private async Task<List<LoadMetrics>> GetActiveInstancesAsync()
+    {
+        // Implementation to get all active instances from cache
+        // Filter out instances with expired heartbeats
+        var allKeys = await _loadCache.GetKeysAsync("instance:*");
+        var instances = new List<LoadMetrics>();
+        
+        foreach (var key in allKeys)
+        {
+            var metrics = await _loadCache.GetAsync(key);
+            if (metrics != null && metrics.LastHeartbeat > DateTime.UtcNow.AddMinutes(-2))
+            {
+                instances.Add(metrics);
+            }
+        }
+        
+        return instances;
+    }
+    
+    private async Task IncrementInstanceLoadAsync(string instanceId)
+    {
+        var cacheKey = $"instance:{instanceId}";
+        var metrics = await _loadCache.GetAsync(cacheKey);
+        if (metrics != null)
+        {
+            metrics.CurrentLoad++;
+            metrics.LastHeartbeat = DateTime.UtcNow;
+            await _loadCache.SetAsync(cacheKey, metrics, TimeSpan.FromMinutes(5));
+        }
+    }
 }
 ```
 
-#### Enhanced Message Buffer (Extends Existing)
+### Enhanced Message Buffer (Extends Existing)
 ```csharp
-// Extends existing IMessageBuffer with high-throughput capabilities
+// Enhanced interface extending existing IMessageBuffer
 public interface IHighThroughputMessageBuffer : IMessageBuffer
 {
-    Task<bool> TryWriteAsync(Message message, CancellationToken cancellationToken = default);
-    Task<IEnumerable<Message>> ReadBatchAsync(int batchSize, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Attempts to write a message to the buffer with a timeout constraint
+    /// </summary>
+    /// <param name="message">Message entity to queue for processing</param>
+    /// <param name="timeout">Maximum time to wait for buffer space</param>
+    /// <returns>True if message was queued successfully, false if timeout exceeded</returns>
+    Task<bool> TryWriteAsync(Message message, TimeSpan timeout);
+    
+    /// <summary>
+    /// Gets current buffer performance and utilization metrics
+    /// </summary>
+    /// <returns>BufferMetrics with depth, capacity, and utilization percentage</returns>
     Task<BufferMetrics> GetMetricsAsync();
+    
+    /// <summary>
+    /// Checks if buffer utilization is approaching capacity threshold
+    /// </summary>
+    /// <param name="threshold">Utilization threshold (0.0 to 1.0, default 0.8 = 80%)</param>
+    /// <returns>True if buffer utilization exceeds threshold</returns>
     Task<bool> IsNearCapacityAsync(double threshold = 0.8);
+    
+    /// <summary>
+    /// Gets the current number of messages in the buffer
+    /// </summary>
+    /// <returns>Current message count in buffer</returns>
+    Task<int> GetCurrentDepthAsync();
+}
+
+// Implementation extending existing MessageBuffer
+public class HighThroughputMessageBuffer : IHighThroughputMessageBuffer, ISingletonDependency
+{
+    private readonly Channel<Message> _channel;
+    private readonly ILogger<HighThroughputMessageBuffer> _logger;
+    private volatile int _currentDepth;
+    
+    public HighThroughputMessageBuffer(ILogger<HighThroughputMessageBuffer> logger)
+    {
+        _logger = logger;
+        var options = new BoundedChannelOptions(Esh3arTechConsts.BufferLimit)
+        {
+            FullMode = BoundedChannelFullMode.Wait,
+            SingleReader = false,
+            SingleWriter = false
+        };
+        _channel = Channel.CreateBounded<Message>(options);
+    }
+    
+    public ChannelWriter<Message> Writer => _channel.Writer;
+    public ChannelReader<Message> Reader => _channel.Reader;
+    
+    public async Task<bool> TryWriteAsync(Message message, TimeSpan timeout)
+    {
+        using var cts = new CancellationTokenSource(timeout);
+        try
+        {
+            await _channel.Writer.WriteAsync(message, cts.Token);
+            Interlocked.Increment(ref _currentDepth);
+            return true;
+        }
+        catch (OperationCanceledException)
+        {
+            _logger.LogWarning("Failed to write message {MessageId} to buffer within timeout {Timeout}", 
+                message.Id, timeout);
+            return false;
+        }
+    }
+    
+    public Task<BufferMetrics> GetMetricsAsync()
+    {
+        return Task.FromResult(new BufferMetrics
+        {
+            CurrentDepth = _currentDepth,
+            MaxCapacity = Esh3arTechConsts.BufferLimit,
+            UtilizationPercentage = (double)_currentDepth / Esh3arTechConsts.BufferLimit * 100,
+            LastUpdated = DateTime.UtcNow
+        });
+    }
+    
+    public async Task<bool> IsNearCapacityAsync(double threshold = 0.8)
+    {
+        var metrics = await GetMetricsAsync();
+        return metrics.UtilizationPercentage >= (threshold * 100);
+    }
+    
+    public Task<int> GetCurrentDepthAsync()
+    {
+        return Task.FromResult(_currentDepth);
+    }
+}
+```
+
+### Background Message Processor (New Component)
+```csharp
+// Background service that processes messages from buffer
+public class HighThroughputMessageProcessor : BackgroundService, ITransientDependency
+{
+    private readonly IHighThroughputMessageBuffer _messageBuffer;
+    private readonly IMessageRepository _messageRepository;
+    private readonly IDistributedEventBus _distributedEventBus;
+    private readonly ILogger<HighThroughputMessageProcessor> _logger;
+    private readonly IUnitOfWorkManager _unitOfWorkManager;
+    
+    public HighThroughputMessageProcessor(
+        IHighThroughputMessageBuffer messageBuffer,
+        IMessageRepository messageRepository,
+        IDistributedEventBus distributedEventBus,
+        ILogger<HighThroughputMessageProcessor> logger,
+        IUnitOfWorkManager unitOfWorkManager)
+    {
+        _messageBuffer = messageBuffer;
+        _messageRepository = messageRepository;
+        _distributedEventBus = distributedEventBus;
+        _logger = logger;
+        _unitOfWorkManager = unitOfWorkManager;
+    }
+    
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        await foreach (var message in _messageBuffer.Reader.ReadAllAsync(stoppingToken))
+        {
+            try
+            {
+                // Process message in background - DB persistence + RabbitMQ
+                await ProcessMessageAsync(message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to process message {MessageId}", message.Id);
+                // Handle retry logic or move to dead letter queue
+            }
+        }
+    }
+    
+    private async Task ProcessMessageAsync(Message message)
+    {
+        using var uow = _unitOfWorkManager.Begin();
+        
+        try
+        {
+            // Persist to database
+            await _messageRepository.InsertAsync(message);
+            
+            // Publish to RabbitMQ for delivery
+            var sendMsgEto = new SendOneWayMessageEto
+            {
+                Id = message.Id,
+                RecipientPhoneNumber = message.RecipientPhoneNumber,
+                MessageContent = message.MessageContent,
+                From = "System" // Or extract from message metadata
+            };
+            
+            await _distributedEventBus.PublishAsync(sendMsgEto);
+            
+            await uow.CompleteAsync();
+            
+            _logger.LogDebug("Successfully processed message {MessageId}", message.Id);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to process message {MessageId}", message.Id);
+            await uow.RollbackAsync();
+            throw;
+        }
+    }
+}
+```
+
+### Rate Limiter (New Component)
+```csharp
+// New interface in Application.Contracts layer
+public interface IRateLimiter
+{
+    /// <summary>
+    /// Attempts to acquire permission for API requests from a business client
+    /// </summary>
+    /// <param name="clientId">Unique identifier of the business client</param>
+    /// <param name="requestCount">Number of requests to acquire (default 1)</param>
+    /// <returns>True if requests are allowed, false if rate limit exceeded</returns>
+    Task<bool> TryAcquireAsync(string clientId, int requestCount = 1);
+    
+    /// <summary>
+    /// Gets current rate limiting information for a business client
+    /// </summary>
+    /// <param name="clientId">Unique identifier of the business client</param>
+    /// <returns>RateLimitInfo with current usage and remaining capacity</returns>
+    Task<RateLimitInfo> GetClientLimitInfoAsync(string clientId);
+    
+    /// <summary>
+    /// Applies backpressure delay to a business client to reduce load
+    /// </summary>
+    /// <param name="clientId">Unique identifier of the business client</param>
+    /// <param name="delay">Duration to throttle the client</param>
+    Task ApplyBackpressureAsync(string clientId, TimeSpan delay);
+    
+    /// <summary>
+    /// Checks if a business client is currently being throttled
+    /// </summary>
+    /// <param name="clientId">Unique identifier of the business client</param>
+    /// <returns>True if client is throttled, false if requests are allowed</returns>
+    Task<bool> IsClientThrottledAsync(string clientId);
+}
+
+// Implementation in Application layer
+public class RateLimiter : IRateLimiter, ITransientDependency
+{
+    private readonly IDistributedCache<ClientRateInfo> _rateLimitCache;
+    private readonly ILogger<RateLimiter> _logger;
+    private readonly RateLimitOptions _options;
+    
+    public RateLimiter(
+        IDistributedCache<ClientRateInfo> rateLimitCache,
+        ILogger<RateLimiter> logger,
+        IOptions<RateLimitOptions> options)
+    {
+        _rateLimitCache = rateLimitCache;
+        _logger = logger;
+        _options = options.Value;
+    }
+    
+    public async Task<bool> TryAcquireAsync(string clientId, int requestCount = 1)
+    {
+        var cacheKey = $"rate_limit:{clientId}";
+        var clientInfo = await _rateLimitCache.GetAsync(cacheKey) ?? new ClientRateInfo
+        {
+            ClientId = clientId,
+            RequestCount = 0,
+            WindowStart = DateTime.UtcNow,
+            IsThrottled = false
+        };
+        
+        // Reset window if expired
+        if (DateTime.UtcNow - clientInfo.WindowStart > TimeSpan.FromMinutes(_options.WindowMinutes))
+        {
+            clientInfo.RequestCount = 0;
+            clientInfo.WindowStart = DateTime.UtcNow;
+            clientInfo.IsThrottled = false;
+        }
+        
+        // Check if adding requests would exceed limit
+        if (clientInfo.RequestCount + requestCount > _options.MaxRequestsPerWindow)
+        {
+            clientInfo.IsThrottled = true;
+            await _rateLimitCache.SetAsync(cacheKey, clientInfo, TimeSpan.FromMinutes(_options.WindowMinutes));
+            
+            _logger.LogWarning("Rate limit exceeded for client {ClientId}. Current: {Current}, Limit: {Limit}", 
+                clientId, clientInfo.RequestCount, _options.MaxRequestsPerWindow);
+            return false;
+        }
+        
+        // Allow request and update count
+        clientInfo.RequestCount += requestCount;
+        await _rateLimitCache.SetAsync(cacheKey, clientInfo, TimeSpan.FromMinutes(_options.WindowMinutes));
+        
+        return true;
+    }
+    
+    public async Task<RateLimitInfo> GetClientLimitInfoAsync(string clientId)
+    {
+        var cacheKey = $"rate_limit:{clientId}";
+        var clientInfo = await _rateLimitCache.GetAsync(cacheKey);
+        
+        return new RateLimitInfo
+        {
+            ClientId = clientId,
+            CurrentRequests = clientInfo?.RequestCount ?? 0,
+            MaxRequests = _options.MaxRequestsPerWindow,
+            WindowStart = clientInfo?.WindowStart ?? DateTime.UtcNow,
+            IsThrottled = clientInfo?.IsThrottled ?? false,
+            RemainingRequests = Math.Max(0, _options.MaxRequestsPerWindow - (clientInfo?.RequestCount ?? 0))
+        };
+    }
+    
+    public async Task ApplyBackpressureAsync(string clientId, TimeSpan delay)
+    {
+        var cacheKey = $"backpressure:{clientId}";
+        await _rateLimitCache.SetAsync(cacheKey, DateTime.UtcNow.Add(delay), delay);
+        
+        _logger.LogInformation("Applied backpressure to client {ClientId} for {Delay}", clientId, delay);
+    }
+    
+    public async Task<bool> IsClientThrottledAsync(string clientId)
+    {
+        var backpressureKey = $"backpressure:{clientId}";
+        var backpressureUntil = await _rateLimitCache.GetAsync(backpressureKey);
+        
+        if (backpressureUntil.HasValue && DateTime.UtcNow < backpressureUntil.Value)
+        {
+            return true;
+        }
+        
+        var limitInfo = await GetClientLimitInfoAsync(clientId);
+        return limitInfo.IsThrottled;
+    }
+}
+```
+
+## Data Models
+
+### Key Class Properties Summary
+
+```csharp
+// Core Load Balancing Classes
+public class MessageAppServiceInstance
+{
+    public string Id { get; set; } = Guid.NewGuid().ToString();
+    public string Endpoint { get; set; }
+    public int MaxCapacity { get; set; } = 1000;
+    public int CurrentLoad { get; set; }
+    public bool IsHealthy { get; set; } = true;
+    public DateTime LastHeartbeat { get; set; } = DateTime.UtcNow;
+    public Dictionary<string, object> Metadata { get; set; } = new();
+    public double AverageResponseTimeMs { get; set; }
+    public double CpuUtilization { get; set; }
+    public double MemoryUtilization { get; set; }
+}
+
+public class LoadMetrics
+{
+    public string InstanceId { get; set; }
+    public int CurrentLoad { get; set; }
+    public int MaxCapacity { get; set; }
+    public DateTime LastHeartbeat { get; set; }
+    public bool IsHealthy { get; set; }
+    public int TotalInstances { get; set; }
+    public int TotalCurrentLoad { get; set; }
+    public int TotalMaxCapacity { get; set; }
+    public double AverageLoad { get; set; }
+    public double SystemUtilizationPercentage => TotalMaxCapacity > 0 ? 
+        (double)TotalCurrentLoad / TotalMaxCapacity * 100 : 0;
 }
 
 public class BufferMetrics
@@ -139,389 +515,796 @@ public class BufferMetrics
     public int CurrentDepth { get; set; }
     public int MaxCapacity { get; set; }
     public double UtilizationPercentage { get; set; }
-    public TimeSpan AverageProcessingTime { get; set; }
-    public int MessagesPerSecond { get; set; }
-}
-```
-
-#### Enhanced SignalR Hub (Extends Existing)
-```csharp
-// Extends existing OnlineMobileUserHub with high-throughput capabilities
-public interface IHighThroughputSignalRHub
-{
-    Task SendMessageToUserAsync(string userId, object message);
-    Task SendBatchMessagesToUserAsync(string userId, IEnumerable<object> messages);
-    Task SendMessageToMultipleUsersAsync(IEnumerable<string> userIds, object message);
-    Task<bool> IsUserConnectedAsync(string userId);
-    Task<int> GetActiveConnectionCountAsync();
-    Task<HubMetrics> GetHubMetricsAsync();
-}
-
-public class HubMetrics
-{
-    public int ActiveConnections { get; set; }
-    public int MessagesPerSecond { get; set; }
-    public TimeSpan AverageDeliveryLatency { get; set; }
-    public int FailedDeliveries { get; set; }
     public DateTime LastUpdated { get; set; }
-}
-```
-
-#### Enhanced Connection Management (Extends Existing)
-```csharp
-// Extends existing OnlineUserTrackerService with high-throughput capabilities
-public interface IHighThroughputConnectionManager
-{
-    Task<bool> IsUserOnlineAsync(string phoneNumber);
-    Task<IEnumerable<string>> GetActiveConnectionsAsync(string phoneNumber);
-    Task RegisterConnectionAsync(string phoneNumber, string connectionId);
-    Task UnregisterConnectionAsync(string phoneNumber, string connectionId);
-    Task<ConnectionMetrics> GetConnectionMetricsAsync();
-    Task<bool> CanAcceptNewConnectionsAsync();
-    Task RedistributeConnectionsAsync();
+    public TimeSpan AverageProcessingTime { get; set; }
+    public int MessagesPerMinute { get; set; }
+    public int DroppedMessages { get; set; }
 }
 
-public class ConnectionMetrics
+// Rate Limiting Classes
+public class ClientRateInfo
 {
-    public int TotalActiveConnections { get; set; }
-    public int MaxConcurrentConnections { get; set; }
-    public double ConnectionUtilization { get; set; }
-    public TimeSpan AverageConnectionDuration { get; set; }
-    public int ConnectionsPerSecond { get; set; }
-}
-```
-
-### Enhanced Caching Layer (Builds on Existing Redis)
-```csharp
-// Builds upon existing IDistributedCache usage in OnlineUserTrackerService
-public interface IHighPerformanceCache
-{
-    Task<T?> GetAsync<T>(string key);
-    Task SetAsync<T>(string key, T value, TimeSpan? expiration = null);
-    Task<Dictionary<string, T?>> GetBatchAsync<T>(IEnumerable<string> keys);
-    Task SetBatchAsync<T>(Dictionary<string, T> items, TimeSpan? expiration = null);
-    Task InvalidatePatternAsync(string pattern);
-    Task<CacheMetrics> GetMetricsAsync();
+    public string ClientId { get; set; }
+    public int RequestCount { get; set; }
+    public DateTime WindowStart { get; set; }
+    public bool IsThrottled { get; set; }
+    public DateTime? ThrottledUntil { get; set; }
+    public int RejectedRequests { get; set; }
 }
 
-public interface IMessageCache
+public class RateLimitInfo
 {
-    Task<Message?> GetMessageAsync(Guid messageId);
-    Task CacheMessageAsync(Message message, TimeSpan expiration);
-    Task<IEnumerable<Message>> GetPendingMessagesAsync(string phoneNumber);
-    Task CachePendingMessagesAsync(string phoneNumber, IEnumerable<Message> messages);
-    Task InvalidateUserMessagesAsync(string phoneNumber);
-}
-```
-
-### Atomic Transaction Manager (New)
-```csharp
-public interface IAtomicMessagePersistence
-{
-    Task<TransactionResult> PersistMessageAtomicallyAsync(Message message);
-    Task<bool> ValidateTransactionConsistencyAsync(Guid messageId);
-    Task<IEnumerable<Message>> GetInconsistentMessagesAsync();
-    Task RepairInconsistentMessageAsync(Guid messageId);
+    public string ClientId { get; set; }
+    public int CurrentRequests { get; set; }
+    public int MaxRequests { get; set; }
+    public int RemainingRequests { get; set; }
+    public DateTime WindowStart { get; set; }
+    public bool IsThrottled { get; set; }
+    public DateTime WindowResetTime => WindowStart.AddMinutes(1);
+    public TimeSpan TimeUntilReset => WindowResetTime - DateTime.UtcNow;
 }
 
-public class TransactionResult
+public class RateLimitOptions
 {
-    public bool Success { get; set; }
+    public int MaxRequestsPerWindow { get; set; } = 1000;
+    public int WindowMinutes { get; set; } = 1;
+    public bool EnableBackpressure { get; set; } = true;
+    public TimeSpan BackpressureDelay { get; set; } = TimeSpan.FromSeconds(1);
+    public TimeSpan MaxBackpressureDelay { get; set; } = TimeSpan.FromMinutes(5);
+    public bool EnableBurstAllowance { get; set; } = true;
+    public int BurstAllowance { get; set; } = 100;
+}
+
+// API Request/Response Classes
+public class SendOneWayMessageDto
+{
+    [Required] [Phone] public string RecipientPhoneNumber { get; set; }
+    [Required] [MaxLength(4096)] public string MessageContent { get; set; }
+    public List<MessageAttachmentDto> Attachments { get; set; } = new();
+    public string CorrelationId { get; set; }
+    public MessagePriority Priority { get; set; } = MessagePriority.Normal;
+    public Dictionary<string, string> Metadata { get; set; } = new();
+}
+
+public class HighThroughputMessageResponse
+{
     public Guid MessageId { get; set; }
-    public string TransactionId { get; set; }
-    public bool DatabasePersisted { get; set; }
-    public bool QueueInserted { get; set; }
-    public string? ErrorMessage { get; set; }
-    public DateTime Timestamp { get; set; }
+    public int StatusCode { get; set; }
+    public long ProcessingTimeMs { get; set; }
+    public SystemLoadInfo SystemLoad { get; set; }
+    public RateLimitInfo RateLimit { get; set; }
+}
+
+public class SystemLoadInfo
+{
+    public double UtilizationPercentage { get; set; }
+    public int ActiveInstances { get; set; }
+    public double BufferUtilization { get; set; }
+    public TimeSpan? RecommendedDelay { get; set; }
+}
+
+public class ErrorResponse
+{
+    public string Code { get; set; }
+    public string Message { get; set; }
+    public int StatusCode { get; set; }
+    public TimeSpan? RetryAfter { get; set; }
+    public Dictionary<string, object> Details { get; set; } = new();
 }
 ```
 
-### Message Queue System
+### API Request/Response Models
 ```csharp
-public interface IHighPerformanceMessageQueue
+// Enhanced request model for high-throughput scenarios
+public class SendOneWayMessageDto
 {
-    Task<bool> EnqueueAsync(Message message, QueuePriority priority = QueuePriority.Normal);
-    Task<Message> DequeueAsync(CancellationToken cancellationToken);
-    Task<IEnumerable<Message>> DequeueBatchAsync(int batchSize, CancellationToken cancellationToken);
-    Task<bool> AcknowledgeAsync(string messageId);
-    Task<bool> RejectAsync(string messageId, string reason);
-    Task<QueueMetrics> GetMetricsAsync();
+    /// <summary>
+    /// Mobile phone number of the message recipient (required)
+    /// </summary>
+    [Required]
+    [Phone]
+    public string RecipientPhoneNumber { get; set; }
+    
+    /// <summary>
+    /// Text content of the message to send (required)
+    /// </summary>
+    [Required]
+    [MaxLength(4096)]
+    public string MessageContent { get; set; }
+    
+    /// <summary>
+    /// Optional file attachments for the message
+    /// </summary>
+    public List<MessageAttachmentDto> Attachments { get; set; } = new();
+    
+    /// <summary>
+    /// Client-provided correlation ID for tracking
+    /// </summary>
+    public string CorrelationId { get; set; }
+    
+    /// <summary>
+    /// Priority level for message processing (Normal, High, Critical)
+    /// </summary>
+    public MessagePriority Priority { get; set; } = MessagePriority.Normal;
+    
+    /// <summary>
+    /// Optional metadata for the message
+    /// </summary>
+    public Dictionary<string, string> Metadata { get; set; } = new();
 }
 
-public interface IAtomicMessagePersistence
+public class MessageDto
 {
-    Task<TransactionResult> PersistMessageAtomicallyAsync(Message message);
-    Task<bool> MarkAsProcessedAsync(string messageId);
-    Task<IEnumerable<Message>> GetUnprocessedMessagesAsync();
+    /// <summary>
+    /// Unique identifier of the created message
+    /// </summary>
+    public Guid Id { get; set; }
+    
+    /// <summary>
+    /// Current status of the message (Queued, Processing, Sent, Failed)
+    /// </summary>
+    public MessageStatus Status { get; set; }
+    
+    /// <summary>
+    /// Timestamp when the message was created
+    /// </summary>
+    public DateTime CreatedAt { get; set; }
+    
+    /// <summary>
+    /// Client-provided correlation ID for tracking
+    /// </summary>
+    public string CorrelationId { get; set; }
+    
+    /// <summary>
+    /// Estimated processing time in milliseconds
+    /// </summary>
+    public int EstimatedProcessingTimeMs { get; set; }
+}
+
+public class HighThroughputMessageResponse
+{
+    /// <summary>
+    /// Unique identifier of the created message
+    /// </summary>
+    public Guid MessageId { get; set; }
+    
+    /// <summary>
+    /// HTTP status code of the operation
+    /// </summary>
+    public int StatusCode { get; set; }
+    
+    /// <summary>
+    /// Processing time in milliseconds
+    /// </summary>
+    public long ProcessingTimeMs { get; set; }
+    
+    /// <summary>
+    /// Current system load information
+    /// </summary>
+    public SystemLoadInfo SystemLoad { get; set; }
+    
+    /// <summary>
+    /// Rate limiting information for the client
+    /// </summary>
+    public RateLimitInfo RateLimit { get; set; }
+}
+
+public class SystemLoadInfo
+{
+    /// <summary>
+    /// Current system utilization percentage (0-100)
+    /// </summary>
+    public double UtilizationPercentage { get; set; }
+    
+    /// <summary>
+    /// Number of active MessageAppService instances
+    /// </summary>
+    public int ActiveInstances { get; set; }
+    
+    /// <summary>
+    /// Current buffer depth percentage (0-100)
+    /// </summary>
+    public double BufferUtilization { get; set; }
+    
+    /// <summary>
+    /// Recommended delay before next request (if system is under load)
+    /// </summary>
+    public TimeSpan? RecommendedDelay { get; set; }
+}
+
+public class ErrorResponse
+{
+    /// <summary>
+    /// Error code identifier
+    /// </summary>
+    public string Code { get; set; }
+    
+    /// <summary>
+    /// Human-readable error message
+    /// </summary>
+    public string Message { get; set; }
+    
+    /// <summary>
+    /// HTTP status code
+    /// </summary>
+    public int StatusCode { get; set; }
+    
+    /// <summary>
+    /// Recommended time to wait before retrying
+    /// </summary>
+    public TimeSpan? RetryAfter { get; set; }
+    
+    /// <summary>
+    /// Additional error details
+    /// </summary>
+    public Dictionary<string, object> Details { get; set; } = new();
+}
+
+public enum MessagePriority
+{
+    Low = 0,
+    Normal = 1,
+    High = 2,
+    Critical = 3
 }
 ```
 
-### Message Processing and Routing
+### Load Balancing Models
 ```csharp
-public interface IMessageProcessor
+// New models in Application.Contracts layer
+public class MessageAppServiceInstance
 {
-    Task ProcessMessageAsync(Message message);
-    Task ProcessBatchAsync(IEnumerable<Message> messages);
-    Task<ProcessingResult> ValidateAndRouteAsync(Message message);
-}
-
-public interface IMessageRouter
-{
-    Task<RoutingResult> RouteToMobileUserAsync(Message message, string mobileUserId);
-    Task<IEnumerable<string>> GetActiveConnectionsAsync(string mobileUserId);
-    Task<bool> IsUserOnlineAsync(string mobileUserId);
-}
-```
-
-### SignalR Hub and Connection Management
-```csharp
-public interface ISignalRMessageHub
-{
-    Task SendMessageToUserAsync(string userId, object message);
-    Task SendMessageToGroupAsync(string groupName, object message);
-    Task SendBatchMessagesAsync(string userId, IEnumerable<object> messages);
-}
-
-public interface IConnectionManager
-{
-    Task<bool> IsConnectedAsync(string userId);
-    Task<IEnumerable<string>> GetConnectionIdsAsync(string userId);
-    Task RegisterConnectionAsync(string userId, string connectionId);
-    Task UnregisterConnectionAsync(string connectionId);
-    Task<ConnectionMetrics> GetConnectionMetricsAsync();
-}
-```
-
-### Circuit Breaker and Fault Tolerance
-```csharp
-public interface ICircuitBreaker
-{
-    Task<T> ExecuteAsync<T>(Func<Task<T>> operation);
-    CircuitBreakerState GetState();
-    Task ResetAsync();
-    event EventHandler<CircuitBreakerStateChangedEventArgs> StateChanged;
-}
-
-public interface IFaultTolerantDelivery
-{
-    Task<DeliveryResult> DeliverWithRetryAsync(Message message, RetryPolicy policy);
-    Task QueueForRetryAsync(Message message, TimeSpan delay);
-    Task MoveToDeadLetterQueueAsync(Message message, string reason);
-}
-```
-
-## Data Models
-
-### Caching Strategy Details
-
-#### Connection State Caching
-- **User Online Status**: Cache with 30-second TTL, updated on connect/disconnect
-- **Active Connections**: Cache connection IDs per user with 60-second TTL
-- **Connection Metrics**: Cache hub load metrics with 10-second TTL
-- **Offline Message Queue**: Cache pending message counts per user
-
-#### Message Caching
-- **Recent Messages**: Cache last 100 messages per user with 5-minute TTL
-- **Delivery Status**: Cache message delivery status with 1-hour TTL
-- **Failed Messages**: Cache retry queue status with 30-second TTL
-- **Message Metadata**: Cache routing information with 10-minute TTL
-
-#### Load Balancer Caching
-- **Node Health**: Cache node status and metrics with 15-second TTL
-- **Routing Decisions**: Cache load balancing decisions with 5-second TTL
-- **Capacity Metrics**: Cache system capacity information with 30-second TTL
-
-#### Cache Invalidation Strategy
-- **Event-Driven**: Invalidate cache on state changes (connect/disconnect, message delivery)
-- **Time-Based**: Use appropriate TTL values based on data volatility
-- **Manual**: Provide cache invalidation APIs for administrative operations
-- **Distributed**: Use Redis pub/sub for cache invalidation across nodes
-
-### Core Message Model (Existing + Extensions)
-
-The existing `Message` entity in `src/Esh3arTech.Domain/Messages/Message.cs` already provides:
-- Retry logic: `RetryCount`, `LastRetryAt`, `NextRetryAt`
-- Status management: `Status`, `SetMessageStatusType()`
-- Priority handling: `Priority`, `SetPriority()`
-- Attachment support: `Attachments`, `AddAttachment()`
-- Dead letter queue support: `MovedToDlqAt`
-
-```csharp
-// Existing Message entity (no changes needed)
-[Table(Esh3arTechConsts.TblMessage)]
-public class Message : FullAuditedAggregateRoot<Guid>
-{
-    public string RecipientPhoneNumber { get; private set; }
-    public string Subject { get; private set; }
-    public string? MessageContent { get; private set; }
-    public MessageStatus Status { get; private set; }
-    public MessageType Type { get; private set; }
-    public Priority Priority { get; private set; }
-    public int RetryCount { get; private set; }
-    public DateTime? DeliveredAt { get; private set; }
-    public DateTime? LastRetryAt { get; private set; }
-    public DateTime? NextRetryAt { get; private set; }
-    public DateTime? MovedToDlqAt { get; private set; }
-    public string? FailureReason { get; private set; }
-    // ... existing methods
-}
-
-// Existing enums (already defined in Domain.Shared)
-public enum MessageStatus { Queued, Processing, Delivered, Failed, DeadLetter }
-public enum MessageType { OneWay, TwoWay }
-public enum Priority { Low, Normal, High, Critical }
-```
-
-### High-Throughput Processing Models (New)
-```csharp
-public class ProcessingNode
-{
-    public string Id { get; set; }
+    /// <summary>
+    /// Unique identifier for the MessageAppService instance
+    /// </summary>
+    public string Id { get; set; } = Guid.NewGuid().ToString();
+    
+    /// <summary>
+    /// HTTP endpoint URL for the MessageAppService instance (e.g., "https://api1.esh3ar.com")
+    /// </summary>
     public string Endpoint { get; set; }
-    public NodeStatus Status { get; set; }
-    public LoadMetrics CurrentLoad { get; set; }
-    public DateTime LastHeartbeat { get; set; }
-    public int MaxConcurrentRequests { get; set; }
-    public int CurrentActiveRequests { get; set; }
-    public Dictionary<string, object> Capabilities { get; set; }
+    
+    /// <summary>
+    /// Maximum number of concurrent requests this instance can handle
+    /// </summary>
+    public int MaxCapacity { get; set; } = 1000;
+    
+    /// <summary>
+    /// Current number of active requests being processed by this instance
+    /// </summary>
+    public int CurrentLoad { get; set; }
+    
+    /// <summary>
+    /// Health status of the instance (true = healthy, false = unhealthy)
+    /// </summary>
+    public bool IsHealthy { get; set; } = true;
+    
+    /// <summary>
+    /// Last time this instance reported its status
+    /// </summary>
+    public DateTime LastHeartbeat { get; set; } = DateTime.UtcNow;
+    
+    /// <summary>
+    /// Additional metadata about the instance (version, region, etc.)
+    /// </summary>
+    public Dictionary<string, object> Metadata { get; set; } = new();
+    
+    /// <summary>
+    /// Average response time in milliseconds for this instance
+    /// </summary>
+    public double AverageResponseTimeMs { get; set; }
+    
+    /// <summary>
+    /// CPU utilization percentage (0-100)
+    /// </summary>
+    public double CpuUtilization { get; set; }
+    
+    /// <summary>
+    /// Memory utilization percentage (0-100)
+    /// </summary>
+    public double MemoryUtilization { get; set; }
 }
 
 public class LoadMetrics
 {
-    public double CpuUsage { get; set; }
-    public double MemoryUsage { get; set; }
-    public int ActiveConnections { get; set; }
-    public int QueueDepth { get; set; }
-    public double RequestsPerSecond { get; set; }
-    public TimeSpan AverageResponseTime { get; set; }
-    public DateTime LastUpdated { get; set; }
+    /// <summary>
+    /// Instance ID this metric belongs to (null for aggregated metrics)
+    /// </summary>
+    public string InstanceId { get; set; }
+    
+    /// <summary>
+    /// Current active request count for this instance
+    /// </summary>
+    public int CurrentLoad { get; set; }
+    
+    /// <summary>
+    /// Maximum capacity for this instance
+    /// </summary>
+    public int MaxCapacity { get; set; }
+    
+    /// <summary>
+    /// Last heartbeat timestamp for this instance
+    /// </summary>
+    public DateTime LastHeartbeat { get; set; }
+    
+    /// <summary>
+    /// Health status of this instance
+    /// </summary>
+    public bool IsHealthy { get; set; }
+    
+    // Aggregated metrics across all instances
+    /// <summary>
+    /// Total number of registered instances
+    /// </summary>
+    public int TotalInstances { get; set; }
+    
+    /// <summary>
+    /// Sum of current load across all instances
+    /// </summary>
+    public int TotalCurrentLoad { get; set; }
+    
+    /// <summary>
+    /// Sum of max capacity across all instances
+    /// </summary>
+    public int TotalMaxCapacity { get; set; }
+    
+    /// <summary>
+    /// Average load per instance
+    /// </summary>
+    public double AverageLoad { get; set; }
+    
+    /// <summary>
+    /// Overall system utilization percentage (0-100)
+    /// </summary>
+    public double SystemUtilizationPercentage => TotalMaxCapacity > 0 ? 
+        (double)TotalCurrentLoad / TotalMaxCapacity * 100 : 0;
 }
 
-public enum NodeStatus
+public class BufferMetrics
 {
-    Healthy,
-    Degraded,
-    Unhealthy,
-    Offline
+    /// <summary>
+    /// Current number of messages in the buffer
+    /// </summary>
+    public int CurrentDepth { get; set; }
+    
+    /// <summary>
+    /// Maximum number of messages the buffer can hold
+    /// </summary>
+    public int MaxCapacity { get; set; }
+    
+    /// <summary>
+    /// Buffer utilization as a percentage (0-100)
+    /// </summary>
+    public double UtilizationPercentage { get; set; }
+    
+    /// <summary>
+    /// Timestamp when these metrics were last updated
+    /// </summary>
+    public DateTime LastUpdated { get; set; }
+    
+    /// <summary>
+    /// Average time messages spend in the buffer before processing
+    /// </summary>
+    public TimeSpan AverageProcessingTime { get; set; }
+    
+    /// <summary>
+    /// Number of messages processed in the last minute
+    /// </summary>
+    public int MessagesPerMinute { get; set; }
+    
+    /// <summary>
+    /// Number of messages that failed to be written due to buffer full
+    /// </summary>
+    public int DroppedMessages { get; set; }
 }
 ```
 
-### Connection and Delivery Models (Existing + Extensions)
-
-Building upon existing infrastructure in `OnlineUserTrackerService` and `OnlineMobileUserHub`:
-
+### Rate Limiting Models
 ```csharp
-// Existing: MobileUserConnectionCacheItem (referenced in OnlineUserTrackerService)
-// Current structure handles connection tracking per mobile number
-
-// Enhanced connection model for high-throughput scenarios
-public class HighThroughputConnectionInfo
+public class ClientRateInfo
 {
-    public string PhoneNumber { get; set; }
-    public List<string> ConnectionIds { get; set; } = new();
-    public DateTime LastActivity { get; set; }
-    public ConnectionStatus Status { get; set; }
-    public int PendingMessageCount { get; set; }
-    public DateTime ConnectedAt { get; set; }
-    public string? UserAgent { get; set; }
+    /// <summary>
+    /// Unique identifier of the business client
+    /// </summary>
+    public string ClientId { get; set; }
+    
+    /// <summary>
+    /// Number of requests made in the current time window
+    /// </summary>
+    public int RequestCount { get; set; }
+    
+    /// <summary>
+    /// Start time of the current rate limiting window
+    /// </summary>
+    public DateTime WindowStart { get; set; }
+    
+    /// <summary>
+    /// Whether the client is currently being throttled
+    /// </summary>
+    public bool IsThrottled { get; set; }
+    
+    /// <summary>
+    /// Timestamp when throttling will be lifted (if throttled)
+    /// </summary>
+    public DateTime? ThrottledUntil { get; set; }
+    
+    /// <summary>
+    /// Number of requests that were rejected due to rate limiting
+    /// </summary>
+    public int RejectedRequests { get; set; }
 }
 
-// Extends existing delivery tracking
-public class DeliveryResult
+public class RateLimitInfo
 {
-    public bool Success { get; set; }
-    public Guid MessageId { get; set; }
-    public DateTime DeliveredAt { get; set; }
-    public string? ErrorMessage { get; set; }
-    public DeliveryChannel Channel { get; set; }
-    public TimeSpan DeliveryLatency { get; set; }
-    public string? ConnectionId { get; set; }
-    public int RetryAttempt { get; set; }
+    /// <summary>
+    /// Unique identifier of the business client
+    /// </summary>
+    public string ClientId { get; set; }
+    
+    /// <summary>
+    /// Current number of requests made in this time window
+    /// </summary>
+    public int CurrentRequests { get; set; }
+    
+    /// <summary>
+    /// Maximum allowed requests per time window
+    /// </summary>
+    public int MaxRequests { get; set; }
+    
+    /// <summary>
+    /// Number of requests remaining in current window
+    /// </summary>
+    public int RemainingRequests { get; set; }
+    
+    /// <summary>
+    /// Start time of the current rate limiting window
+    /// </summary>
+    public DateTime WindowStart { get; set; }
+    
+    /// <summary>
+    /// Whether the client is currently being throttled
+    /// </summary>
+    public bool IsThrottled { get; set; }
+    
+    /// <summary>
+    /// Time when the current window will reset
+    /// </summary>
+    public DateTime WindowResetTime => WindowStart.AddMinutes(1);
+    
+    /// <summary>
+    /// Time remaining until window reset
+    /// </summary>
+    public TimeSpan TimeUntilReset => WindowResetTime - DateTime.UtcNow;
 }
 
-// Transaction result for atomic operations
-public class TransactionResult
+public class RateLimitOptions
 {
-    public bool Success { get; set; }
-    public Guid MessageId { get; set; }
-    public string TransactionId { get; set; }
-    public bool DatabasePersisted { get; set; }
-    public bool QueueInserted { get; set; }
-    public string? ErrorMessage { get; set; }
-    public DateTime Timestamp { get; set; }
+    /// <summary>
+    /// Maximum number of requests allowed per time window
+    /// </summary>
+    public int MaxRequestsPerWindow { get; set; } = 1000;
+    
+    /// <summary>
+    /// Duration of the rate limiting window in minutes
+    /// </summary>
+    public int WindowMinutes { get; set; } = 1;
+    
+    /// <summary>
+    /// Whether to enable backpressure when limits are exceeded
+    /// </summary>
+    public bool EnableBackpressure { get; set; } = true;
+    
+    /// <summary>
+    /// Default delay to apply when backpressure is triggered
+    /// </summary>
+    public TimeSpan BackpressureDelay { get; set; } = TimeSpan.FromSeconds(1);
+    
+    /// <summary>
+    /// Maximum backpressure delay that can be applied
+    /// </summary>
+    public TimeSpan MaxBackpressureDelay { get; set; } = TimeSpan.FromMinutes(5);
+    
+    /// <summary>
+    /// Whether to enable burst allowance above the base limit
+    /// </summary>
+    public bool EnableBurstAllowance { get; set; } = true;
+    
+    /// <summary>
+    /// Additional requests allowed in burst scenarios
+    /// </summary>
+    public int BurstAllowance { get; set; } = 100;
 }
+```
 
-// Cache entry wrapper for performance optimization
-public class CacheEntry<T>
+## Enhanced MessageAppService Integration
+
+### Enhanced MessageAppService Interface
+```csharp
+// Enhanced interface in Application.Contracts layer
+public interface IMessageAppService : IApplicationService
 {
-    public T Value { get; set; }
-    public DateTime CreatedAt { get; set; }
-    public DateTime ExpiresAt { get; set; }
-    public string Version { get; set; }
-    public int HitCount { get; set; }
+    /// <summary>
+    /// Standard message sending with enhanced high-throughput support
+    /// </summary>
+    /// <param name="input">Message details including recipient and content</param>
+    /// <returns>MessageDto with tracking ID and status</returns>
+    /// <exception cref="BusinessException">When rate limit exceeded or system at capacity</exception>
+    Task<MessageDto> SendOneWayMessageAsync(SendOneWayMessageDto input);
+    
+    /// <summary>
+    /// High-throughput optimized message sending for concurrent scenarios
+    /// </summary>
+    /// <param name="input">Message details with priority and metadata</param>
+    /// <returns>HighThroughputMessageResponse with detailed system information</returns>
+    /// <exception cref="BusinessException">When client is throttled or buffer full</exception>
+    Task<HighThroughputMessageResponse> HighThroughputSendOneWayMessageAsync(SendOneWayMessageDto input);
+    
+    /// <summary>
+    /// Batch message sending for multiple recipients
+    /// </summary>
+    /// <param name="inputs">Collection of messages to send</param>
+    /// <returns>Collection of MessageDto results</returns>
+    Task<List<MessageDto>> SendBatchMessagesAsync(List<SendOneWayMessageDto> inputs);
+    
+    /// <summary>
+    /// Gets current system health and capacity information
+    /// </summary>
+    /// <returns>SystemLoadInfo with current utilization metrics</returns>
+    Task<SystemLoadInfo> GetSystemHealthAsync();
+    
+    /// <summary>
+    /// Gets rate limiting information for the current client
+    /// </summary>
+    /// <returns>RateLimitInfo with current usage and limits</returns>
+    Task<RateLimitInfo> GetClientRateLimitInfoAsync();
 }
+```
 
-public enum DeliveryChannel
+### Modified MessageAppService
+```csharp
+// Enhanced existing MessageAppService in Application layer
+public class MessageAppService : Esh3arTechAppService, IMessageAppService
 {
-    SignalR,
-    Fallback,
-    Retry
-}
+    private readonly IMessageFactory _messageFactory;
+    private readonly IDistributedEventBus _distributedEventBus;
+    private readonly IMessageRepository _messageRepository;
+    private readonly IRepository<MobileUser, Guid> _mobileUserRepository;
+    private readonly IBlobService _blobService;
+    private readonly IUnitOfWorkManager _unitOfWorkManager;
+    private readonly IHighThroughputMessageBuffer _messageBuffer; // Enhanced buffer
+    private readonly IRateLimiter _rateLimiter; // New rate limiter
+    private readonly IHighThroughputLoadBalancer _loadBalancer; // New load balancer
+    private readonly ILogger<MessageAppService> _logger;
 
-public enum ConnectionStatus
-{
-    Connected,
-    Disconnected,
-    Reconnecting,
-    Idle
+    public MessageAppService(
+        IMessageFactory messageFactory,
+        IDistributedEventBus distributedEventBus,
+        IMessageRepository messageRepository,
+        IRepository<MobileUser, Guid> mobileUserRepository,
+        IBlobService blobService,
+        IUnitOfWorkManager unitOfWorkManager,
+        IHighThroughputMessageBuffer messageBuffer,
+        IRateLimiter rateLimiter,
+        IHighThroughputLoadBalancer loadBalancer,
+        ILogger<MessageAppService> logger)
+    {
+        _messageFactory = messageFactory;
+        _distributedEventBus = distributedEventBus;
+        _messageRepository = messageRepository;
+        _mobileUserRepository = mobileUserRepository;
+        _blobService = blobService;
+        _unitOfWorkManager = unitOfWorkManager;
+        _messageBuffer = messageBuffer;
+        _rateLimiter = rateLimiter;
+        _loadBalancer = loadBalancer;
+        _logger = logger;
+    }
+
+    [Authorize(Esh3arTechPermissions.Esh3arSendMessages)]
+    public async Task<MessageDto> SendOneWayMessageAsync(SendOneWayMessageDto input)
+    {
+        var clientId = GetClientId(); // Extract from current user or API key
+        
+        // Apply rate limiting
+        if (!await _rateLimiter.TryAcquireAsync(clientId))
+        {
+            var limitInfo = await _rateLimiter.GetClientLimitInfoAsync(clientId);
+            throw new BusinessException($"Rate limit exceeded. Try again after {limitInfo.WindowStart.AddMinutes(1):HH:mm:ss}");
+        }
+        
+        var stopwatch = Stopwatch.StartNew();
+        
+        try
+        {
+            // Create message entity with minimal validation
+            var createdMessage = await CreateMessageAsync(input);
+            
+            // OPTIMIZATION: Only write to buffer, let background processor handle DB persistence
+            var bufferWriteSuccess = await _messageBuffer.TryWriteAsync(createdMessage, TimeSpan.FromMilliseconds(80));
+            
+            if (!bufferWriteSuccess)
+            {
+                // Apply backpressure if buffer is full
+                await _rateLimiter.ApplyBackpressureAsync(clientId, TimeSpan.FromSeconds(1));
+                throw new BusinessException("System is at capacity. Please retry in a moment.");
+            }
+            
+            stopwatch.Stop();
+            _logger.LogInformation("Message {MessageId} queued in {ElapsedMs}ms for client {ClientId}", 
+                createdMessage.Id, stopwatch.ElapsedMilliseconds, clientId);
+            
+            // Return immediately with message ID - background processor will handle persistence
+            return new MessageDto 
+            { 
+                Id = createdMessage.Id,
+                Status = MessageStatus.Queued,
+                CreatedAt = createdMessage.CreationTime,
+                EstimatedProcessingTimeMs = 50 // Estimated background processing time
+            };
+        }
+        catch (Exception ex)
+        {
+            stopwatch.Stop();
+            _logger.LogError(ex, "Failed to queue message for client {ClientId} in {ElapsedMs}ms", 
+                clientId, stopwatch.ElapsedMilliseconds);
+            throw;
+        }
+    }
+    
+    // Enhanced ingestion method with high-throughput support
+    [Authorize(Esh3arTechPermissions.Esh3arSendMessages)]
+    public async Task<HighThroughputMessageResponse> HighThroughputSendOneWayMessageAsync(SendOneWayMessageDto input)
+    {
+        var clientId = GetClientId();
+        var stopwatch = Stopwatch.StartNew();
+        
+        // Check if client is throttled
+        if (await _rateLimiter.IsClientThrottledAsync(clientId))
+        {
+            throw new BusinessException("Client is currently throttled due to rate limiting");
+        }
+        
+        // Check buffer capacity before processing
+        if (await _messageBuffer.IsNearCapacityAsync(0.9))
+        {
+            _logger.LogWarning("Message buffer near capacity, applying backpressure to client {ClientId}", clientId);
+            await _rateLimiter.ApplyBackpressureAsync(clientId, TimeSpan.FromMilliseconds(500));
+        }
+        
+        var createdMessage = await CreateMessageAsync(input);
+        
+        // OPTIMIZATION: Only queue to buffer - background processor handles DB + RabbitMQ
+        await _messageBuffer.Writer.WriteAsync(createdMessage);
+        
+        stopwatch.Stop();
+        
+        // Get system metrics for response
+        var loadMetrics = await _loadBalancer.GetCurrentLoadAsync();
+        var bufferMetrics = await _messageBuffer.GetMetricsAsync();
+        var rateLimitInfo = await _rateLimiter.GetClientLimitInfoAsync(clientId);
+        
+        return new HighThroughputMessageResponse
+        {
+            MessageId = createdMessage.Id,
+            StatusCode = 200,
+            ProcessingTimeMs = stopwatch.ElapsedMilliseconds,
+            SystemLoad = new SystemLoadInfo
+            {
+                UtilizationPercentage = loadMetrics.SystemUtilizationPercentage,
+                ActiveInstances = loadMetrics.TotalInstances,
+                BufferUtilization = bufferMetrics.UtilizationPercentage,
+                RecommendedDelay = bufferMetrics.UtilizationPercentage > 80 ? 
+                    TimeSpan.FromMilliseconds(100) : null
+            },
+            RateLimit = rateLimitInfo
+        };
+    }
+    
+    [Authorize(Esh3arTechPermissions.Esh3arSendMessages)]
+    public async Task<List<MessageDto>> SendBatchMessagesAsync(List<SendOneWayMessageDto> inputs)
+    {
+        var clientId = GetClientId();
+        
+        // Check rate limit for batch size
+        if (!await _rateLimiter.TryAcquireAsync(clientId, inputs.Count))
+        {
+            throw new BusinessException($"Batch size {inputs.Count} exceeds rate limit");
+        }
+        
+        var results = new List<MessageDto>();
+        var tasks = inputs.Select(async input =>
+        {
+            var message = await CreateMessageAsync(input);
+            await _messageBuffer.Writer.WriteAsync(message);
+            await _messageRepository.InsertAsync(message);
+            
+            return new MessageDto 
+            { 
+                Id = message.Id,
+                Status = message.Status,
+                CreatedAt = message.CreationTime,
+                CorrelationId = input.CorrelationId
+            };
+        });
+        
+        results.AddRange(await Task.WhenAll(tasks));
+        return results;
+    }
+    
+    public async Task<SystemLoadInfo> GetSystemHealthAsync()
+    {
+        var loadMetrics = await _loadBalancer.GetCurrentLoadAsync();
+        var bufferMetrics = await _messageBuffer.GetMetricsAsync();
+        
+        return new SystemLoadInfo
+        {
+            UtilizationPercentage = loadMetrics.SystemUtilizationPercentage,
+            ActiveInstances = loadMetrics.TotalInstances,
+            BufferUtilization = bufferMetrics.UtilizationPercentage,
+            RecommendedDelay = bufferMetrics.UtilizationPercentage > 90 ? 
+                TimeSpan.FromSeconds(1) : null
+        };
+    }
+    
+    public async Task<RateLimitInfo> GetClientRateLimitInfoAsync()
+    {
+        var clientId = GetClientId();
+        return await _rateLimiter.GetClientLimitInfoAsync(clientId);
+    }
+    
+    private string GetClientId()
+    {
+        // Extract client ID from current user, API key, or request headers
+        return CurrentUser.Id?.ToString() ?? 
+               HttpContext.Request.Headers["X-Client-Id"].FirstOrDefault() ?? 
+               "anonymous";
+    }
+    
+    // Existing methods remain unchanged...
+    private async Task<Message> CreateMessageAsync(SendOneWayMessageDto input)
+    {
+        var messageManager = _messageFactory.Create(MessageType.OneWay);
+        var createdMessage = await messageManager.CreateMessageAsync(input.RecipientPhoneNumber, input.MessageContent);
+        createdMessage.SetMessageStatusType(MessageStatus.Queued);
+        return createdMessage;
+    }
 }
 ```
 
 ## Error Handling
 
-### Error Classification
-- **Transient Errors**: Network timeouts, temporary service unavailability
-- **Permanent Errors**: Invalid user IDs, malformed messages
-- **System Errors**: Database failures, memory exhaustion
-- **Business Errors**: Rate limiting, quota exceeded
+### High-Throughput Error Scenarios
+- **Buffer Overflow**: Apply backpressure and return 503 Service Unavailable
+- **Rate Limit Exceeded**: Return 429 Too Many Requests with retry-after header
+- **Instance Unavailable**: Load balancer redirects to healthy instances
+- **Timeout Exceeded**: Return 408 Request Timeout for requests over 100ms
 
-### Error Handling Strategy
+### Error Response Strategy
 ```csharp
-public class ErrorHandlingStrategy
+public class HighThroughputErrorHandler
 {
-    public async Task<ErrorHandlingResult> HandleErrorAsync(Exception error, Message message)
+    public async Task<ErrorResponse> HandleBufferOverflowAsync(string clientId)
     {
-        return error switch
+        await _rateLimiter.ApplyBackpressureAsync(clientId, TimeSpan.FromSeconds(2));
+        return new ErrorResponse
         {
-            TransientException => await HandleTransientErrorAsync(message),
-            PermanentException => await HandlePermanentErrorAsync(message),
-            SystemException => await HandleSystemErrorAsync(message),
-            BusinessException => await HandleBusinessErrorAsync(message),
-            _ => await HandleUnknownErrorAsync(message)
+            Code = "BUFFER_OVERFLOW",
+            Message = "System at capacity, please retry",
+            StatusCode = 503,
+            RetryAfter = TimeSpan.FromSeconds(2)
         };
     }
     
-    private async Task<ErrorHandlingResult> HandleTransientErrorAsync(Message message)
+    public async Task<ErrorResponse> HandleRateLimitExceededAsync(string clientId)
     {
-        // Implement exponential backoff retry
-        var delay = CalculateExponentialBackoff(message.RetryCount);
-        await _faultTolerantDelivery.QueueForRetryAsync(message, delay);
-        return ErrorHandlingResult.Retry;
-    }
-    
-    private async Task<ErrorHandlingResult> HandlePermanentErrorAsync(Message message)
-    {
-        // Move to dead letter queue immediately
-        await _faultTolerantDelivery.MoveToDeadLetterQueueAsync(message, "Permanent error");
-        return ErrorHandlingResult.DeadLetter;
+        var limitInfo = await _rateLimiter.GetClientLimitInfoAsync(clientId);
+        return new ErrorResponse
+        {
+            Code = "RATE_LIMIT_EXCEEDED",
+            Message = $"Rate limit of {limitInfo.MaxRequests} requests per minute exceeded",
+            StatusCode = 429,
+            RetryAfter = TimeSpan.FromMinutes(1) - (DateTime.UtcNow - limitInfo.WindowStart)
+        };
     }
 }
 ```
-
-### Circuit Breaker Implementation
-- **Closed State**: Normal operation, requests flow through
-- **Open State**: Failures detected, requests fail fast
-- **Half-Open State**: Testing if service has recovered
-- **Failure Threshold**: 5 consecutive failures or 50% failure rate
-- **Recovery Timeout**: 30 seconds before attempting recovery
-

@@ -46,7 +46,7 @@ namespace Esh3arTech.Messages
 
             await CheckExistanceOrVerifiedMobileNumberAsync(PrepareMobileNumber(recipient));
 
-            var msgToReturn = new Message(_guidGenerator.Create(), $"967{recipient}", MessageType.OneWay); ;
+            var msgToReturn = new Message(_guidGenerator.Create(), $"967{recipient}", MessageType.OneWay);
             
             msgToReturn.SetSubject("default");
 
