@@ -35,8 +35,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Esh3arTech.Abp.Worker", "sr
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Abp.Gateway", "Abp.Gateway", "{E2D66B2D-03A7-4B44-AEFD-9152D1695273}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Esh3arTech.Abp.Gateway", "Esh3arTech.Abp.Gateway\Esh3arTech.Abp.Gateway.csproj", "{0C068F31-BF3B-4FF1-9AF7-7A453CFA3839}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -91,10 +89,6 @@ Global
 		{19015088-BCA9-791F-5C2E-11E2633DA72E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{19015088-BCA9-791F-5C2E-11E2633DA72E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{19015088-BCA9-791F-5C2E-11E2633DA72E}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0C068F31-BF3B-4FF1-9AF7-7A453CFA3839}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0C068F31-BF3B-4FF1-9AF7-7A453CFA3839}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0C068F31-BF3B-4FF1-9AF7-7A453CFA3839}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0C068F31-BF3B-4FF1-9AF7-7A453CFA3839}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -115,7 +109,6 @@ Global
 		{9E2D19A6-2087-4F06-9420-E94F7B52C89F} = {CA9AC87F-097E-4F15-8393-4BC07735A5B0}
 		{19015088-BCA9-791F-5C2E-11E2633DA72E} = {9E2D19A6-2087-4F06-9420-E94F7B52C89F}
 		{E2D66B2D-03A7-4B44-AEFD-9152D1695273} = {CA9AC87F-097E-4F15-8393-4BC07735A5B0}
-		{0C068F31-BF3B-4FF1-9AF7-7A453CFA3839} = {E2D66B2D-03A7-4B44-AEFD-9152D1695273}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {28315BFD-90E7-4E14-A2EA-F3D23AF4126F}
