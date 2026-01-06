@@ -22,8 +22,6 @@ namespace Esh3arTech.Abp.Gateway
 
             context.Services.AddReverseProxy()
                 .LoadFromConfig(configuration.GetSection("ReverseProxy"));
-
-            context.Services.AddHealthChecks();
         }
 
         public override void OnApplicationInitialization(ApplicationInitializationContext context)
@@ -44,7 +42,10 @@ namespace Esh3arTech.Abp.Gateway
 
             app.UseHttpsRedirection();
             app.UseRouting();
-            app.UseConfiguredEndpoints();
+            app.UseConfiguredEndpoints(endpoints =>
+            {
+                endpoints.MapReverseProxy();
+            });
         }
 
     }

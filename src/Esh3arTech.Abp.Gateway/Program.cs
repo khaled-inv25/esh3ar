@@ -11,5 +11,4 @@ await builder.AddApplicationAsync<Esh3arTechAbpGatewayModule>();
 var app = builder.Build();
 
 await app.InitializeApplicationAsync();
-app.MapReverseProxy();
 await app.RunAsync();
