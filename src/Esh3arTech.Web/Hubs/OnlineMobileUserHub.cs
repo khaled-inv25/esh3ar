@@ -82,11 +82,10 @@ namespace Esh3arTech.Web.Hubs
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
             var mobileNumber = GetMobileNumber();
-            var connectionId = Context.ConnectionId;
 
             if (!string.IsNullOrEmpty(mobileNumber))
             {
-                await _onlineUserTrackerService.RemoveConnection(mobileNumber, connectionId);
+                await _onlineUserTrackerService.RemoveConnection(mobileNumber);
             }
         }
 

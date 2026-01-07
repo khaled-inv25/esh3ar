@@ -126,7 +126,7 @@ SELECT
 FROM EtMessages ORDER BY CreationTime DESC
 
 SELECT 
-	MessageContent
+	MessageContent,
 	RecipientPhoneNumber,
 	 CASE 
         WHEN Status = 0 THEN 'Pending'
@@ -144,7 +144,7 @@ SELECT
 	CreatorId
 	FROM EtMessages ORDER BY CreationTime DESC
 
-UPDATE EtMessages SET Status = 2
+UPDATE EtMessages SET CreatorId = 'DAD566BE-82EF-E9FD-4584-3A1E7B04D314'
 
 SELECT * FROM EtMessages ORDER BY CreationTime DESC
 

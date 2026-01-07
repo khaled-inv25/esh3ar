@@ -9,6 +9,7 @@ using Esh3arTech.Web.HealthChecks;
 using Esh3arTech.Web.Menus;
 using Hangfire;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -16,8 +17,10 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using OpenIddict.Server;
 using OpenIddict.Server.AspNetCore;
 using OpenIddict.Validation.AspNetCore;
+using StackExchange.Redis;
 using System;
 using System.IO;
 using Volo.Abp;
@@ -168,8 +171,16 @@ public class Esh3arTechWebModule : AbpModule
         //    var connection = ConnectionMultiplexer.Connect(configuration["Redis:Configuration"]!);
         //    return new RedisDistributedSynchronizationProvider(connection.GetDatabase());
         //});
-    }
 
+        var redis = ConnectionMultiplexer.Connect(configuration.GetConnectionString("Redis:Configuration") ?? "localhost");
+        context.Services.AddDataProtection()
+            .PersistKeysToStackExchangeRedis(redis, "Esh3arTech-Shared-Keys")
+            .SetApplicationName("Esh3arTech");
+
+        Configure<OpenIddictServerOptions>(options => {
+            options.Issuer = new Uri(configuration["App:SelfUrl"] ?? "https://localhost:44306");
+        });
+    }
 
     private void ConfigureHealthChecks(ServiceConfigurationContext context)
     {

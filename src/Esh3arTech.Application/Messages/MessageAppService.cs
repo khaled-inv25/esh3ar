@@ -58,7 +58,7 @@ namespace Esh3arTech.Messages
 
             return new MessageDto { Id = createdMessage.Id };
         }
-        
+        // V1
         [Authorize(Esh3arTechPermissions.Esh3arSendMessages)]
         public async Task<MessageDto> IngestionSendOneWayMessageAsync(SendOneWayMessageDto input)
         {

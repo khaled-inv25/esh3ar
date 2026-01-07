@@ -1,14 +1,13 @@
 ﻿using Esh3arTech.Web.MobileUsers.CacheItems;
 using Microsoft.Extensions.Caching.Distributed;
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Volo.Abp.Caching;
 using Volo.Abp.DependencyInjection;
 
 namespace Esh3arTech.Web.MobileUsers
 {
-    public class OnlineUserTrackerService : ITransientDependency
+    public class OnlineUserTrackerService : ISingletonDependency
     {
         private readonly IDistributedCache<MobileUserConnectionCacheItem> _cache;
 
@@ -22,9 +21,9 @@ namespace Esh3arTech.Web.MobileUsers
             var cacheKey = mobileNumber;
             var cacheItem = await _cache.GetAsync(cacheKey) ?? new MobileUserConnectionCacheItem();
 
-            if (!cacheItem.ConnectionIds.Contains(cacheKey))
+            if (!string.IsNullOrEmpty(cacheItem.ConnectionId))
             {
-                cacheItem.ConnectionIds.Add(connectionId);
+                cacheItem.ConnectionId = connectionId;
                 await _cache.SetAsync(cacheKey, cacheItem, new DistributedCacheEntryOptions
                 {
                     SlidingExpiration = TimeSpan.FromMinutes(30)
@@ -32,22 +31,14 @@ namespace Esh3arTech.Web.MobileUsers
             }
         }
 
-        public async Task RemoveConnection(string mobileNumber, string connectionId)
+        public async Task RemoveConnection(string mobileNumber)
         {
             var cacheKey = mobileNumber;
             var cacheItem = await _cache.GetAsync(cacheKey);
 
             if (cacheItem != null)
             {
-                cacheItem.ConnectionIds.Remove(connectionId);
-                if (cacheItem.ConnectionIds.Count != 0)
-                {
-                    await _cache.SetAsync(cacheKey, cacheItem);
-                }
-                else
-                {
-                    await _cache.RemoveAsync(cacheKey);
-                }
+                await _cache.RemoveAsync(cacheKey);
             }
         }
 
@@ -56,7 +47,7 @@ namespace Esh3arTech.Web.MobileUsers
             var cacheKey = mobileNumber;
             var cacheItem = await _cache.GetAsync(cacheKey);
 
-            return cacheItem?.ConnectionIds?.FirstOrDefault();
+            return cacheItem?.ConnectionId;
         }
     }
 }
