@@ -9,9 +9,7 @@ namespace Esh3arTech.Messages
     {
         Task<MessageDto> SendOneWayMessageAsync(SendOneWayMessageDto input);
 
-        //Task<MessageDto> SendMessageWithAttachmentAsync(SendOneWayMessageWithAttachmentDto input);
-
-        Task<MessageDto> SendMessageWithAttachmentFromUiAsync(SendOneWayMessageWithAttachmentFromUiDto input);
+        Task<MessageDto> SendMessageFromUiAsync(SendOneWayMessageWithAttachmentFromUiDto input);
 
         Task<IReadOnlyList<PendingMessageDto>> GetPendingMessagesAsync(string phoneNumber);
 

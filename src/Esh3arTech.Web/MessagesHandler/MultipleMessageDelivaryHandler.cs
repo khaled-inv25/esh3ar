@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Volo.Abp.Caching;
 using Volo.Abp.DependencyInjection;
 using Volo.Abp.EventBus.Distributed;
+using Volo.Abp.Users;
 using static Esh3arTech.Esh3arTechConsts;
 
 namespace Esh3arTech.Web.MessagesHandler

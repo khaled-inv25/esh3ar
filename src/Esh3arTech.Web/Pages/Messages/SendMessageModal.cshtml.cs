@@ -54,7 +54,7 @@ namespace Esh3arTech.Web.Pages.Messages
                     Model.ImageFile.FileName,
                     Model.ImageFile.ContentType);
 
-                await _messageAppService.SendMessageWithAttachmentFromUiAsync(dto);
+                await _messageAppService.SendMessageFromUiAsync(dto);
             }
             else
             {

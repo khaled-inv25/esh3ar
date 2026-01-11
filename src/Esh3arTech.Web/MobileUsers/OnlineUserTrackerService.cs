@@ -21,7 +21,7 @@ namespace Esh3arTech.Web.MobileUsers
             var cacheKey = mobileNumber;
             var cacheItem = await _cache.GetAsync(cacheKey) ?? new MobileUserConnectionCacheItem();
 
-            if (!string.IsNullOrEmpty(cacheItem.ConnectionId))
+            if (string.IsNullOrEmpty(cacheItem.ConnectionId))
             {
                 cacheItem.ConnectionId = connectionId;
                 await _cache.SetAsync(cacheKey, cacheItem, new DistributedCacheEntryOptions

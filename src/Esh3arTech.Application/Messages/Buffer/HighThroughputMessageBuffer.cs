@@ -13,7 +13,7 @@ namespace Esh3arTech.Messages.Buffer
 
         public HighThroughputMessageBuffer()
         {
-            var options = new BoundedChannelOptions(Esh3arTechConsts.BufferLimit)
+            var options = new BoundedChannelOptions(Esh3arTechConsts.BufferLimit) // To prevent OOM
             {
                 FullMode = BoundedChannelFullMode.Wait,
                 SingleReader = false,

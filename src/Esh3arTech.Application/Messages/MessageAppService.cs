@@ -70,7 +70,7 @@ namespace Esh3arTech.Messages
         }
         
         [Authorize(Esh3arTechPermissions.Esh3arSendMessages)]
-        public async Task<MessageDto> SendMessageWithAttachmentFromUiAsync(SendOneWayMessageWithAttachmentFromUiDto input)
+        public async Task<MessageDto> SendMessageFromUiAsync(SendOneWayMessageWithAttachmentFromUiDto input)
         {
             var messageManager = _messageFactory.Create(MessageType.OneWay);
             var createdMessageWithAttachment = await messageManager.CreateMessageWithAttachmentFromUiAsync(input.RecipientPhoneNumber, input.MessageContent, input.ImageStreamContent);

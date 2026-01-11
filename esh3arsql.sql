@@ -141,16 +141,20 @@ SELECT
 	LastRetryAt,
 	NextRetryAt,
 	FailureReason,
-	CreatorId
+	CreatorId,
+	CreationTime
 	FROM EtMessages ORDER BY CreationTime DESC
+
+UPDATE EtMessages SET CreatorId = 'DAD566BE-82EF-E9FD-4584-3A1E7B04D314'
+
+SELECT COUNT(*) FROM EtMessages
+
 
 UPDATE EtMessages SET CreatorId = 'DAD566BE-82EF-E9FD-4584-3A1E7B04D314'
 
 SELECT * FROM EtMessages ORDER BY CreationTime DESC
 
 DELETE FROM EtMessages 
-
-SELECT COUNT(*) FROM EtMessages
 
 SELECT * FROM EtMessages WHERE Id = '0D429AAC-FAD9-3187-115B-3A1E7210D640'
 

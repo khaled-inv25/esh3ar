@@ -22,7 +22,6 @@ namespace Esh3arTech.Abp.Gateway
 
             context.Services.AddReverseProxy()
                 .LoadFromConfig(configuration.GetSection("ReverseProxy"));
-
         }
 
         public override void OnApplicationInitialization(ApplicationInitializationContext context)
