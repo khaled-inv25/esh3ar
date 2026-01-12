@@ -1,6 +1,5 @@
 ﻿using Esh3arTech.Abp.Blob.Services;
 using Esh3arTech.Messages.Buffer;
-using Esh3arTech.Messages.Eto;
 using Esh3arTech.Messages.SendBehavior;
 using Esh3arTech.Messages.Specs;
 using Esh3arTech.MobileUsers;
@@ -11,22 +10,32 @@ using Microsoft.AspNetCore.Authorization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.EventBus.Distributed;
+using Volo.Abp.ObjectMapping;
+using Volo.Abp.Uow;
 
 namespace Esh3arTech.Messages
 {
     public class MessageAppService : Esh3arTechAppService, IMessageAppService
     {
+        #region Fields
+
         private readonly IMessageFactory _messageFactory;
         private readonly IDistributedEventBus _distributedEventBus;
         private readonly IMessageRepository _messageRepository;
         private readonly IRepository<MobileUser, Guid> _mobileUserRepository;
         private readonly IBlobService _blobService;
         private readonly IHighThroughputMessageBuffer _highThroughputMessageBuffer;
+        private readonly IUnitOfWorkManager _unitOfWorkManager;
+
+        #endregion
+
+        #region Ctor
 
         public MessageAppService(
             IMessageFactory messageFactory,
@@ -34,7 +43,8 @@ namespace Esh3arTech.Messages
             IMessageRepository messageRepository,
             IRepository<MobileUser, Guid> mobileUserRepository,
             IBlobService blobService,
-            IHighThroughputMessageBuffer highThroughputMessageBuffer)
+            IHighThroughputMessageBuffer highThroughputMessageBuffer,
+            IUnitOfWorkManager unitOfWorkManager)
         {
             _messageFactory = messageFactory;
             _distributedEventBus = distributedEventBus;
@@ -42,21 +52,19 @@ namespace Esh3arTech.Messages
             _mobileUserRepository = mobileUserRepository;
             _blobService = blobService;
             _highThroughputMessageBuffer = highThroughputMessageBuffer;
+            _unitOfWorkManager = unitOfWorkManager;
         }
 
-        [Authorize(Esh3arTechPermissions.Esh3arSendMessages)]
-        public async Task<MessageDto> SendOneWayMessageAsync(SendOneWayMessageDto input)
+        #endregion
+
+        #region Methods
+
+        public async Task<bool> IngestionBatchMessageAsync(SendBatchMessageDto input)
         {
-            var createdMessage = await CreateMessageAsync(input);
+            var map = ObjectMapper.Map<List<SendOneWayMessageDto>, List<BatchMessage>>(input.BatchMessages);
+            var createdMessages = await CreateBatchMessageAsync(map);
 
-            var sendMsgEto = ObjectMapper.Map<Message, SendOneWayMessageEto>(createdMessage);
-            sendMsgEto.From = CurrentUser.Name!;
-
-            await _messageRepository.InsertAsync(createdMessage);
-
-            await _distributedEventBus.PublishAsync(sendMsgEto);
-
-            return new MessageDto { Id = createdMessage.Id };
+            return true;
         }
 
         [Authorize(Esh3arTechPermissions.Esh3arSendMessages)]
@@ -68,9 +76,21 @@ namespace Esh3arTech.Messages
 
             return new MessageDto { Id = createdMessage.Id };
         }
+
+        [Authorize(Esh3arTechPermissions.Esh3arSendMessages)]
+        public async Task<MessageDto> SendMessageFromUiAsync(SendOneWayMessageDto input)
+        {
+            var createdMessage = await CreateMessageAsync(input);
+
+            using var uow = _unitOfWorkManager.Begin(requiresNew: true);
+            await _messageRepository.InsertAsync(createdMessage);
+            await uow.CompleteAsync();
+
+            return new MessageDto { Id = createdMessage.Id };
+        }
         
         [Authorize(Esh3arTechPermissions.Esh3arSendMessages)]
-        public async Task<MessageDto> SendMessageFromUiAsync(SendOneWayMessageWithAttachmentFromUiDto input)
+        public async Task<MessageDto> SendMessageFromUiWithAttachmentAsync(SendOneWayMessageWithAttachmentFromUiDto input)
         {
             var messageManager = _messageFactory.Create(MessageType.OneWay);
             var createdMessageWithAttachment = await messageManager.CreateMessageWithAttachmentFromUiAsync(input.RecipientPhoneNumber, input.MessageContent, input.ImageStreamContent);
@@ -78,21 +98,11 @@ namespace Esh3arTech.Messages
             var attachment = createdMessageWithAttachment.Attachments.FirstOrDefault();
             await _blobService.SaveToFileSystemAsync(input.ImageStreamContent, attachment!.FileName);
 
-            var msgWithAttachmentEto = new SendOneWayMessageEto
-            {
-                Id = createdMessageWithAttachment.Id,
-                RecipientPhoneNumber = createdMessageWithAttachment.RecipientPhoneNumber,
-                MessageContent = input.MessageContent,
-                From = CurrentUser.Name!,
-                AccessUrl = attachment.AccessUrl
-            };
-
-            await _distributedEventBus.PublishAsync(msgWithAttachmentEto);
-
-            createdMessageWithAttachment.SetMessageStatusType(MessageStatus.Queued);
+            using var uow = _unitOfWorkManager.Begin(requiresNew: true);
             await _messageRepository.InsertAsync(createdMessageWithAttachment);
+            await uow.CompleteAsync();
 
-            return new MessageDto { Id = createdMessageWithAttachment.Id }; ;
+            return new MessageDto { Id = createdMessageWithAttachment.Id };
         }
 
         public async Task<IReadOnlyList<PendingMessageDto>> GetPendingMessagesAsync(string phoneNumber)
@@ -139,6 +149,11 @@ namespace Esh3arTech.Messages
             await _messageRepository.UpdateAsync((Message)msg, autoSave: true);
         }
 
+        public async Task<bool> IsMessageDeliveredOrSentAsync(Guid messageId)
+        {
+            return await _messageRepository.AnyAsync(m => m.Id == messageId && (m.Status == MessageStatus.Delivered || m.Status == MessageStatus.Sent));
+        }
+
         private async Task<Message> CreateMessageAsync(SendOneWayMessageDto input)
         {
             var messageManager = _messageFactory.Create(MessageType.OneWay);
@@ -148,5 +163,15 @@ namespace Esh3arTech.Messages
 
             return createdMessage;
         }
+
+        private async Task<List<Message>> CreateBatchMessageAsync(List<BatchMessage> batchMessages)
+        {
+            var messageManager = _messageFactory.Create(MessageType.OneWay);
+            var createdMessage = await messageManager.CreateBatchMessageAsync(batchMessages);
+
+            return createdMessage;
+        }
+
+        #endregion
     }
 }

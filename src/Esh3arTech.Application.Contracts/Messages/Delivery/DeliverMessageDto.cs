@@ -1,30 +1,19 @@
 ﻿using JetBrains.Annotations;
+using System;
 using System.ComponentModel.DataAnnotations;
-using Volo.Abp.EventBus;
+using Volo.Abp.Application.Dtos;
 
-namespace Esh3arTech.Abp.Worker.Messages
+namespace Esh3arTech.Messages.Delivery
 {
-    [EventName("Esh3arTech.Messages.SendMessageEto")]
-    public class MessageRetryEto
+    public class DeliverMessageDto : EntityDto<Guid>
     {
-        [Required]
-        public Guid Id { get; set; }
-
-        [Required]
-        public Guid CreatorId { get; set; }
-
         [RegularExpression(@"^(77|78|70|73|71)\d{7}$")]
         public string RecipientPhoneNumber { get; set; }
-
         [CanBeNull]
         public string? MessageContent { get; set; }
-
-        public string From { get; set; }
-
-        public string Subject { get; set; }
-
+        public Guid CreatorId { get; set; }
+        public MessageStatus Status { get; set; }
         public string AccessUrl { get; set; }
-
         public DateTime? UrlExpiresAt { get; set; }
     }
 }

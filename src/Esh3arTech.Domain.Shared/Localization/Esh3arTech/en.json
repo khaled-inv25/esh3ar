@@ -19,6 +19,7 @@
     "Action:AssignToUser": "Assign to user",
     "Action:MoveUsersToPlan": "Move users to plan",
     "Btn:ExportToExcel": "Export To Excel",
+    "Btn:ImportExcel": "Import From Excel",
     "Btn:Refresh": "Refresh",
     "Btn:SendMessage": "Send Message",
     "Btn:NewPlan": "Create new plan",

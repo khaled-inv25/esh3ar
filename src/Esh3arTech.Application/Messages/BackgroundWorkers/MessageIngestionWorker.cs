@@ -1,30 +1,30 @@
 ﻿using Esh3arTech.Messages.Buffer;
-using Esh3arTech.Messages.Eto;
+using Esh3arTech.Messages.Delivery;
 using Microsoft.Extensions.Hosting;
 using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Volo.Abp.BackgroundWorkers;
-using Volo.Abp.EventBus.Distributed;
 
 namespace Esh3arTech.Messages.BackgroundWorkers
 {
     public class MessageIngestionWorker : BackgroundService, IBackgroundWorker
     {
-        private readonly IHighThroughputMessageBuffer _highThroughputMessageBuffer;
         private const int BatchIntervalMs = 100;
-        private readonly IDistributedEventBus _distributedEventBus;
+
+        private readonly IHighThroughputMessageBuffer _highThroughputMessageBuffer;
         private readonly IMessageRepository _messageRepository;
+        private readonly IMessageDeliveryService _messageDeliveryService;
 
         public MessageIngestionWorker(
             IHighThroughputMessageBuffer highThroughputMessageBuffer,
-            IDistributedEventBus distributedEventBus,
-            IMessageRepository messageRepository)
+            IMessageRepository messageRepository,
+            IMessageDeliveryService messageDeliveryService)
         {
             _highThroughputMessageBuffer = highThroughputMessageBuffer;
-            _distributedEventBus = distributedEventBus;
             _messageRepository = messageRepository;
+            _messageDeliveryService = messageDeliveryService;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -56,7 +56,7 @@ namespace Esh3arTech.Messages.BackgroundWorkers
             await _messageRepository.InsertManyAsync(msgs);
 
             var serlizedMessages = JsonSerializer.Serialize(msgs);
-            await _distributedEventBus.PublishAsync(new MessageIngestionEto() { JsonMessages = serlizedMessages });
+            await _messageDeliveryService.DeliverBatchMessageAsync(new DeliverBatchMessageDto { JsonMessages = serlizedMessages });
         }
     }
 }

@@ -5,6 +5,7 @@ using Esh3arTech.Plans;
 using Esh3arTech.Settings;
 using Esh3arTech.Utility;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using Volo.Abp;
@@ -19,12 +20,17 @@ namespace Esh3arTech.Messages
 {
     public class OneWayMessageManager : DomainService, IOneWayMessageManager
     {
+        #region Fields
+
         private readonly IRepository<MobileUser, Guid> _mobileUserRepository;
         private readonly UserPlanManager _userPlanManager;
         private readonly ICurrentUser _currentUser;
         private readonly IGuidGenerator _guidGenerator;
         private readonly ISettingProvider _settingProvider;
 
+        #endregion
+
+        #region Ctor
         public OneWayMessageManager(
             IRepository<MobileUser, Guid> mobileUserRepository,
             UserPlanManager userPlanManager,
@@ -39,8 +45,20 @@ namespace Esh3arTech.Messages
             _settingProvider = settingProvider;
         }
 
+        #endregion
+
+        #region Methods
+
+        public async Task<List<Message>> CreateBatchMessageAsync(List<BatchMessage> batch)
+        {
+            await _userPlanManager.CanSendMessageAsync(_currentUser.Id!.Value, batch.Count);
+
+            return null;
+        }
+
         public async Task<Message> CreateMessageAsync(string recipient, string content)
         {
+            var currentUserId = _currentUser.Id!.Value;
             await _userPlanManager.CanSendMessageAsync(_currentUser.Id!.Value);
 
             await CheckExistanceOrVerifiedMobileNumberAsync(PrepareMobileNumber(recipient));
@@ -56,13 +74,9 @@ namespace Esh3arTech.Messages
 
             msgToReturn.SetMessageContentOrNull(content);
             msgToReturn.SetMessageStatusType(MessageStatus.Queued);
+            msgToReturn.CreatorId = currentUserId;
 
             return msgToReturn;
-        }
-
-        public async Task<Message> CreateMessageWithAttachmentAsync()
-        {
-            return null;
         }
 
         public async Task<Message> CreateMessageWithAttachmentFromUiAsync(string recipient, string? content, IRemoteStreamContent stream)
@@ -149,5 +163,7 @@ namespace Esh3arTech.Messages
         {
             return $"{msgId}{extension}";
         }
+
+        #endregion
     }
 }

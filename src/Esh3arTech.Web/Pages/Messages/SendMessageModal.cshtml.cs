@@ -54,12 +54,12 @@ namespace Esh3arTech.Web.Pages.Messages
                     Model.ImageFile.FileName,
                     Model.ImageFile.ContentType);
 
-                await _messageAppService.SendMessageFromUiAsync(dto);
+                await _messageAppService.SendMessageFromUiWithAttachmentAsync(dto);
             }
             else
             {
                 var model = ObjectMapper.Map<SendMessageViewModal, SendOneWayMessageDto>(Model);
-                await _messageAppService.SendOneWayMessageAsync(model);
+                await _messageAppService.SendMessageFromUiAsync(model);
             }
 
             return NoContent();

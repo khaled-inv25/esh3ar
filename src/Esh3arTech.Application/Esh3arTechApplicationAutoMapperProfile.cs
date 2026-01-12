@@ -28,5 +28,6 @@ public class Esh3arTechApplicationAutoMapperProfile : Profile
         CreateMap<Message, PendingMessageDto>();
         CreateMap<Message, SendOneWayMessageEto>();
         CreateMap<Message, MessageInListDto>();
+        CreateMap<SendOneWayMessageDto, BatchMessage>();
     }
 }

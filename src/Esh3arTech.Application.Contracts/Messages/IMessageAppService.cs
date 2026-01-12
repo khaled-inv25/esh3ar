@@ -7,15 +7,21 @@ namespace Esh3arTech.Messages
 {
     public interface IMessageAppService
     {
-        Task<MessageDto> SendOneWayMessageAsync(SendOneWayMessageDto input);
+        Task<bool> IngestionBatchMessageAsync(SendBatchMessageDto input);
 
-        Task<MessageDto> SendMessageFromUiAsync(SendOneWayMessageWithAttachmentFromUiDto input);
+        Task<MessageDto> IngestionSendOneWayMessageAsync(SendOneWayMessageDto input);
+
+        Task<MessageDto> SendMessageFromUiAsync(SendOneWayMessageDto input);
+
+        Task<MessageDto> SendMessageFromUiWithAttachmentAsync(SendOneWayMessageWithAttachmentFromUiDto input);
 
         Task<IReadOnlyList<PendingMessageDto>> GetPendingMessagesAsync(string phoneNumber);
 
         Task<PagedResultDto<MessageInListDto>> GetOneWayMessagesAsync(PagedAndSortedResultRequestDto input);
 
         Task<object> GetMessageById(Guid messageId);
+
+        Task<bool> IsMessageDeliveredOrSentAsync(Guid messageId);
 
         Task UpdateMessage(object msg);
     }

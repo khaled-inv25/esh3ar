@@ -38,18 +38,28 @@ namespace Esh3arTech.Abp.Worker.Messages
             {
                 foreach (var msg in messagesToRetry)
                 {
+                    string accessUrl = null;
+                    DateTime? urlExpiresAt = null;
+                    if (msg.Attachments.Count > 0)
+                    {
+                        var attachment = msg.Attachments.First();
+                        accessUrl = attachment.AccessUrl;
+                        urlExpiresAt = attachment.UrlExpiresAt;
+                    }
+
                     msg.MarkAsRetrying();
                     await _messageRepository.UpdateAsync(msg);
 
                     var sendMessageEto = new MessageRetryEto()
                     {
                         Id = msg.Id,
+                        CreatorId = msg.CreatorId!.Value,
                         RecipientPhoneNumber = msg.RecipientPhoneNumber,
                         MessageContent = msg.MessageContent,
-                        From = "msg.From",
+                        From = string.Empty,
                         Subject = msg.Subject,
-                        AccessUrl = "AccessUrl",
-                        UrlExpiresAt = null
+                        AccessUrl = accessUrl,
+                        UrlExpiresAt = urlExpiresAt
                     };
 
                     await _distributedEventBus.PublishAsync(sendMessageEto);

@@ -56,7 +56,7 @@ namespace Esh3arTech.Web.MessagesHandler
             }
             catch (Exception ex)
             {
-                await HandleMessageDeliveryFailureAsync(eventData, ex, message);
+                await HandleMessageDeliveryFailureAsync(ex, message);
             }
         }
 
@@ -86,7 +86,7 @@ namespace Esh3arTech.Web.MessagesHandler
             }
         }
 
-        private async Task HandleMessageDeliveryFailureAsync(SendOneWayMessageEto eto, Exception ex, Message message)
+        private async Task HandleMessageDeliveryFailureAsync(Exception ex, Message message)
         {
             message.IncrementRetryCount();
 

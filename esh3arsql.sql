@@ -112,6 +112,23 @@ UPDATE EtSubscriptions SET IsActive = 1
 SELECT * FROM AbpUsers
 SELECT * FROM EtMobileUsers
 
+-- I want a query to check amoung data I will provide if a specific recored is not applyed
+
+SELECT IIF (
+	(SELECT COUNT(*) FROM EtMobileUsers WHERE MobileNumber IN ('967775265496', '967775265499', '967775265492') ) = (SELECT COUNT(*) FROM EtMobileUsers),
+	CAST(1 AS BIT),
+	CAST(0 AS BIT)) AS IsAnyNumberFound;
+
+SELECT CAST ( 
+	CASE 
+		WHEN NOT EXISTS (
+		SELECT v.MobileNumber FROM (VALUES ('967775265496'), ('967775265497'), ('967775265498')) v(MobileNumber)  WHERE NOT EXISTS(SELECT 1 FROM EtMobileUsers e WHERE e.MobileNumber = v.MobileNumber))
+		THEN 1
+		ELSE 0
+	END AS BIT)
+
+SELECT TOP 1 1 FROM EtMobileUsers WHERE EXISTS(SELECT 1 FROM EtMobileUsers)
+
 SELECT 
     CASE 
         WHEN Status = 0 THEN 'Pending'
@@ -145,7 +162,11 @@ SELECT
 	CreationTime
 	FROM EtMessages ORDER BY CreationTime DESC
 
+SELECT * FROM EtMessageAttachments
+
 UPDATE EtMessages SET CreatorId = 'DAD566BE-82EF-E9FD-4584-3A1E7B04D314'
+
+DELETE EtMessages WHERE CreatorId Is Null
 
 SELECT COUNT(*) FROM EtMessages
 
@@ -170,6 +191,8 @@ update EtMessages set Status = 2
 SELECT * FROM EtMessages
 
 SELECT COUNT(*) FROM EtMessages
+
+
 
 UPDATE EtMessages SET Status = 2
 -- Mobile sections

@@ -72,12 +72,12 @@ namespace Esh3arTech.Plans
                    !await _userPlanRepository.AnyAsync(up => up.ExpiringPlanId.Equals(planId)); // to check if there is expiring plans linked to it.
         }
 
-        public async Task<bool> CanSendMessageAsync(Guid userId)
+        public async Task<bool> CanSendMessageAsync(Guid userId, int batchCount = 0)
         {
             var sentMessages = await GetSentMessagesByUserId(userId);
             var allowedMessagesCount = await _featureChecker.GetAsync<int>("Esh3arTech.MaxMessages");
 
-            return sentMessages < allowedMessagesCount;
+            return (sentMessages + batchCount) < allowedMessagesCount;
         }
 
         private async Task<int> GetSentMessagesByUserId(Guid id)
