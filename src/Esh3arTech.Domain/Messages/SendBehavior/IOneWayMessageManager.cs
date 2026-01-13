@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Esh3arTech.MobileUsers;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Volo.Abp.Content;
 
@@ -8,6 +9,6 @@ namespace Esh3arTech.Messages.SendBehavior
     {
         Task<Message> CreateMessageAsync(string recipient, string content);
         Task<Message> CreateMessageWithAttachmentFromUiAsync(string recipient, string? content, IRemoteStreamContent stream);
-        Task<List<Message>> CreateBatchMessageAsync(List<BatchMessage> batch);
+        Task<List<Message>> CreateBatchMessageAsync(List<BatchMessage> data, List<EtTempMobileUserData> numbers);
     }
 }

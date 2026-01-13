@@ -8,5 +8,7 @@ namespace Esh3arTech.Messages
     public interface IMessageRepository : IRepository<Message, Guid>
     {
         Task<List<Message>> GetFailedOrQueuedMessagesAsync();
+
+        Task BulkInsertMessages(List<Message> messages);
     }
 }

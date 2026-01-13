@@ -10,7 +10,6 @@ using Microsoft.AspNetCore.Authorization;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
@@ -26,11 +25,11 @@ namespace Esh3arTech.Messages
         #region Fields
 
         private readonly IMessageFactory _messageFactory;
-        private readonly IDistributedEventBus _distributedEventBus;
         private readonly IMessageRepository _messageRepository;
-        private readonly IRepository<MobileUser, Guid> _mobileUserRepository;
+        private readonly IMobileUserRepository _mobileUserRepository;
         private readonly IBlobService _blobService;
         private readonly IHighThroughputMessageBuffer _highThroughputMessageBuffer;
+        private readonly IHighThroughputBatchMessageBuffer _highThroughputBatchMessageBuffer;
         private readonly IUnitOfWorkManager _unitOfWorkManager;
 
         #endregion
@@ -39,19 +38,19 @@ namespace Esh3arTech.Messages
 
         public MessageAppService(
             IMessageFactory messageFactory,
-            IDistributedEventBus distributedEventBus,
             IMessageRepository messageRepository,
-            IRepository<MobileUser, Guid> mobileUserRepository,
+            IMobileUserRepository mobileUserRepository,
             IBlobService blobService,
             IHighThroughputMessageBuffer highThroughputMessageBuffer,
+            IHighThroughputBatchMessageBuffer highThroughputBatchMessageBuffer,
             IUnitOfWorkManager unitOfWorkManager)
         {
             _messageFactory = messageFactory;
-            _distributedEventBus = distributedEventBus;
             _messageRepository = messageRepository;
             _mobileUserRepository = mobileUserRepository;
             _blobService = blobService;
             _highThroughputMessageBuffer = highThroughputMessageBuffer;
+            _highThroughputBatchMessageBuffer = highThroughputBatchMessageBuffer;
             _unitOfWorkManager = unitOfWorkManager;
         }
 
@@ -59,12 +58,15 @@ namespace Esh3arTech.Messages
 
         #region Methods
 
+        [Authorize(Esh3arTechPermissions.Esh3arSendMessages)]
         public async Task<bool> IngestionBatchMessageAsync(SendBatchMessageDto input)
         {
-            var map = ObjectMapper.Map<List<SendOneWayMessageDto>, List<BatchMessage>>(input.BatchMessages);
-            var createdMessages = await CreateBatchMessageAsync(map);
+            var batchMessages = ObjectMapper.Map<List<BatchMessageItem>, List<BatchMessage>>(input.BatchMessages);
+            var numbers = ObjectMapper.Map<List<BatchMessageItem>, List<EtTempMobileUserData>>(input.BatchMessages);
 
-            return true;
+            var messagesCreated = await CreateBatchMessageAsync(batchMessages, numbers);
+
+            return await _highThroughputBatchMessageBuffer.TryWriteAsync(messagesCreated, TimeSpan.FromMilliseconds(50));
         }
 
         [Authorize(Esh3arTechPermissions.Esh3arSendMessages)]
@@ -164,14 +166,13 @@ namespace Esh3arTech.Messages
             return createdMessage;
         }
 
-        private async Task<List<Message>> CreateBatchMessageAsync(List<BatchMessage> batchMessages)
+        private async Task<List<Message>> CreateBatchMessageAsync(List<BatchMessage> data, List<EtTempMobileUserData> numbers)
         {
             var messageManager = _messageFactory.Create(MessageType.OneWay);
-            var createdMessage = await messageManager.CreateBatchMessageAsync(batchMessages);
+            var createdList = await messageManager.CreateBatchMessageAsync(data, numbers);
 
-            return createdMessage;
+            return createdList;
         }
-
         #endregion
     }
 }

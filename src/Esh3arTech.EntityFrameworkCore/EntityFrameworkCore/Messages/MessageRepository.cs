@@ -1,6 +1,9 @@
-﻿using Esh3arTech.Messages;
+﻿using EFCore.BulkExtensions;
+using Esh3arTech.Messages;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using Volo.Abp.Domain.Repositories.EntityFrameworkCore;
@@ -10,8 +13,25 @@ namespace Esh3arTech.EntityFrameworkCore.Messages
 {
     public class MessageRepository : EfCoreRepository<Esh3arTechDbContext, Message, Guid>, IMessageRepository
     {
-        public MessageRepository(IDbContextProvider<Esh3arTechDbContext> dbContextProvider) : base(dbContextProvider)
+        public MessageRepository(IDbContextProvider<Esh3arTechDbContext> dbContextProvider)
+            : base(dbContextProvider)
         {
+        }
+
+        public async Task BulkInsertMessages(List<Message> messages)
+        {
+            var dbContext = await GetDbContextAsync();
+            var connection = dbContext.Database.GetDbConnection();
+
+            if (connection.State != ConnectionState.Open)
+            {
+                await connection.OpenAsync();
+            }
+
+            await dbContext.BulkInsertAsync(messages, new BulkConfig()
+            {
+                CustomDestinationTableName = "EtMessages"
+            });
         }
 
         public async Task<List<Message>> GetFailedOrQueuedMessagesAsync()

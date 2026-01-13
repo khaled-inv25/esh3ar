@@ -1,9 +1,7 @@
 ﻿using Esh3arTech.MobileUsers;
 using Esh3arTech.Plans;
-using Microsoft.Extensions.Configuration;
 using System;
 using Volo.Abp.DependencyInjection;
-using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Guids;
 using Volo.Abp.Settings;
 using Volo.Abp.Users;
@@ -12,14 +10,14 @@ namespace Esh3arTech.Messages.SendBehavior
 {
     public class MessageFactory : IMessageFactory, ITransientDependency
     {
-        private readonly IRepository<MobileUser, Guid> _mobileUserRepository;
+        private readonly IMobileUserRepository _mobileUserRepository;
         private readonly UserPlanManager _userPlanManager;
         private readonly ICurrentUser _currentUser;
         private readonly IGuidGenerator _guidGenerator;
         private readonly ISettingProvider _settingProvider;
 
         public MessageFactory(
-            IRepository<MobileUser, Guid> mobileUserRepository,
+            IMobileUserRepository mobileUserRepository,
             UserPlanManager userPlanManager,
             ICurrentUser currentUser,
             IGuidGenerator guidGenerator,

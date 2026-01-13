@@ -112,22 +112,25 @@ UPDATE EtSubscriptions SET IsActive = 1
 SELECT * FROM AbpUsers
 SELECT * FROM EtMobileUsers
 
--- I want a query to check amoung data I will provide if a specific recored is not applyed
+IF OBJECT_ID('tempdb..#TempEtMobileUsers') IS NOT NULL
+    DROP TABLE #TempEtMobileUsers;
 
-SELECT IIF (
-	(SELECT COUNT(*) FROM EtMobileUsers WHERE MobileNumber IN ('967775265496', '967775265499', '967775265492') ) = (SELECT COUNT(*) FROM EtMobileUsers),
-	CAST(1 AS BIT),
-	CAST(0 AS BIT)) AS IsAnyNumberFound;
+CREATE TABLE #TempEtMobileUsers (
+    Id INT,
+    MobileNumber VARCHAR(50)
+);
 
-SELECT CAST ( 
-	CASE 
-		WHEN NOT EXISTS (
-		SELECT v.MobileNumber FROM (VALUES ('967775265496'), ('967775265497'), ('967775265498')) v(MobileNumber)  WHERE NOT EXISTS(SELECT 1 FROM EtMobileUsers e WHERE e.MobileNumber = v.MobileNumber))
-		THEN 1
-		ELSE 0
-	END AS BIT)
+INSERT INTO #TempEtMobileUsers (Id, MobileNumber) VALUES (1,'967775265496'), (1,'967775265497'), (1, '967775265498'), (1, '967775265495')
 
-SELECT TOP 1 1 FROM EtMobileUsers WHERE EXISTS(SELECT 1 FROM EtMobileUsers)
+SELECT v.MobileNumber  FROM #TempEtMobileUsers v LEFT Join  EtMobileUsers
+on EtMobileUsers.MobileNumber = v.MobileNumber 
+where EtMobileUsers.Id is null or EtMobileUsers.Status != 1
+
+DROP TABLE #TempEtMobileUsers;
+
+SELECT * FROM EtMobileUsers
+
+--UPDATE EtMobileUsers SET Status = 1 WHERE Id = '52799EA1-1233-4D89-8A39-875C46039ECB'
 
 SELECT 
     CASE 
@@ -161,6 +164,10 @@ SELECT
 	CreatorId,
 	CreationTime
 	FROM EtMessages ORDER BY CreationTime DESC
+
+SELECT * FROM EtMessages ORDER BY CreationTime DESC
+
+SELECT * FROM AbpUsers WHERE Id = '64FC8C10-E373-F108-4B13-3A1E7B04D324'
 
 SELECT * FROM EtMessageAttachments
 

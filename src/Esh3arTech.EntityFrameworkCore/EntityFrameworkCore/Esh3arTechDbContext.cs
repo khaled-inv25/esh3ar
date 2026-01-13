@@ -50,6 +50,8 @@ public class Esh3arTechDbContext :
 
     public DbSet<MessageAttachment> Attachments { get; set; }
 
+    public DbSet<EtTempMobileUserData> TempMobileUsers { get; set; } // this is a temp entity for bulk operations
+
     #region Entities from the modules
 
     // Identity
@@ -93,6 +95,7 @@ public class Esh3arTechDbContext :
         builder.ConfigureTenantManagement();
         builder.ConfigureBlobStoring();
         builder.Entity<Tenant>().ConfigureExtraProperties();
+        builder.ConfigureEsh3arTech();
         //builder.ConfigureEventOutbox();
 
         builder.ApplyConfiguration(new MobileUserConfiguration());

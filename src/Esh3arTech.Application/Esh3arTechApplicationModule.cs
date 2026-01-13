@@ -47,5 +47,6 @@ public class Esh3arTechApplicationModule : AbpModule
         });
 
         context.Services.AddHostedService<MessageIngestionWorker>();
+        context.Services.AddHostedService<BatchMessageIngestionWorker>();
     }
 }

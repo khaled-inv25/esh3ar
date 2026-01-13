@@ -326,6 +326,7 @@ public class Esh3arTechWebModule : AbpModule
         // Register background workers
         context.AddBackgroundWorkerAsync<MessageRetryWorker>().GetAwaiter().GetResult();
         context.AddBackgroundWorkerAsync<MessageIngestionWorker>();
+        context.AddBackgroundWorkerAsync<BatchMessageIngestionWorker>();
 
         app.UseForwardedHeaders();
 

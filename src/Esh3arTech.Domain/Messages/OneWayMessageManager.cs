@@ -7,6 +7,7 @@ using Esh3arTech.Utility;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Volo.Abp;
 using Volo.Abp.Content;
@@ -22,7 +23,7 @@ namespace Esh3arTech.Messages
     {
         #region Fields
 
-        private readonly IRepository<MobileUser, Guid> _mobileUserRepository;
+        private readonly IMobileUserRepository _mobileUserRepository;
         private readonly UserPlanManager _userPlanManager;
         private readonly ICurrentUser _currentUser;
         private readonly IGuidGenerator _guidGenerator;
@@ -32,7 +33,7 @@ namespace Esh3arTech.Messages
 
         #region Ctor
         public OneWayMessageManager(
-            IRepository<MobileUser, Guid> mobileUserRepository,
+            IMobileUserRepository mobileUserRepository,
             UserPlanManager userPlanManager,
             ICurrentUser currentUser,
             IGuidGenerator guidGenerator,
@@ -49,11 +50,23 @@ namespace Esh3arTech.Messages
 
         #region Methods
 
-        public async Task<List<Message>> CreateBatchMessageAsync(List<BatchMessage> batch)
+        public async Task<List<Message>> CreateBatchMessageAsync(List<BatchMessage> data, List<EtTempMobileUserData> numbers)
         {
-            await _userPlanManager.CanSendMessageAsync(_currentUser.Id!.Value, batch.Count);
+            var messages = new List<Message>();
 
-            return null;
+            await _userPlanManager.CanSendMessageAsync(_currentUser.Id!.Value, data.Count);
+
+            await CheckMissingOrNotVerifiedMobileNumberAsync(numbers);
+
+            foreach (var item in data)
+            {
+                var msg = CreateMessage(item.MobileNumber, item.MessageContent!, _currentUser.Id!.Value);
+                msg.CreationTime = DateTime.Now;
+
+                messages.Add(msg);
+            }
+
+            return messages;
         }
 
         public async Task<Message> CreateMessageAsync(string recipient, string content)
@@ -63,20 +76,7 @@ namespace Esh3arTech.Messages
 
             await CheckExistanceOrVerifiedMobileNumberAsync(PrepareMobileNumber(recipient));
 
-            var msgToReturn = new Message(_guidGenerator.Create(), $"967{recipient}", MessageType.OneWay);
-            
-            msgToReturn.SetSubject("default");
-
-            if (string.IsNullOrEmpty(content))
-            {
-                throw new UserFriendlyException("Message content with no attachment can't be empty!");
-            }
-
-            msgToReturn.SetMessageContentOrNull(content);
-            msgToReturn.SetMessageStatusType(MessageStatus.Queued);
-            msgToReturn.CreatorId = currentUserId;
-
-            return msgToReturn;
+            return CreateMessage(recipient, content, currentUserId);
         }
 
         public async Task<Message> CreateMessageWithAttachmentFromUiAsync(string recipient, string? content, IRemoteStreamContent stream)
@@ -106,6 +106,24 @@ namespace Esh3arTech.Messages
             return msgToReturn;
         }
 
+        private Message CreateMessage(string recipient, string content, Guid currentUserId)
+        {
+            var msgToReturn = new Message(_guidGenerator.Create(), $"967{recipient}", MessageType.OneWay);
+
+            msgToReturn.SetSubject("default");
+
+            if (string.IsNullOrEmpty(content))
+            {
+                throw new UserFriendlyException("Message content with no attachment can't be empty!");
+            }
+
+            msgToReturn.SetMessageContentOrNull(content);
+            msgToReturn.SetMessageStatusType(MessageStatus.Queued);
+            msgToReturn.CreatorId = currentUserId;
+
+            return msgToReturn;
+        }
+
         private string PrepareMobileNumber(string mobileNumber) => MobileNumberPreparator.PrepareMobileNumber(mobileNumber);
 
         private async Task CheckExistanceOrVerifiedMobileNumberAsync(string mobileNumber)
@@ -113,6 +131,17 @@ namespace Esh3arTech.Messages
             if (!await _mobileUserRepository.AnyAsync(new MobileVerifiedSpecification(mobileNumber).ToExpression()))
             {
                 throw new UserFriendlyException("Mobile not found or not verified!");
+            }
+        }
+
+        private async Task CheckMissingOrNotVerifiedMobileNumberAsync(List<EtTempMobileUserData> numbers) 
+        {
+            var missingNumbers = await _mobileUserRepository.CheckExistanceOrVerifiedMobileNumberAsync(numbers);
+
+            if (missingNumbers.Count > 0)
+            {
+                throw new BusinessException("There are missing or not verified numbers!")
+                    .WithData("missing or not verified numbers", JsonSerializer.Serialize(missingNumbers));
             }
         }
 
