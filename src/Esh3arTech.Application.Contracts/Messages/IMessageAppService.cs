@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Volo.Abp.Application.Dtos;
+using Volo.Abp.Content;
 
 namespace Esh3arTech.Messages
 {
@@ -14,6 +15,8 @@ namespace Esh3arTech.Messages
         Task<MessageDto> SendMessageFromUiAsync(SendOneWayMessageDto input);
 
         Task<MessageDto> SendMessageFromUiWithAttachmentAsync(SendOneWayMessageWithAttachmentFromUiDto input);
+
+        Task SendMessagesFromFile(IRemoteStreamContent file);
 
         Task<IReadOnlyList<PendingMessageDto>> GetPendingMessagesAsync(string phoneNumber);
 

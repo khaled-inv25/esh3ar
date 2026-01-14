@@ -1,4 +1,7 @@
-﻿using Esh3arTech.Messages.SendBehavior;
+﻿using AutoMapper.Internal.Mappers;
+using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Spreadsheet;
+using Esh3arTech.Messages.SendBehavior;
 using Esh3arTech.MobileUsers;
 using Esh3arTech.MobileUsers.Specs;
 using Esh3arTech.Plans;
@@ -7,6 +10,7 @@ using Esh3arTech.Utility;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Volo.Abp;
@@ -106,6 +110,20 @@ namespace Esh3arTech.Messages
             return msgToReturn;
         }
 
+        public async Task<List<Message>> CreateMessagesFromFileAsync(IRemoteStreamContent stream)
+        {
+            var size = CalculateStreamSize(stream);
+
+            if (size > MessageConts.MaxFileSize)
+            {
+                throw new BusinessException("Size is begger than 1Mb try other file!");
+            }
+
+            var messagesTuple = ReadExcel(stream.GetStream());
+
+            return await CreateBatchMessageAsync(messagesTuple.Item2, messagesTuple.Item1);
+        }
+
         private Message CreateMessage(string recipient, string content, Guid currentUserId)
         {
             var msgToReturn = new Message(_guidGenerator.Create(), $"967{recipient}", MessageType.OneWay);
@@ -193,6 +211,69 @@ namespace Esh3arTech.Messages
             return $"{msgId}{extension}";
         }
 
+        private (List<EtTempMobileUserData>, List<BatchMessage>) ReadExcel(Stream stream)
+        {
+            (List<EtTempMobileUserData>, List<BatchMessage>) tuple = ([], []);
+
+            int typeCounter = 0;
+            CellType cellType = CellType.Number;
+
+            using SpreadsheetDocument doc = SpreadsheetDocument.Open(stream, false);
+            WorkbookPart workbookPart = doc.WorkbookPart;
+
+            Sheet sheet = workbookPart.Workbook.Sheets.GetFirstChild<Sheet>();
+            WorksheetPart worksheetPart = (WorksheetPart)workbookPart.GetPartById(sheet.Id);
+            SheetData sheetData = worksheetPart.Worksheet.Elements<SheetData>().First();
+
+            foreach (Row row in sheetData.Elements<Row>())
+            {
+                var mobileNumber = string.Empty;
+                var message = string.Empty;
+                var subject = string.Empty;
+
+                foreach (Cell cell in row.Elements<Cell>())
+                {
+
+                    string value = GetCellValue(doc, cell);
+                    cellType = (CellType)(typeCounter % 3);
+
+                    switch(cellType)
+                    {
+                        case CellType.Number:
+                            mobileNumber = value;
+                            break;
+                        case CellType.Message:
+                            message = value;
+                            break;
+                        case CellType.Subject:
+                            subject = value;
+                            break;
+                    }
+
+                    typeCounter++;
+                }
+
+                tuple.Item1.Add(new EtTempMobileUserData() { MobileNumber = MobileNumberPreparator.PrepareMobileNumber(mobileNumber) });
+                tuple.Item2.Add(new BatchMessage() { MobileNumber = mobileNumber, MessageContent = message, Subject = subject });
+            }
+
+
+            return tuple;
+        }
+
+        private string GetCellValue(SpreadsheetDocument doc, Cell cell)
+        {
+            string value = cell.CellValue?.InnerText;
+
+            if (cell.DataType != null && cell.DataType.Value == CellValues.SharedString)
+            {
+                return doc.WorkbookPart.SharedStringTablePart.SharedStringTable
+                          .ChildElements[int.Parse(value)].InnerText;
+            }
+            return value;
+        }
+
+        private enum CellType { Number = 0, Message = 1, Subject = 2 }
         #endregion
     }
 }

@@ -1,12 +1,13 @@
 ﻿$(function () {
     var l = abp.localization.getResource('Esh3arTech');
     var sendModal = new abp.ModalManager(abp.appPath + 'Messages/SendMessageModal');
+    var uploadFileModal = new abp.ModalManager(abp.appPath + 'UploadFiles/UploadFileModal');
 
     var dataTable = $('#MessagesTable').DataTable(
         abp.libs.datatables.normalizeConfiguration({
             serverSide: true,
             paging: true,
-            order: [[0, "desc"]],
+            order: [[1, "desc"]],
             searching: false,
             scrollX: true,
             ajax: abp.libs.datatables.createAjax(esh3arTech.messages.message.getOneWayMessages),
@@ -42,6 +43,11 @@
     $('#SendMsgBtn').click(function (e) {
         e.preventDefault();
         sendModal.open();
+    });
+
+    $('#UploadFileBtn').click(function (e) {
+        e.preventDefault();
+        uploadFileModal.open();
     });
 
 });

@@ -13,9 +13,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
+using Volo.Abp.Content;
 using Volo.Abp.Domain.Repositories;
-using Volo.Abp.EventBus.Distributed;
-using Volo.Abp.ObjectMapping;
 using Volo.Abp.Uow;
 
 namespace Esh3arTech.Messages
@@ -64,9 +63,9 @@ namespace Esh3arTech.Messages
             var batchMessages = ObjectMapper.Map<List<BatchMessageItem>, List<BatchMessage>>(input.BatchMessages);
             var numbers = ObjectMapper.Map<List<BatchMessageItem>, List<EtTempMobileUserData>>(input.BatchMessages);
 
-            var messagesCreated = await CreateBatchMessageAsync(batchMessages, numbers);
+            var createdMessages = await CreateBatchMessageAsync(batchMessages, numbers);
 
-            return await _highThroughputBatchMessageBuffer.TryWriteAsync(messagesCreated, TimeSpan.FromMilliseconds(50));
+            return await _highThroughputBatchMessageBuffer.TryWriteAsync(createdMessages, TimeSpan.FromMilliseconds(50));
         }
 
         [Authorize(Esh3arTechPermissions.Esh3arSendMessages)]
@@ -107,6 +106,14 @@ namespace Esh3arTech.Messages
             return new MessageDto { Id = createdMessageWithAttachment.Id };
         }
 
+        public async Task SendMessagesFromFile(IRemoteStreamContent file)
+        {
+            var messageManager = _messageFactory.Create(MessageType.OneWay);
+            var createdMessages = await messageManager.CreateMessagesFromFileAsync(file);
+
+            await _highThroughputBatchMessageBuffer.TryWriteAsync(createdMessages, TimeSpan.FromMilliseconds(50));
+        }
+
         public async Task<IReadOnlyList<PendingMessageDto>> GetPendingMessagesAsync(string phoneNumber)
         {
             phoneNumber = MobileNumberPreparator.PrepareMobileNumber(phoneNumber);
@@ -127,18 +134,18 @@ namespace Esh3arTech.Messages
             var queryable = await _messageRepository.GetQueryableAsync();
             var currentUserId = CurrentUser.Id!.Value;
 
-            queryable = queryable
-                .Where(m => m.CreatorId.Equals(currentUserId))
-                .Skip(input.SkipCount)
-                .Take(input.MaxResultCount)
-                .OrderByDescending(m => m.CreationTime);
+            var sorting = input.Sorting.IsNullOrWhiteSpace() ? $"{nameof(Message.CreationTime)} DESC" : input.Sorting;
 
-            var messages = await AsyncExecuter.ToListAsync(queryable);
-            var count = await AsyncExecuter.CountAsync(queryable);
+            var filteredQueryByUser = queryable.Where(m => m.CreatorId == currentUserId);
 
-            var dtos = ObjectMapper.Map<List<Message>, List<MessageInListDto>>(messages);
+            var filteredQuery = filteredQueryByUser
+                .OrderByDescending(m => m.CreationTime)
+                .PageBy(input.SkipCount, input.MaxResultCount);
 
-            return new PagedResultDto<MessageInListDto>(count, dtos);
+            var messages = await AsyncExecuter.ToListAsync(filteredQuery);
+            var totalCount = await AsyncExecuter.CountAsync(filteredQueryByUser);
+
+            return new PagedResultDto<MessageInListDto>(totalCount, ObjectMapper.Map<List<Message>, List<MessageInListDto>>(messages));
         }
 
         public async Task<object> GetMessageById(Guid messageId)
@@ -173,6 +180,7 @@ namespace Esh3arTech.Messages
 
             return createdList;
         }
+
         #endregion
     }
 }

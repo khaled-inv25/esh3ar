@@ -1,0 +1,23 @@
+﻿@page
+@using Esh3arTech.Localization
+@using Microsoft.Extensions.Localization
+@using Volo.Abp.AspNetCore.Mvc.UI.Bootstrap.TagHelpers.Modal
+@model Esh3arTech.Web.Pages.UploadFiles.UploadFileModalModel
+@inject IStringLocalizer<Esh3arTechResource> L
+@{
+    Layout = null;
+}
+
+<form asp-page="/UploadFiles/UploadFileModal">
+    <abp-modal size="ExtraLarge">
+        <abp-modal-header title="Upload file"></abp-modal-header>
+        <abp-modal-body>
+            <div class="row justify-content-center">
+                <div class="col-md-6">
+                    <abp-input asp-for="File.ImportFile" type="file" id="UploadFile" label="@L["UploadFile"]"></abp-input>
+                </div>
+            </div>
+        </abp-modal-body>
+        <abp-modal-footer buttons="@(AbpModalButtons.Cancel|AbpModalButtons.Save)"></abp-modal-footer>
+    </abp-modal>
+</form>

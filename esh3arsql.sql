@@ -144,26 +144,7 @@ SELECT
     END AS StatusDescription,
 	EtMessages.*
 FROM EtMessages ORDER BY CreationTime DESC
-
-SELECT 
-	MessageContent,
-	RecipientPhoneNumber,
-	 CASE 
-        WHEN Status = 0 THEN 'Pending'
-        WHEN Status = 1 THEN 'Sent'
-        WHEN Status = 2 THEN 'Delivered'
-        WHEN Status = 3 THEN 'Read'
-        WHEN Status = 4 THEN 'Queued'
-        WHEN Status = 5 THEN 'Failed'
-        ELSE 'Unknown'
-    END AS StatusDescription,
-	RetryCount,
-	LastRetryAt,
-	NextRetryAt,
-	FailureReason,
-	CreatorId,
-	CreationTime
-	FROM EtMessages ORDER BY CreationTime DESC
+   
 
 SELECT * FROM EtMessages ORDER BY CreationTime DESC
 

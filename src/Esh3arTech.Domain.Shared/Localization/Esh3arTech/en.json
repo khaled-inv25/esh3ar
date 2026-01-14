@@ -73,6 +73,7 @@
     "AutoRenew": "Auto Renew",
     "IsActive": "Active",
     "UploadImage": "Max image size 1MB",
+    "UploadFile": "Upload file",
     "SuccessfullyDeleted": "Deleted Successfully"
   }
 }

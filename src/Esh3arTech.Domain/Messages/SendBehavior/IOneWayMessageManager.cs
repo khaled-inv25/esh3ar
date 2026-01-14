@@ -10,5 +10,6 @@ namespace Esh3arTech.Messages.SendBehavior
         Task<Message> CreateMessageAsync(string recipient, string content);
         Task<Message> CreateMessageWithAttachmentFromUiAsync(string recipient, string? content, IRemoteStreamContent stream);
         Task<List<Message>> CreateBatchMessageAsync(List<BatchMessage> data, List<EtTempMobileUserData> numbers);
+        Task<List<Message>> CreateMessagesFromFileAsync(IRemoteStreamContent stream);
     }
 }
