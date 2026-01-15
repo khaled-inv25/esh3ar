@@ -257,7 +257,6 @@ namespace Esh3arTech.Messages
                 tuple.Item2.Add(new BatchMessage() { MobileNumber = mobileNumber, MessageContent = message, Subject = subject });
             }
 
-
             return tuple;
         }
 
