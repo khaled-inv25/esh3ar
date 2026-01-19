@@ -1,5 +1,6 @@
 ﻿using Esh3arTech.Abp.Blob.Services;
-using Esh3arTech.Messages.Buffer;
+using Esh3arTech.BackgroundJobs;
+using Esh3arTech.Messages.Eto;
 using Esh3arTech.Messages.SendBehavior;
 using Esh3arTech.Messages.Specs;
 using Esh3arTech.MobileUsers;
@@ -13,8 +14,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using Volo.Abp;
 using Volo.Abp.Application.Dtos;
+using Volo.Abp.BackgroundJobs;
 using Volo.Abp.Content;
 using Volo.Abp.Domain.Repositories;
+using Volo.Abp.EventBus.Distributed;
 using Volo.Abp.Uow;
 
 namespace Esh3arTech.Messages
@@ -27,9 +30,9 @@ namespace Esh3arTech.Messages
         private readonly IMessageRepository _messageRepository;
         private readonly IMobileUserRepository _mobileUserRepository;
         private readonly IBlobService _blobService;
-        private readonly IHighThroughputMessageBuffer _highThroughputMessageBuffer;
-        private readonly IHighThroughputBatchMessageBuffer _highThroughputBatchMessageBuffer;
         private readonly IUnitOfWorkManager _unitOfWorkManager;
+        private readonly IDistributedEventBus _distributedEventBus;
+        private readonly IBackgroundJobManager _backgroundJobManager;
 
         #endregion
 
@@ -40,17 +43,17 @@ namespace Esh3arTech.Messages
             IMessageRepository messageRepository,
             IMobileUserRepository mobileUserRepository,
             IBlobService blobService,
-            IHighThroughputMessageBuffer highThroughputMessageBuffer,
-            IHighThroughputBatchMessageBuffer highThroughputBatchMessageBuffer,
-            IUnitOfWorkManager unitOfWorkManager)
+            IUnitOfWorkManager unitOfWorkManager,
+            IDistributedEventBus distributedEventBus,
+            IBackgroundJobManager backgroundJobManager)
         {
             _messageFactory = messageFactory;
             _messageRepository = messageRepository;
             _mobileUserRepository = mobileUserRepository;
             _blobService = blobService;
-            _highThroughputMessageBuffer = highThroughputMessageBuffer;
-            _highThroughputBatchMessageBuffer = highThroughputBatchMessageBuffer;
             _unitOfWorkManager = unitOfWorkManager;
+            _distributedEventBus = distributedEventBus;
+            _backgroundJobManager = backgroundJobManager;
         }
 
         #endregion
@@ -65,7 +68,9 @@ namespace Esh3arTech.Messages
 
             var createdMessages = await CreateBatchMessageAsync(batchMessages, numbers);
 
-            return await _highThroughputBatchMessageBuffer.TryWriteAsync(createdMessages, TimeSpan.FromMilliseconds(50));
+            await _backgroundJobManager.EnqueueAsync(new BatchMessageIngestionArg { Messages = createdMessages });
+
+            return true;
         }
 
         [Authorize(Esh3arTechPermissions.Esh3arSendMessages)]
@@ -73,7 +78,7 @@ namespace Esh3arTech.Messages
         {
             var createdMessage = await CreateMessageAsync(input);
 
-            await _highThroughputMessageBuffer.TryWriteAsync(createdMessage, TimeSpan.FromMilliseconds(50));
+            await _distributedEventBus.PublishAsync(ObjectMapper.Map<Message, SendOneWayMessageEto>(createdMessage));
 
             return new MessageDto { Id = createdMessage.Id };
         }
@@ -83,9 +88,7 @@ namespace Esh3arTech.Messages
         {
             var createdMessage = await CreateMessageAsync(input);
 
-            using var uow = _unitOfWorkManager.Begin(requiresNew: true);
-            await _messageRepository.InsertAsync(createdMessage);
-            await uow.CompleteAsync();
+            await _backgroundJobManager.EnqueueAsync(new SendMessageFromUiArg { Message = createdMessage });
 
             return new MessageDto { Id = createdMessage.Id };
         }
@@ -99,9 +102,8 @@ namespace Esh3arTech.Messages
             var attachment = createdMessageWithAttachment.Attachments.FirstOrDefault();
             await _blobService.SaveToFileSystemAsync(input.ImageStreamContent, attachment!.FileName);
 
-            using var uow = _unitOfWorkManager.Begin(requiresNew: true);
-            await _messageRepository.InsertAsync(createdMessageWithAttachment);
-            await uow.CompleteAsync();
+            var arg = ObjectMapper.Map<Message, SendMessageFromUiWithAttachmentArg>(createdMessageWithAttachment);
+            await _backgroundJobManager.EnqueueAsync(arg);
 
             return new MessageDto { Id = createdMessageWithAttachment.Id };
         }
@@ -111,7 +113,7 @@ namespace Esh3arTech.Messages
             var messageManager = _messageFactory.Create(MessageType.OneWay);
             var createdMessages = await messageManager.CreateMessagesFromFileAsync(file);
 
-            await _highThroughputBatchMessageBuffer.TryWriteAsync(createdMessages, TimeSpan.FromMilliseconds(50));
+            //await _highThroughputBatchMessageBuffer.TryWriteAsync(createdMessages, TimeSpan.FromMilliseconds(50));
         }
 
         public async Task<IReadOnlyList<PendingMessageDto>> GetPendingMessagesAsync(string phoneNumber)

@@ -9,6 +9,6 @@ namespace Esh3arTech.Messages
     {
         Task<List<Message>> GetFailedOrQueuedMessagesAsync();
 
-        Task BulkInsertMessages(List<Message> messages);
+        Task BulkInsertMessagesAsync(List<Message> messages);
     }
 }

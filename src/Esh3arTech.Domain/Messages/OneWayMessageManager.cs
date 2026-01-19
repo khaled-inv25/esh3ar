@@ -1,5 +1,4 @@
-﻿using AutoMapper.Internal.Mappers;
-using DocumentFormat.OpenXml.Packaging;
+﻿using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
 using Esh3arTech.Messages.SendBehavior;
 using Esh3arTech.MobileUsers;
@@ -85,13 +84,15 @@ namespace Esh3arTech.Messages
 
         public async Task<Message> CreateMessageWithAttachmentFromUiAsync(string recipient, string? content, IRemoteStreamContent stream)
         {
-            await _userPlanManager.CanSendMessageAsync(_currentUser.Id!.Value);
+            var currentUserId = _currentUser.Id!.Value;
+            await _userPlanManager.CanSendMessageAsync(currentUserId);
 
             await CheckExistanceOrVerifiedMobileNumberAsync(PrepareMobileNumber(recipient));
 
             var msgToReturn = new Message(_guidGenerator.Create(), $"967{recipient}", MessageType.OneWay);
             msgToReturn.SetSubject("default");
             msgToReturn.SetMessageContentOrNull(content ?? null);
+            msgToReturn.CreatorId = currentUserId;
             msgToReturn.SetMessageStatusType(MessageStatus.Queued);
 
             var size = CalculateStreamSize(stream);
@@ -273,6 +274,7 @@ namespace Esh3arTech.Messages
         }
 
         private enum CellType { Number = 0, Message = 1, Subject = 2 }
+
         #endregion
     }
 }

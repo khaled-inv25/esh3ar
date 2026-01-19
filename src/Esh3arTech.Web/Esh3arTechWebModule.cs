@@ -3,7 +3,6 @@ using Esh3arTech.Abp.Worker;
 using Esh3arTech.Abp.Worker.Messages;
 using Esh3arTech.EntityFrameworkCore;
 using Esh3arTech.Localization;
-using Esh3arTech.Messages.BackgroundWorkers;
 using Esh3arTech.MultiTenancy;
 using Esh3arTech.Web.HealthChecks;
 using Esh3arTech.Web.Menus;
@@ -37,6 +36,7 @@ using Volo.Abp.AspNetCore.SignalR;
 using Volo.Abp.Autofac;
 using Volo.Abp.AutoMapper;
 using Volo.Abp.BackgroundJobs.Hangfire;
+using Volo.Abp.BackgroundJobs.RabbitMQ;
 using Volo.Abp.BackgroundWorkers;
 using Volo.Abp.BlobStoring;
 using Volo.Abp.BlobStoring.FileSystem;
@@ -73,7 +73,8 @@ namespace Esh3arTech.Web;
     typeof(AbpEventBusRabbitMqModule),
     typeof(AbpAspNetCoreSignalRModule),
     typeof(Esh3arTechAbpBlobModule),
-    typeof(Esh3arTechAbpWorkerModule)
+    typeof(Esh3arTechAbpWorkerModule),
+    typeof(AbpBackgroundJobsRabbitMqModule)
 )]
 public class Esh3arTechWebModule : AbpModule
 {
@@ -325,8 +326,6 @@ public class Esh3arTechWebModule : AbpModule
 
         // Register background workers
         context.AddBackgroundWorkerAsync<MessageRetryWorker>().GetAwaiter().GetResult();
-        context.AddBackgroundWorkerAsync<MessageIngestionWorker>();
-        context.AddBackgroundWorkerAsync<BatchMessageIngestionWorker>();
 
         app.UseForwardedHeaders();
 

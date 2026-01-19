@@ -18,7 +18,7 @@ namespace Esh3arTech.EntityFrameworkCore.Messages
         {
         }
 
-        public async Task BulkInsertMessages(List<Message> messages)
+        public async Task BulkInsertMessagesAsync(List<Message> messages)
         {
             var dbContext = await GetDbContextAsync();
             var connection = dbContext.Database.GetDbConnection();
@@ -30,7 +30,7 @@ namespace Esh3arTech.EntityFrameworkCore.Messages
 
             await dbContext.BulkInsertAsync(messages, new BulkConfig()
             {
-                CustomDestinationTableName = "EtMessages"
+                CustomDestinationTableName = Esh3arTechConsts.TblMessage
             });
         }
 

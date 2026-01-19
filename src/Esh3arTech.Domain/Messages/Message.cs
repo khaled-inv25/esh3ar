@@ -59,6 +59,20 @@ namespace Esh3arTech.Messages
             Attachments = new Collection<MessageAttachment>();
         }
 
+        private Message(Guid id, Guid creatorId, string recipientPhoneNumber, string messageContent, string subject, bool isMedia = false) 
+            : base(id)
+        {
+            CreatorId = creatorId;
+            SetRecipientPhoneNumber(recipientPhoneNumber);
+            SetSubject(subject);
+            MessageContent = (isMedia) ? messageContent : Check.NotNullOrWhiteSpace(messageContent, nameof(messageContent));
+            SetMessageType(MessageType.OneWay);
+            SetPriority(Priority.Normal);
+            SetMessageStatusType(MessageStatus.Queued);
+            Attachments = new Collection<MessageAttachment>();
+        }        
+        
+
         public Message SetRecipientPhoneNumber(string number)
         {
             RecipientPhoneNumber = Check.NotNullOrWhiteSpace(number, nameof(number));
@@ -169,6 +183,35 @@ namespace Esh3arTech.Messages
             NextRetryAt = null;
 
             return this;
+        }
+
+        public static Message CreateOneWayMessage( 
+            Guid id, 
+            Guid creatorId, 
+            string recipientPhoneNumber,
+            string content, 
+            string subject = "default")
+        {
+            return new Message(id, creatorId, recipientPhoneNumber, content, subject);
+        }
+        
+        public static Message CreateOneWayMessageWithAttachment( 
+            Guid id, 
+            Guid creatorId,
+            Guid attachmentId, 
+            string recipientPhoneNumber,
+            string content, 
+            string fileName,
+            string type,
+            string accessUrl,
+            DateTime? urlExpiresAt = null,
+            string subject = "default"
+            )
+        {
+            var message = new Message(id, creatorId, recipientPhoneNumber, content, subject, isMedia: true);
+            message.AddAttachment(attachmentId, fileName, type, accessUrl, urlExpiresAt);
+
+            return message;
         }
 
         private void MarkAsDelivered()

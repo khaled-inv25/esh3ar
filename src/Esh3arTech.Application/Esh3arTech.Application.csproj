@@ -26,6 +26,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Messages\BackgroundWorkers\" />
     <Folder Include="Messages\SendBehaviors\" />
   </ItemGroup>
 

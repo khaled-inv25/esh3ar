@@ -33,27 +33,27 @@ FROM EtUserPlans
 --TRUNCATE TABLE [Esh3arTechDb_v101].[dbo].[AbpFeatureValues]
 
 
--- Users section
+--Users section
 SELECT * FROM [Esh3arTechDb_v101].[dbo].[AbpUsers]
 
 SELECT * FROM [Esh3arTechDb_v101].[dbo].[AbpUserRoles]
 
 SELECT * FROM [Esh3arTechDb_v101].[dbo].[AbpRoles]
 
--- Plan Section
+--Plan Section
 SELECT * FROM [Esh3arTechDb_v101].[dbo].[EtUserPlans]
 
-TRUNCATE TABLE [Esh3arTechDb_v101].[dbo].[EtUserPlans]
+--TRUNCATE TABLE [Esh3arTechDb_v101].[dbo].[EtUserPlans]
 
-Insert into EtUserPlans (Id, Name, DisplayName, CreationTime, CreatorId, IsDeleted)
-values(NEWID(), 'primeum', 'Primeum', GETDATE(), '3AA83D86-A3D9-14A1-83E5-3A1D8A462EFD', 0);
+--Insert into EtUserPlans (Id, Name, DisplayName, CreationTime, CreatorId, IsDeleted)
+--values(NEWID(), 'primeum', 'Primeum', GETDATE(), '3AA83D86-A3D9-14A1-83E5-3A1D8A462EFD', 0);
 
-Insert into EtUserPlans (Id, Name, DisplayName, CreationTime, CreatorId, IsDeleted)
-values(NEWID(), 'free', 'Free', GETDATE(), '3AA83D86-A3D9-14A1-83E5-3A1D8A462EFD', 0);
+--Insert into EtUserPlans (Id, Name, DisplayName, CreationTime, CreatorId, IsDeleted)
+--values(NEWID(), 'free', 'Free', GETDATE(), '3AA83D86-A3D9-14A1-83E5-3A1D8A462EFD', 0);
 
-UPDATE EtUserPlans SET ExpiringPlanId = '1C78910F-F10C-602B-CCFA-3A1DC7235E7F' Where Id = '5F82439A-8516-D297-8ADE-3A1DC7246E18'
+--UPDATE EtUserPlans SET ExpiringPlanId = '1C78910F-F10C-602B-CCFA-3A1DC7235E7F' Where Id = '5F82439A-8516-D297-8ADE-3A1DC7246E18'
 
-UPDATE EtUserPlans SET AnnualPrice = 60 Where Id = 'D55FB645-A065-44E8-964D-87780C2E9982'
+--UPDATE EtUserPlans SET AnnualPrice = 60 Where Id = 'D55FB645-A065-44E8-964D-87780C2E9982'
 
 SELECT up.Name, up.DisplayName, sup.DisplayName as ExpireName from EtUserPlans up
 left join EtUserPlans sup on up.ExpiringPlanId = sup.Id
@@ -79,27 +79,27 @@ Where EtSubscriptionRenewalHistory.SubscriptionId = 'E59F998D-6358-DEED-40EE-3A1
 
 SELECT * FROM AbpUsers
 
-DELETE FROM EtSubscriptions
+--DELETE FROM EtSubscriptions
 
-TRUNCATE TABLE EtSubscriptionRenewalHistory
+--TRUNCATE TABLE EtSubscriptionRenewalHistory
 
-UPDATE AbpUsers SET PlanId = null
+--UPDATE AbpUsers SET PlanId = null
 
-UPDATE EtSubscriptions SET StartDate = DATEADD(DAY, -1, StartDate)
+--UPDATE EtSubscriptions SET StartDate = DATEADD(DAY, -1, StartDate)
 
-UPDATE EtSubscriptions SET EndDate = DATEADD(DAY, -1, EndDate)
+--UPDATE EtSubscriptions SET EndDate = DATEADD(DAY, -1, EndDate)
 
-UPDATE EtSubscriptions SET NextBill = DATEADD(DAY, -1, NextBill)
+--UPDATE EtSubscriptions SET NextBill = DATEADD(DAY, -1, NextBill)
 
-UPDATE EtSubscriptionRenewalHistory SET RenewalDate = DATEADD(DAY, -1, RenewalDate)
+--UPDATE EtSubscriptionRenewalHistory SET RenewalDate = DATEADD(DAY, -1, RenewalDate)
 
-UPDATE EtSubscriptionRenewalHistory SET PeriodStartDate = DATEADD(DAY, -1, PeriodStartDate)
+--UPDATE EtSubscriptionRenewalHistory SET PeriodStartDate = DATEADD(DAY, -1, PeriodStartDate)
 
-UPDATE EtSubscriptionRenewalHistory SET PeriodEndDate = DATEADD(DAY, -1, PeriodEndDate)
+--UPDATE EtSubscriptionRenewalHistory SET PeriodEndDate = DATEADD(DAY, -1, PeriodEndDate)
 
 SELECT * FROM EtUserPlans
 
-UPDATE EtSubscriptions SET IsActive = 1
+--UPDATE EtSubscriptions SET IsActive = 1
 
 -- Messages sections
 -- Pending = 0,    // Created, not yet sent
@@ -144,48 +144,45 @@ SELECT
     END AS StatusDescription,
 	EtMessages.*
 FROM EtMessages ORDER BY CreationTime DESC
-   
+ 
+--UPDATE EtMessages SET Status = 0;
 
 SELECT * FROM EtMessages ORDER BY CreationTime DESC
 
-SELECT * FROM AbpUsers WHERE Id = '64FC8C10-E373-F108-4B13-3A1E7B04D324'
-
 SELECT * FROM EtMessageAttachments
 
-UPDATE EtMessages SET CreatorId = 'DAD566BE-82EF-E9FD-4584-3A1E7B04D314'
+--UPDATE EtMessages SET CreatorId = 'DAD566BE-82EF-E9FD-4584-3A1E7B04D314'
 
-DELETE EtMessages WHERE CreatorId Is Null
+--DELETE FROM EtMessages WHERE CreatorId Is Null
 
 SELECT COUNT(*) FROM EtMessages
 
 
-UPDATE EtMessages SET CreatorId = 'DAD566BE-82EF-E9FD-4584-3A1E7B04D314'
+--UPDATE EtMessages SET CreatorId = 'DAD566BE-82EF-E9FD-4584-3A1E7B04D314'
 
 SELECT * FROM EtMessages ORDER BY CreationTime DESC
 
-DELETE FROM EtMessages 
+--DELETE FROM EtMessages 
 
 SELECT * FROM EtMessages WHERE Id = '0D429AAC-FAD9-3187-115B-3A1E7210D640'
 
 
 SELECT * FROM EtMessageAttachments
 
-DELETE FROM EtMessages
+--DELETE FROM EtMessages
 
-DELETE FROM EtMessageAttachments
+--DELETE FROM EtMessageAttachments
 
-update EtMessages set Status = 2
+--update EtMessages set Status = 2
 
 SELECT * FROM EtMessages
 
 SELECT COUNT(*) FROM EtMessages
 
-
-
-UPDATE EtMessages SET Status = 2
--- Mobile sections
-SELECT * FROM AbpUsers
-SELECT * FROM EtMobileUsers
+--UPDATE EtMessages SET Status = 2
+---- Mobile sections
+--SELECT * FROM AbpUsers
+--SELECT * FROM EtMobileUsers
 
 SELECT * FROM EtMobileUsers
 -- INSERT INTO EtMobileUsers (Id, MobileNumber, Status, IsStatic, CreationTime, IsDeleted)
