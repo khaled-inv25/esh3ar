@@ -1,11 +1,13 @@
 ﻿using Esh3arTech.Messages;
 using Esh3arTech.Messages.Delivery;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Volo.Abp.BackgroundJobs;
 using Volo.Abp.DependencyInjection;
+using Volo.Abp.ObjectMapping;
 
 namespace Esh3arTech.BackgroundJobs
 {
@@ -28,12 +30,16 @@ namespace Esh3arTech.BackgroundJobs
             await _semaphore.WaitAsync();
             try
             {
-                await _messageRepository.BulkInsertMessagesAsync(args.Messages);
+                var messages = args.EnqueueMessages
+                    .Select(msg => Message.CreateOneWayMessage(msg.Id, msg.CreatorId!.Value, msg.RecipientPhoneNumber, msg.MessageContent))
+                    .ToList();
+                await _messageRepository.BulkInsertMessagesAsync(messages);
 
-                await _messageDeliveryService.DeliverBatchMessageAsync( new DeliverBatchMessageDto 
-                {
-                    JsonMessages = SerializeMessages(args.Messages)
-                });
+                await _messageDeliveryService.DeliverBatchMessageAsync(
+                    new DeliverBatchMessageDto
+                    {
+                        JsonMessages = SerializeMessages(args.EnqueueMessages)
+                    });
             }
             finally
             {
@@ -41,7 +47,7 @@ namespace Esh3arTech.BackgroundJobs
             }
         }
 
-        private string SerializeMessages(List<Message> messages)
+        private string SerializeMessages(List<EnqueueBatchMessageDto> messages)
         {
             return JsonSerializer.Serialize(messages);
         }

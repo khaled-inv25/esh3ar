@@ -5,6 +5,7 @@ namespace Esh3arTech;
 public static class Esh3arTechConsts
 {
     public const string DbTablePrefix = "Et";
+    public const string QueuePrefix = "Esh3arTech";
 
     public const string? DbSchema = null;
     public const string AdminEmailDefaultValue = IdentityDataSeedContributor.AdminEmailDefaultValue;
@@ -30,4 +31,10 @@ public static class Esh3arTechConsts
         public const string ReceiveMessage = "ReceiveMessage";
     }
 
+    public static class BackgroundJobNames
+    {
+        public const string BatchMessageArg = "IngestionBatchMessageArg";
+        public const string SendMessageFromUiArg = "SendMessageFromUiArg";
+        public const string SendMessageFromUiWithAttachmentArg = "SendMessageFromUiWithAttachmentArg";
+    }
 }

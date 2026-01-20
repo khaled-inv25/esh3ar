@@ -18,7 +18,6 @@ using Volo.Abp.BackgroundJobs;
 using Volo.Abp.Content;
 using Volo.Abp.Domain.Repositories;
 using Volo.Abp.EventBus.Distributed;
-using Volo.Abp.Uow;
 
 namespace Esh3arTech.Messages
 {
@@ -30,7 +29,6 @@ namespace Esh3arTech.Messages
         private readonly IMessageRepository _messageRepository;
         private readonly IMobileUserRepository _mobileUserRepository;
         private readonly IBlobService _blobService;
-        private readonly IUnitOfWorkManager _unitOfWorkManager;
         private readonly IDistributedEventBus _distributedEventBus;
         private readonly IBackgroundJobManager _backgroundJobManager;
 
@@ -43,7 +41,6 @@ namespace Esh3arTech.Messages
             IMessageRepository messageRepository,
             IMobileUserRepository mobileUserRepository,
             IBlobService blobService,
-            IUnitOfWorkManager unitOfWorkManager,
             IDistributedEventBus distributedEventBus,
             IBackgroundJobManager backgroundJobManager)
         {
@@ -51,7 +48,6 @@ namespace Esh3arTech.Messages
             _messageRepository = messageRepository;
             _mobileUserRepository = mobileUserRepository;
             _blobService = blobService;
-            _unitOfWorkManager = unitOfWorkManager;
             _distributedEventBus = distributedEventBus;
             _backgroundJobManager = backgroundJobManager;
         }
@@ -68,7 +64,12 @@ namespace Esh3arTech.Messages
 
             var createdMessages = await CreateBatchMessageAsync(batchMessages, numbers);
 
-            await _backgroundJobManager.EnqueueAsync(new BatchMessageIngestionArg { Messages = createdMessages });
+            var arg = new BatchMessageIngestionArg
+            {
+                EnqueueMessages = ObjectMapper.Map<List<Message>, List<EnqueueBatchMessageDto>>(createdMessages),
+            };
+
+            await _backgroundJobManager.EnqueueAsync(arg);
 
             return true;
         }
@@ -92,7 +93,7 @@ namespace Esh3arTech.Messages
 
             return new MessageDto { Id = createdMessage.Id };
         }
-        
+
         [Authorize(Esh3arTechPermissions.Esh3arSendMessages)]
         public async Task<MessageDto> SendMessageFromUiWithAttachmentAsync(SendOneWayMessageWithAttachmentFromUiDto input)
         {
@@ -113,7 +114,12 @@ namespace Esh3arTech.Messages
             var messageManager = _messageFactory.Create(MessageType.OneWay);
             var createdMessages = await messageManager.CreateMessagesFromFileAsync(file);
 
-            //await _highThroughputBatchMessageBuffer.TryWriteAsync(createdMessages, TimeSpan.FromMilliseconds(50));
+            var arg = new BatchMessageIngestionArg
+            {
+                EnqueueMessages = ObjectMapper.Map<List<Message>, List<EnqueueBatchMessageDto>>(createdMessages),
+            };
+
+            await _backgroundJobManager.EnqueueAsync(arg);
         }
 
         public async Task<IReadOnlyList<PendingMessageDto>> GetPendingMessagesAsync(string phoneNumber)

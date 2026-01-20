@@ -2,11 +2,9 @@
 using System;
 using System.Collections.Generic;
 using Volo.Abp.Application.Dtos;
-using Volo.Abp.BackgroundJobs;
 
 namespace Esh3arTech.BackgroundJobs
 {
-    [BackgroundJobName("SendMessageFromUiWithAttachmentArg")]
     public class SendMessageFromUiWithAttachmentArg : AuditedEntityDto<Guid>
     {
         public string RecipientPhoneNumber { get; set; }

@@ -24,12 +24,11 @@ public class Esh3arTechApplicationAutoMapperProfile : Profile
         CreateMap<Subscription, SubscriptionDto>();
         CreateMap<SubscriptionRenewalHistory, SubscriptionHistoryInListDto>();
 
-        CreateMap<BroadcastMessageDto, BroadcastMessageEvent>();
-
         CreateMap<Message, PendingMessageDto>();
         CreateMap<Message, SendOneWayMessageEto>();
         CreateMap<Message, MessageInListDto>();
         CreateMap<Message, SendMessageFromUiWithAttachmentArg>();
+        CreateMap<Message, EnqueueBatchMessageDto>();
         CreateMap<BatchMessageItem, BatchMessage>();
         CreateMap<BatchMessageItem, EtTempMobileUserData>();
     }

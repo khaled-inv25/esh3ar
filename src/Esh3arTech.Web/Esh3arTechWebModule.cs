@@ -1,6 +1,7 @@
 using Esh3arTech.Abp.Blob;
 using Esh3arTech.Abp.Worker;
 using Esh3arTech.Abp.Worker.Messages;
+using Esh3arTech.BackgroundJobs;
 using Esh3arTech.EntityFrameworkCore;
 using Esh3arTech.Localization;
 using Esh3arTech.MultiTenancy;
@@ -12,6 +13,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -35,6 +37,7 @@ using Volo.Abp.AspNetCore.Serilog;
 using Volo.Abp.AspNetCore.SignalR;
 using Volo.Abp.Autofac;
 using Volo.Abp.AutoMapper;
+using Volo.Abp.BackgroundJobs;
 using Volo.Abp.BackgroundJobs.Hangfire;
 using Volo.Abp.BackgroundJobs.RabbitMQ;
 using Volo.Abp.BackgroundWorkers;
@@ -53,6 +56,7 @@ using Volo.Abp.TenantManagement.Web;
 using Volo.Abp.UI.Navigation;
 using Volo.Abp.UI.Navigation.Urls;
 using Volo.Abp.VirtualFileSystem;
+using static Esh3arTech.Esh3arTechConsts;
 
 namespace Esh3arTech.Web;
 
@@ -69,7 +73,7 @@ namespace Esh3arTech.Web;
     typeof(AbpFeatureManagementWebModule),
     typeof(AbpSwashbuckleModule),
     typeof(AbpAspNetCoreSerilogModule),
-    typeof(AbpBackgroundJobsHangfireModule),
+    //typeof(AbpBackgroundJobsHangfireModule),
     typeof(AbpEventBusRabbitMqModule),
     typeof(AbpAspNetCoreSignalRModule),
     typeof(Esh3arTechAbpBlobModule),
@@ -153,7 +157,7 @@ public class Esh3arTechWebModule : AbpModule
         ConfigureNavigationServices();
         ConfigureAutoApiControllers();
         ConfigureSwaggerServices(context.Services);
-        ConfigureHangfire(context, configuration);
+        //ConfigureHangfire(context, configuration);
         ConfigureBlobStoringFileSystem(configuration);
         ConfigureRabbitmqDLQ();
 
@@ -181,6 +185,26 @@ public class Esh3arTechWebModule : AbpModule
         Configure<OpenIddictServerOptions>(options => {
             options.Issuer = new Uri(configuration["App:SelfUrl"] ?? "https://localhost:44306");
         });
+
+        //Configure<AbpRabbitMqBackgroundJobOptions>(options =>
+        //{
+        //    options.DefaultQueueNamePrefix = QueuePrefix + '.' + options.DefaultQueueNamePrefix;
+        //    options.DefaultDelayedQueueNamePrefix = QueuePrefix + '.' + options.DefaultDelayedQueueNamePrefix;
+        //});
+
+        //Configure<AbpBackgroundJobOptions>(options =>
+        //{
+        //    options.GetBackgroundJobName = (jobTyep) =>
+        //    {
+        //        return jobTyep switch
+        //        {
+        //            var t when t == typeof(BatchMessageIngestionArg) => BackgroundJobNames.BatchMessageArg,
+        //            var t when t == typeof(SendMessageFromUiArg) => BackgroundJobNames.SendMessageFromUiArg,
+        //            var t when t == typeof(SendMessageFromUiWithAttachmentArg) => BackgroundJobNames.SendMessageFromUiWithAttachmentArg,
+        //            _ => BackgroundJobNameAttribute.GetName(jobTyep)
+        //        };
+        //    };
+        //});
     }
 
     private void ConfigureHealthChecks(ServiceConfigurationContext context)
@@ -365,7 +389,7 @@ public class Esh3arTechWebModule : AbpModule
         });
         app.UseAuditing();
         app.UseAbpSerilogEnrichers();
-        app.UseAbpHangfireDashboard();
+        //app.UseAbpHangfireDashboard();
         app.UseConfiguredEndpoints();
     }
 }
