@@ -1,7 +1,6 @@
 using Esh3arTech.Abp.Blob;
 using Esh3arTech.Abp.Worker;
 using Esh3arTech.Abp.Worker.Messages;
-using Esh3arTech.BackgroundJobs;
 using Esh3arTech.EntityFrameworkCore;
 using Esh3arTech.Localization;
 using Esh3arTech.MultiTenancy;
@@ -13,7 +12,6 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -37,8 +35,6 @@ using Volo.Abp.AspNetCore.Serilog;
 using Volo.Abp.AspNetCore.SignalR;
 using Volo.Abp.Autofac;
 using Volo.Abp.AutoMapper;
-using Volo.Abp.BackgroundJobs;
-using Volo.Abp.BackgroundJobs.Hangfire;
 using Volo.Abp.BackgroundJobs.RabbitMQ;
 using Volo.Abp.BackgroundWorkers;
 using Volo.Abp.BlobStoring;
@@ -56,7 +52,6 @@ using Volo.Abp.TenantManagement.Web;
 using Volo.Abp.UI.Navigation;
 using Volo.Abp.UI.Navigation.Urls;
 using Volo.Abp.VirtualFileSystem;
-using static Esh3arTech.Esh3arTechConsts;
 
 namespace Esh3arTech.Web;
 
