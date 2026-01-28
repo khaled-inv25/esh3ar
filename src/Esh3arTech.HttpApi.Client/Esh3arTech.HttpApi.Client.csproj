@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Esh3arTech.Application.Contracts\Esh3arTech.Application.Contracts.csproj" />
+    <ProjectReference Include="..\Esh3arTech.Web\Esh3arTech.Web.csproj" />
   </ItemGroup>
 
   <ItemGroup>

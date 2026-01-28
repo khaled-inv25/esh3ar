@@ -1,11 +1,11 @@
 using AutoMapper;
+using Esh3arTech.Chats;
 using Esh3arTech.Messages;
-using Esh3arTech.Messages.Delivery;
 using Esh3arTech.Plans;
 using Esh3arTech.Plans.Subscriptions;
 using Esh3arTech.UserMessages;
 using Esh3arTech.Web.Pages.Messages;
-using static Esh3arTech.Web.MessagesHandler.MessageDeliveryService;
+using static Esh3arTech.Web.Hubs.BusinessUserHub;
 using static Esh3arTech.Web.Pages.Dashboard.Components.DashboardArea.DashboardAreaViewComponent;
 using static Esh3arTech.Web.Pages.Plans.Subscriptions.AssignToUserModel;
 using static Esh3arTech.Web.Pages.Plans.Subscriptions.RenewModalModel;
@@ -26,5 +26,7 @@ public class Esh3arTechWebAutoMapperProfile : Profile
         CreateMap<SendMessageViewModal, SendOneWayMessageDto>();
 
         CreateMap<MessagesStatusDto, MessagesStatusAreaViewComponentModel>();
+
+        CreateMap<ReceiveMessageModel, ReceiveToBusinessMessageDto>();
     }
 }

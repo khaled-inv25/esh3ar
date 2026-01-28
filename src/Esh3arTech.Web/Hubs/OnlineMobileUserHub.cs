@@ -1,4 +1,6 @@
-﻿using Esh3arTech.Messages;
+﻿using Esh3arTech.Chats;
+using Esh3arTech.Messages;
+using Esh3arTech.Utility;
 using Esh3arTech.Web.MessagesHandler.CacheItems;
 using Esh3arTech.Web.MobileUsers;
 using Microsoft.AspNetCore.Authorization;
@@ -18,28 +20,34 @@ namespace Esh3arTech.Web.Hubs
 {
     [Authorize]
     [HubRoute("online-mobile-user")]
-    public class OnlineMobileUserHub : AbpHub
+    public class OnlineMobileUserHub : Esh3arTechHubBase
     {
         private readonly OnlineUserTrackerService _onlineUserTrackerService;
         private readonly IMessageAppService _messageAppService;
         private readonly IMessageStatusUpdater _messageStatusUpdater;
         private readonly IDistributedCache<UserPendingMessageItem> _cache;
+        private readonly IHubContext<BusinessUserHub> _businessHubContext;
+        private readonly IChatService _chatService;
 
         public OnlineMobileUserHub(
             OnlineUserTrackerService onlineUserTrackerService,
             IMessageAppService messageAppService,
             IMessageStatusUpdater messageStatusUpdater,
-            IDistributedCache<UserPendingMessageItem> cache)
+            IDistributedCache<UserPendingMessageItem> cache,
+            IHubContext<BusinessUserHub> businessHubContext,
+            IChatService chatService)
         {
             _onlineUserTrackerService = onlineUserTrackerService;
             _messageAppService = messageAppService;
             _cache = cache;
             _messageStatusUpdater = messageStatusUpdater;
+            _businessHubContext = businessHubContext;
+            _chatService = chatService;
         }
 
         public override async Task OnConnectedAsync()
         {
-            var mobileNumber = GetMobileNumber();
+            var mobileNumber = (string?)GetUserInfo();
             var connectionId = Context.ConnectionId;
 
             if (!string.IsNullOrEmpty(mobileNumber))
@@ -81,7 +89,7 @@ namespace Esh3arTech.Web.Hubs
 
         public override async Task OnDisconnectedAsync(Exception? exception)
         {
-            var mobileNumber = GetMobileNumber();
+            var mobileNumber = (string?)GetUserInfo();
 
             if (!string.IsNullOrEmpty(mobileNumber))
             {
@@ -91,7 +99,7 @@ namespace Esh3arTech.Web.Hubs
 
         public async Task AcknowledgeMessage(Guid messageId)
         {
-            var mobileNumber = GetMobileNumber();
+            var mobileNumber = (string?)GetUserInfo();
 
             if (string.IsNullOrEmpty(mobileNumber) || !CurrentUser.IsAuthenticated)
             {
@@ -101,15 +109,48 @@ namespace Esh3arTech.Web.Hubs
             await _messageStatusUpdater.SetMessageStatusToDeliveredInNewTransactionAsync(messageId);
         }
 
-        private string? GetMobileNumber()
+        public async Task SendMessage(ReceiveMessageModel model)
         {
-            var phoneNumber = Context.User?.FindFirst(ClaimTypesConsts.MobileNumber)?.Value;
-            if (!string.IsNullOrEmpty(phoneNumber))
+
+            IsAuthorized(model.From);
+
+            var createdMessage = await _chatService.CreateMobileToBusinessMessageAsync(
+                new ReceiveToBusinessMessageDto
+                {
+                    Id = model.Id,
+                    From = model.From,
+                    MobileAccount = model.MobileAccount,
+                    Content = model.Content
+                });
+
+            var connectionId = await _onlineUserTrackerService.GetFirstConnectionIdByPhoneNumberAsync(MobileNumberPreparator.PrepareMobileNumber(model.MobileAccount));
+
+            if (!string.IsNullOrEmpty(connectionId))
             {
-                return phoneNumber;
+                await _businessHubContext.Clients.Client(connectionId).SendAsync(HubMethods.ReceiveChatMessage, JsonSerializer.Serialize(createdMessage));
+            }
+        }
+
+        protected override object? GetUserInfo()
+        {
+            var mobileNumber = Context.User?.FindFirst(ClaimTypesConsts.MobileNumber)?.Value;
+            if (!string.IsNullOrEmpty(mobileNumber))
+            {
+                return mobileNumber;
             }
 
             return null;
+        }
+
+        protected override void IsAuthorized(string number)
+        {
+            var currentMobileNumber = (string?)GetUserInfo();
+            var mobileSender = MobileNumberPreparator.PrepareMobileNumber(number);
+
+            if (!currentMobileNumber!.Equals(mobileSender))
+            {
+                throw new BusinessException("You are not authorized to send messages from this mobile number!");
+            }
         }
 
         public class SendMessageModel : EntityDto<Guid>
@@ -120,6 +161,17 @@ namespace Esh3arTech.Web.Hubs
             public string AccessUrl { get; set; }
             public DateTime? UrlExpiresAt { get; set; }
 
+        }
+
+        public class ReceiveMessageModel
+        {
+            public Guid Id { get; set; }
+
+            public string From { get; set; }
+
+            public string MobileAccount { get; set; }
+
+            public string Content { get; set; }
         }
     }
 }

@@ -1,0 +1,54 @@
+﻿@page
+@using Esh3arTech.Localization
+@using Esh3arTech.Web.Pages.Bots.Components.BotManagementAdminArea
+@using Microsoft.Extensions.Localization
+@using Volo.Abp.Users
+@inject IStringLocalizer<Esh3arTechResource> L
+@inject ICurrentUser CurrentUser
+
+<abp-card>
+    <abp-card-header>
+        <abp-row>
+            <abp-column size-md="_12">
+                @if (CurrentUser.IsAuthenticated && CurrentUser.IsInRole("admin"))
+                {
+                    <i class="fas fa-robot me-2 opacity-75"></i> @L["UsersWithBot"]
+                }
+                else if (CurrentUser.IsAuthenticated && CurrentUser.IsInRole("sender"))
+                {
+                    <i class="fas fa-robot me-2 opacity-75"></i> @L["BotConfigurations"]
+                }
+            </abp-column>
+        </abp-row>
+    </abp-card-header>
+    <abp-card-body>
+        @if (CurrentUser.IsAuthenticated && CurrentUser.IsInRole("admin"))
+        {
+            <div id="WidgetContainer">
+                @await Component.InvokeAsync(typeof(BotManagementAdminAreaViewComponent))
+            </div>
+
+            @section scripts {
+                <script>
+                    $(function() {
+                        // 2. Initialize the manager on that container
+                        var manager = new abp.WidgetManager('#WidgetContainer');
+
+                        // 3. This specific call triggers the 'init' in your JS file
+                        manager.init();
+                    });
+                </script>
+            }
+        }
+        else if (CurrentUser.IsAuthenticated && CurrentUser.IsInRole("sender"))
+        {
+            <h1>Business user</h1>
+        }
+        else
+        {
+            <div>
+                <p class="text-muted">You must be authenticated user to use the content of this page</p>
+            </div>
+        }
+    </abp-card-body>
+</abp-card>

@@ -1,5 +1,6 @@
 using AutoMapper;
 using Esh3arTech.BackgroundJobs;
+using Esh3arTech.Chats.Bots;
 using Esh3arTech.Messages;
 using Esh3arTech.Messages.Eto;
 using Esh3arTech.MobileUsers;
@@ -31,5 +32,7 @@ public class Esh3arTechApplicationAutoMapperProfile : Profile
         CreateMap<Message, EnqueueBatchMessageDto>();
         CreateMap<BatchMessageItem, BatchMessage>();
         CreateMap<BatchMessageItem, EtTempMobileUserData>();
+
+        CreateMap<IdentityUser, UsersInListWithBotFeatureDto>();
     }
 }

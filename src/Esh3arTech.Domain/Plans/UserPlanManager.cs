@@ -12,12 +12,12 @@ namespace Esh3arTech.Plans
     {
         private readonly IUserPlanRepository _userPlanRepository;
         private readonly IFeatureChecker _featureChecker;
-        private readonly IRepository<Message, Guid> _messageRepository;
+        private readonly IMessageRepository _messageRepository;
 
         public UserPlanManager(
             IUserPlanRepository userPlanRepository,
             IFeatureChecker featureChecker,
-            IRepository<Message, Guid> messageRepository)
+            IMessageRepository messageRepository)
         {
             _userPlanRepository = userPlanRepository;
             _featureChecker = featureChecker;

@@ -8,6 +8,10 @@ SELECT * FROM [Esh3arTechDb_v101].[dbo].[EtUserPlans]
 
 SELECT * FROM [Esh3arTechDb_v101].[dbo].[AbpUsers]
 
+SELECT DISTINCT ProviderKey FROM AbpFeatureValues Where (Name = 'Esh3arTech.AutomaticReply' and Value = 'true')
+
+SELECT * FROM AbpUsers Where PlanId in('33179724-FA4F-5D89-BF33-3A1F07464962')
+
 SELECT 
 	CASE
 		WHEN

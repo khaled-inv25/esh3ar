@@ -1,20 +1,31 @@
 ﻿using Esh3arTech.Plans;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Volo.Abp.Data;
+using Volo.Abp.Domain.Repositories;
 using Volo.Abp.Domain.Repositories.EntityFrameworkCore;
 using Volo.Abp.EntityFrameworkCore;
+using Volo.Abp.FeatureManagement;
 using Volo.Abp.Identity;
 
 namespace Esh3arTech.EntityFrameworkCore.Plans
 {
     public class UserPlanRepository : EfCoreRepository<Esh3arTechDbContext, UserPlan, Guid>, IUserPlanRepository
     {
-        public UserPlanRepository(IDbContextProvider<Esh3arTechDbContext> dbContextProvider) 
+        private readonly IFeatureValueRepository _featureValueRepository;
+        private readonly IRepository<IdentityUser> _userRepository;
+
+        public UserPlanRepository(
+            IDbContextProvider<Esh3arTechDbContext> dbContextProvider,
+            IFeatureValueRepository featureValueRepository,
+            IRepository<IdentityUser> userRepository)
             : base(dbContextProvider)
         {
+            _featureValueRepository = featureValueRepository;
+            _userRepository = userRepository;
         }
 
         // To get the count of users linked to a specific plan.
@@ -99,10 +110,33 @@ namespace Esh3arTech.EntityFrameworkCore.Plans
             return queryResult?.IsFree ?? false;
         }
 
-        //public override async Task<IQueryable<UserPlan>> WithDetailsAsync()
-        //{
-        //    return await GetQueryableAsync();
-        //}
+        public async Task<List<IdentityUser>> GetUsersWithBotFeatureAsyn()
+        {
+            var featureName = "Esh3arTech.AutomaticReply";
+            var featureValue = "true";
 
+            var featureValues = await _featureValueRepository.GetListAsync();
+
+            var planIds = featureValues
+                .Distinct()
+                .Where(fv => fv.Name == featureName && fv.Value == featureValue)
+                .Select(fv => fv.ProviderKey)
+                .ToList();
+
+            if (planIds.Count <= 0)
+            {
+                return [];
+            }
+
+            var userQeryable = await _userRepository.GetQueryableAsync();
+
+            var query = from u in userQeryable
+                        where planIds.Contains(EF.Property<string>(u, "PlanId"))
+                        select u;
+
+            var users = await AsyncExecuter.ToListAsync(query);
+
+            return users;
+        }
     }
 }

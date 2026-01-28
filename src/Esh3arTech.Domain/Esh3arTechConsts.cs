@@ -29,6 +29,7 @@ public static class Esh3arTechConsts
     {
         public const string ReceivePendingMessages = "ReceivePendingMessages";
         public const string ReceiveMessage = "ReceiveMessage";
+        public const string ReceiveChatMessage = "ReceiveChatMessage";
     }
 
     public static class BackgroundJobNames

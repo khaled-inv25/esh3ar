@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Volo.Abp.Domain.Repositories;
+using Volo.Abp.Identity;
 
 namespace Esh3arTech.Plans
 {
@@ -17,5 +19,7 @@ namespace Esh3arTech.Plans
         Task AssginPlanToUser(Guid planId, Guid userId);
 
         Task<bool> IsPlanFreeById(Guid planId);
+
+        Task<List<IdentityUser>> GetUsersWithBotFeatureAsyn();
     }
 }

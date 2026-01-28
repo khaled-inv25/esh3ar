@@ -1,7 +1,7 @@
-using Volo.Abp.Localization.Resources.AbpLocalization;
+using Volo.Abp.Localization;
 using Volo.Abp.Settings;
 
-namespace Volo.Abp.Localization;
+namespace Esh3arTech.Localization;
 
 public class LocalizationSettingProvider : SettingDefinitionProvider
 {
@@ -18,6 +18,6 @@ public class LocalizationSettingProvider : SettingDefinitionProvider
 
     private static LocalizableString L(string name)
     {
-        return LocalizableString.Create<AbpLocalizationResource>(name);
+        return LocalizableString.Create<Esh3arTechResource>(name);
     }
 }

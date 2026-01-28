@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Localization;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -20,6 +21,7 @@ namespace Esh3arTech.Plans
         private readonly IFeatureDefinitionManager _featureDefinitionManager;
         private readonly UserPlanManager _userPlanManager;
         private readonly IUserPlanRepository _userPlanRepository;
+        private readonly IStringLocalizerFactory _stringLocalizerFactory;
 
         public PlanAppService(
             IUserPlanRepository planRepository,
@@ -27,7 +29,8 @@ namespace Esh3arTech.Plans
             IFeatureManager featureManager,
             IFeatureDefinitionManager featureDefinitionManager,
             UserPlanManager userPlanManager,
-            IUserPlanRepository userPlanRepository)
+            IUserPlanRepository userPlanRepository,
+            IStringLocalizerFactory stringLocalizerFactory)
         {
             _planRepository = planRepository;
             _currentUser = currentUser;
@@ -35,6 +38,7 @@ namespace Esh3arTech.Plans
             _featureDefinitionManager = featureDefinitionManager;
             _userPlanManager = userPlanManager;
             _userPlanRepository = userPlanRepository;
+            _stringLocalizerFactory = stringLocalizerFactory;
         }
 
         public async Task<PagedResultDto<PlanInListDto>> GetAllPlansAsync(PlanListFilter input)
@@ -126,6 +130,7 @@ namespace Esh3arTech.Plans
                 foreach (var featureDef in group.Features)
                 {
                     string currentValue = featureDef.DefaultValue;
+                    var actualText = featureDef.DisplayName.Localize(_stringLocalizerFactory);
 
                     if (planId.HasValue)
                     {
@@ -136,7 +141,7 @@ namespace Esh3arTech.Plans
                     result.Add(new PlanFeatureDto
                     {
                         Name = featureDef.Name,
-                        DisplayName = featureDef.DisplayName.ToString(),
+                        DisplayName = actualText.Value,
                         Value = currentValue,
                         ValueType = featureDef.ValueType
                     });

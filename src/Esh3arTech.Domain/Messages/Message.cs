@@ -16,7 +16,7 @@ namespace Esh3arTech.Messages
 
         public string Subject { get; private set; }
 
-        public string? MessageContent { get; private set; }
+        public string? MessageContent { get; set; }
 
         public MessageStatus Status { get; private set; }
 

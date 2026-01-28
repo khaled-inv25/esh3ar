@@ -52,12 +52,24 @@ public class Esh3arTechMenuContributor : IMenuContributor
                     Esh3arTechMenus.Subscriptions,
                     l["Menu:Subscriptions"],
                     "~/Plans/Subscriptions",
-                    icon: "fa-solid fa-id-badge",
+                    icon: "fa-solid fa-credit-card",
                     order: 1,
                     requiredPermissionName: Esh3arTechPermissions.Esh3arSubscriptions
                 )
             );
+        
+        // Bot
+        context.Menu.AddItem(
+                new ApplicationMenuItem(
+                    Esh3arTechMenus.Subscriptions,
+                    l["Menu:AdminBot"],
+                    "~/Bots",
+                    icon: "fa-solid fa-robot",
+                    order: 1
+                )
+            );
 
+        // Messages
         context.Menu.AddItem(
                 new ApplicationMenuItem(
                     Esh3arTechMenus.Messages,
@@ -68,7 +80,6 @@ public class Esh3arTechMenuContributor : IMenuContributor
                     requiredPermissionName: Esh3arTechPermissions.Esh3arSendMessages
                 )
             );
-
 
         //Administration
         var administration = context.Menu.GetAdministration();

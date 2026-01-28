@@ -12,28 +12,38 @@ namespace Esh3arTech.Feature
         // To Define all esh3ar tech features.
         public override void Define(IFeatureDefinitionContext context)
         {
-            var esh3arGroup = context.AddGroup($"{AppPrefix}", LocalizableString.Create<Esh3arTechResource>(AppPrefix));
+            var esh3arGroup = context.AddGroup($"{AppPrefix}", L("AppName"));
 
             esh3arGroup.AddFeature($"{AppPrefix}.Chat", defaultValue: "false",
-                displayName: LocalizableString.Create<Esh3arTechResource>("Chat"),
+                displayName: L("Feature:Chat"),
+                valueType: new ToggleStringValueType()
+                );
+            
+            esh3arGroup.AddFeature($"{AppPrefix}.AutomaticReply", defaultValue: "false",
+                displayName: L("Feature:AutomaticReply"),
                 valueType: new ToggleStringValueType()
                 );
 
             esh3arGroup.AddFeature($"{AppPrefix}.PdfReporting", defaultValue: "false", 
-                LocalizableString.Create<Esh3arTechResource>("PdfReporting"), 
+                displayName: L("Feature:PdfReporting"), 
                 valueType: new ToggleStringValueType()
                 );
             
             esh3arGroup.AddFeature($"{AppPrefix}.ExcelReporting", defaultValue: "false",
-                displayName: LocalizableString.Create<Esh3arTechResource>("ExcelReporting"),
+                displayName: L("Feature:ExcelReporting"),
                 valueType: new ToggleStringValueType()
                 );
 
             esh3arGroup.AddFeature(
                 $"{AppPrefix}.MaxMessages", defaultValue: "50",
-                displayName: LocalizableString.Create<Esh3arTechResource>("MaxMessages"),
+                displayName: L("Feature:MaxMessages"),
                 valueType: new FreeTextStringValueType(new NumericValueValidator())
                 );
+        }
+
+        private static LocalizableString L(string name)
+        {
+            return LocalizableString.Create<Esh3arTechResource>(name);
         }
     }
 }
